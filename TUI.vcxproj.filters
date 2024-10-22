@@ -1,0 +1,276 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="GUI">
+      <UniqueIdentifier>{1e71d23b-ba10-4d64-b0ee-6c766f2b19db}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GUI\WM">
+      <UniqueIdentifier>{4f667529-46d7-4b03-864e-339199e6c2f7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GUI\Widget">
+      <UniqueIdentifier>{ae0b581c-15b7-4d6b-ae36-0f243ef12aab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GUI\Widget\Widget_Effects">
+      <UniqueIdentifier>{814b012f-4f89-4a58-8693-f03ad313ccf2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GUI\Widget\Controls">
+      <UniqueIdentifier>{82419740-5f13-444a-b801-7457bd5b68b4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GUI\Core">
+      <UniqueIdentifier>{5180366f-a598-4529-8f99-5eafd702d63f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GUI\Core\Cursor">
+      <UniqueIdentifier>{53ef7cb1-0847-45b7-970d-3911a9ba9220}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GUI\Core\Memory">
+      <UniqueIdentifier>{4278a24e-1e95-42ed-8824-541d25cf4706}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GUI\Core\LCD">
+      <UniqueIdentifier>{2053ee94-36f7-49e8-8d9e-57d67abfec31}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GUI\Font">
+      <UniqueIdentifier>{7adbe07f-d0d5-4f22-8229-8ad608bc9904}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GUI_X_LCD">
+      <UniqueIdentifier>{206fdd61-b446-4ded-be6c-4021f972e1d1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GUI\Widget\Controls\FrameWin">
+      <UniqueIdentifier>{35785c23-7365-45d3-b54e-aaeb53c28a89}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="GUI\Widget\GUI_ARRAY.cc">
+      <Filter>GUI\Widget</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Widget\GUI_DRAW.cc">
+      <Filter>GUI\Widget</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Widget\GUI_DRAW_BITMAP.cc">
+      <Filter>GUI\Widget</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Widget\GUI_DRAW_Self.cc">
+      <Filter>GUI\Widget</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Widget\WIDGET.cc">
+      <Filter>GUI\Widget</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\WM\WM.cc">
+      <Filter>GUI\WM</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\WM\WMTouch.cc">
+      <Filter>GUI\WM</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Core\GUI_OnKey.cc">
+      <Filter>GUI\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Core\GUI_UC.cc">
+      <Filter>GUI\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Core\GUI_UC_EncodeNone.cc">
+      <Filter>GUI\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Core\GUIChar.cc">
+      <Filter>GUI\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Core\GUICharM.cc">
+      <Filter>GUI\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Core\GUICharP.cc">
+      <Filter>GUI\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Core\GUICore.cc">
+      <Filter>GUI\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Font\F6x8.cc">
+      <Filter>GUI\Font</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Font\F08_1.cc">
+      <Filter>GUI\Font</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Font\F08_ASCII.cc">
+      <Filter>GUI\Font</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Font\F13_1.cc">
+      <Filter>GUI\Font</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Font\F13_ASCII.cc">
+      <Filter>GUI\Font</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Widget\FRAMEWIN.cc">
+      <Filter>GUI\Widget\Controls\FrameWin</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Widget\FRAMEWIN_SetResizeable.cc">
+      <Filter>GUI\Widget\Controls\FrameWin</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Widget\WIDGET_Effect_None.cc">
+      <Filter>GUI\Widget\Widget_Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Core\GUI_CursorArrowLPx.cc">
+      <Filter>GUI\Core\Cursor</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Core\GUI_CursorArrowMPx.cc">
+      <Filter>GUI\Core\Cursor</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Core\GUI_CursorArrowSPx.cc">
+      <Filter>GUI\Core\Cursor</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Core\GUI_CursorCrossLPx.cc">
+      <Filter>GUI\Core\Cursor</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Core\GUI_CursorCrossMPx.cc">
+      <Filter>GUI\Core\Cursor</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Core\GUI_CursorCrossSPx.cc">
+      <Filter>GUI\Core\Cursor</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Core\GUI_CursorHeaderMPx.cc">
+      <Filter>GUI\Core\Cursor</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Core\GUI_CursorPal.cc">
+      <Filter>GUI\Core\Cursor</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Core\GUI__mem.cc">
+      <Filter>GUI\Core\Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Core\GUIAlloc.cc">
+      <Filter>GUI\Core\Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Core\GUICurs.cc">
+      <Filter>GUI\Core\Cursor</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Core\GUILCD.cc">
+      <Filter>GUI\Core\LCD</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI_X\GUI_X_LCD.cc">
+      <Filter>GUI_X_LCD</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI_X\GUI_X_LCDA.cc">
+      <Filter>GUI_X_LCD</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI_X\GUI_X.cc">
+      <Filter>GUI_X_LCD</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cc" />
+    <ClCompile Include="GUI\Widget\BUTTON.cc">
+      <Filter>GUI\Widget\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Widget\CHECKBOX.cc">
+      <Filter>GUI\Widget\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Widget\DROPDOWN.cc">
+      <Filter>GUI\Widget\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Widget\EDIT.cc">
+      <Filter>GUI\Widget\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Widget\HEADER.cc">
+      <Filter>GUI\Widget\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Widget\LISTBOX.cc">
+      <Filter>GUI\Widget\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Widget\LISTVIEW.cc">
+      <Filter>GUI\Widget\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Widget\MENU.cc">
+      <Filter>GUI\Widget\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Widget\MULTIEDIT.cc">
+      <Filter>GUI\Widget\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Widget\MULTIPAGE.cc">
+      <Filter>GUI\Widget\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Widget\PROGBAR.cc">
+      <Filter>GUI\Widget\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Widget\RADIO.cc">
+      <Filter>GUI\Widget\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Widget\SCROLLBAR.cc">
+      <Filter>GUI\Widget\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Widget\SLIDER.cc">
+      <Filter>GUI\Widget\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Widget\TEXT.cc">
+      <Filter>GUI\Widget\Controls</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="GUI\Widget\GUI_ARRAY.h">
+      <Filter>GUI\Widget</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\Widget\WIDGET.h">
+      <Filter>GUI\Widget</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\WM\WM.h">
+      <Filter>GUI\WM</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\Core\GUI.h">
+      <Filter>GUI\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\Core\GUI_FontIntern.h">
+      <Filter>GUI\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\Core\GUI_X.h">
+      <Filter>GUI\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\Widget\FRAMEWIN.h">
+      <Filter>GUI\Widget\Controls\FrameWin</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\Widget\BUTTON.h">
+      <Filter>GUI\Widget\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\Widget\CHECKBOX.h">
+      <Filter>GUI\Widget\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\Widget\DROPDOWN.h">
+      <Filter>GUI\Widget\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\Widget\EDIT.h">
+      <Filter>GUI\Widget\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\Widget\HEADER.h">
+      <Filter>GUI\Widget\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\Widget\LISTBOX.h">
+      <Filter>GUI\Widget\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\Widget\LISTVIEW.h">
+      <Filter>GUI\Widget\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\Widget\MENU.h">
+      <Filter>GUI\Widget\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\Widget\MULTIEDIT.h">
+      <Filter>GUI\Widget\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\Widget\MULTIPAGE.h">
+      <Filter>GUI\Widget\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\Widget\PROGBAR.h">
+      <Filter>GUI\Widget\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\Widget\RADIO.h">
+      <Filter>GUI\Widget\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\Widget\SCROLLBAR.h">
+      <Filter>GUI\Widget\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\Widget\SLIDER.h">
+      <Filter>GUI\Widget\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\Widget\TEXT.h">
+      <Filter>GUI\Widget\Controls</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="GUI\Core\chars_pic.inl">
+      <Filter>GUI\Core</Filter>
+    </None>
+    <None Include="GUI\Core\GUI_ID.inl">
+      <Filter>GUI\Core</Filter>
+    </None>
+  </ItemGroup>
+</Project>
