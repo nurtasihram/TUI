@@ -1,53 +1,113 @@
 #pragma once
-#include "Widget.h"
+#include "WM.h"
+
 #define CHECKBOX_BI_INACTIV        0
 #define CHECKBOX_BI_ACTIV          1
 #define CHECKBOX_BI_INACTIV_3STATE 2
 #define CHECKBOX_BI_ACTIV_3STATE   3
-typedef struct {
-	CFont* pFont;
-	RGBC aBkColorBox[2]; /* Colors used to draw the box background */
-	RGBC BkColor;        /* Widget background color */
-	RGBC TextColor;
-	int16_t Align;
-	uint8_t  Spacing;
-	const Bitmap* apBm[4];
-} CHECKBOX_PROPS;
-struct CheckBox_Obj : public Widget {
-	CHECKBOX_PROPS Props;
-	uint8_t NumStates;
-	uint8_t CurrentState;
-	char *pText;
+
+class CheckBox : public Widget {
+public:
+	static CBitmap abmCheck[2];
+	static CBitmap abmCheck3[2];
+	struct Property {
+		CFont *pFont = &GUI_Font13_1;
+		CBitmap *apBm[4] = {
+			&abmCheck[0],
+			&abmCheck[1],
+			&abmCheck3[0],
+			&abmCheck3[1]
+		};
+		RGBC aBkColorBox[2] = {
+			/* Inactive color */ RGBC_GRAY(0x80),
+			/* Active color */ RGB_WHITE
+		};
+		RGBC BkColor = RGB_INVALID_COLOR;
+		RGBC TextColor = RGB_BLACK;
+		int16_t Align = GUI_TA_LEFT | GUI_TA_VCENTER;
+		uint8_t Spacing = 4;
+	} static DefaultProps;
+private:
+	Property Props = DefaultProps;
+	uint8_t nStates = 2, CurrentState = 0;
+	TString text;
+private:
+	void _OnPaint();
+	void _OnTouch(WM_MSG *pMsg);
+	bool _OnKey(WM_MSG *pMsg);
+
+	static void _Callback(WM_MSG *pMsg);
+
+public:
+	CheckBox(int x0, int y0, int xsize, int ysize,
+			 WObj *pParent, uint16_t Id = 0, uint16_t Flags = 0,
+			 const char *pText = nullptr);
+	CheckBox(const WM_CREATESTRUCT &wc) : CheckBox(
+		wc.x, wc.y, wc.xsize, wc.ysize,
+		wc.pParent, wc.Id, wc.Flags,
+		wc.pCaption) {}
+protected:
+	~CheckBox() = default;
+
+#pragma region Properties
+public: // Property - Font
+	/* W */ inline void Font(CFont *pFont) {
+		if (Props.pFont != pFont) {
+			Props.pFont = pFont;
+			Invalidate();
+		}
+	}
+public: // Property - TextColor
+	/* W */ inline void TextColor(RGBC Color) {
+		if (Props.TextColor != Color) {
+			Props.TextColor = Color;
+			Invalidate();
+		}
+	}
+public: // Property - BkColor
+	/* W */ inline void BkColor(RGBC Color) {
+		if (Props.BkColor != Color) {
+			Props.BkColor = Color;
+			Invalidate();
+		}
+	}
+	/* R */ inline auto BkColor() const { return Props.BkColor; }
+public: // Property - Spacing
+	/* W */ inline void Spacing(unsigned Spacing) {
+		if (Props.Spacing == Spacing)
+			return;
+		Props.Spacing = Spacing;
+		Invalidate();
+	}
+public: // Property - Text
+	/* W */ void Text(const char *s) {
+		if (GUI__SetText(&text, s))
+			Invalidate();
+	}
+public: // Property - TextAlign
+	/* W */ inline void TextAlign(int Align) {
+		if (Props.Align != Align) {
+			Props.Align = Align;
+			Invalidate();
+		}
+	}
+public: // Property - CheckState
+	/* W */ inline void CheckState(uint8_t State) {
+		if (nStates >= State) {
+			CurrentState = State;
+			Invalidate();
+		}
+	}
+	/* R */ inline uint8_t CheckState() const { return CurrentState; }
+public: // Property - NumStates
+	/* W */ inline void NumStates(uint8_t nStates) {
+		if (nStates == 2 || nStates == 3) {
+			Props.apBm[2] = DefaultProps.apBm[2];
+			Props.apBm[3] = DefaultProps.apBm[3];
+			this->nStates = nStates;
+		}
+	}
+	/* R */ inline auto NumStates() const { return nStates; }
+#pragma endregion
+
 };
-CheckBox_Obj *CHECKBOX_CreateEx(int x0, int y0, int xsize, int ysize, WObj *pParent, int WinFlags, int ExFlags, int Id);
-#define CHECKBOX_Create(x0, y0, xsize, ysize, pParent, Id, Flags) CHECKBOX_CreateEx(x0, y0, xsize, ysize, pParent, Flags, 0, Id)
-#define CHECKBOX_CreateIndirect(pCreateInfo, pParent, x0, y0, cb) \
-	CHECKBOX_CreateEx(pCreateInfo->x0 + x0, pCreateInfo->y0 + y0,    \
-		pCreateInfo->xSize, pCreateInfo->ySize,                      \
-		pParent, 0, pCreateInfo->Flags, pCreateInfo->Id)
-int    CHECKBOX_GetDefaultAlign    (void);
-RGBC   CHECKBOX_GetDefaultBkColor  (void);
-CFont *CHECKBOX_GetDefaultFont     (void);
-int    CHECKBOX_GetDefaultSpacing  (void);
-int    CHECKBOX_GetDefaultTextAlign(void);
-RGBC   CHECKBOX_GetDefaultTextColor(void);
-void   CHECKBOX_SetDefaultAlign    (int Align);
-void   CHECKBOX_SetDefaultBkColor  (RGBC Color);
-void   CHECKBOX_SetDefaultFont     (CFont* pFont);
-void   CHECKBOX_SetDefaultImage    (const Bitmap * pBitmap, unsigned int Index);
-void   CHECKBOX_SetDefaultSpacing  (int Spacing);
-void   CHECKBOX_SetDefaultTextAlign(int Align);
-void   CHECKBOX_SetDefaultTextColor(RGBC Color);
-int  CHECKBOX_GetState    (CheckBox_Obj *pObj);
-bool CHECKBOX_IsChecked   (CheckBox_Obj *pObj);
-void CHECKBOX_SetBkColor  (CheckBox_Obj *pObj, RGBC Color);
-void CHECKBOX_SetFont     (CheckBox_Obj *pObj, CFont* pFont);
-void CHECKBOX_SetImage    (CheckBox_Obj *pObj, const Bitmap * pBitmap, unsigned int Index);
-void CHECKBOX_SetNumStates(CheckBox_Obj *pObj, unsigned NumStates);
-void CHECKBOX_SetSpacing  (CheckBox_Obj *pObj, unsigned Spacing);
-void CHECKBOX_SetState    (CheckBox_Obj *pObj, unsigned State);
-void CHECKBOX_SetText     (CheckBox_Obj *pObj, const char * pText);
-void CHECKBOX_SetTextAlign(CheckBox_Obj *pObj, int Align);
-void CHECKBOX_SetTextColor(CheckBox_Obj *pObj, RGBC Color);
-#define CHECKBOX_Check(pObj)   CHECKBOX_SetState(pObj, 1)
-#define CHECKBOX_Uncheck(pObj) CHECKBOX_SetState(pObj, 0)

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug LLVM|Win32">
@@ -35,87 +35,192 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="GUI\Core\GUIAlloc.cc" />
-    <ClCompile Include="GUI\Core\GUIChar.cc" />
-    <ClCompile Include="GUI\Core\GUICharM.cc" />
-    <ClCompile Include="GUI\Core\GUICharP.cc" />
-    <ClCompile Include="GUI\Core\GUICore.cc" />
-    <ClCompile Include="GUI\Core\GUICurs.cc" />
-    <ClCompile Include="GUI\Core\GUILCD.cc" />
-    <ClCompile Include="GUI\Core\GUI_CursorArrowLPx.cc" />
-    <ClCompile Include="GUI\Core\GUI_CursorArrowMPx.cc" />
-    <ClCompile Include="GUI\Core\GUI_CursorArrowSPx.cc" />
-    <ClCompile Include="GUI\Core\GUI_CursorCrossLPx.cc" />
-    <ClCompile Include="GUI\Core\GUI_CursorCrossMPx.cc" />
-    <ClCompile Include="GUI\Core\GUI_CursorCrossSPx.cc" />
-    <ClCompile Include="GUI\Core\GUI_CursorHeaderMPx.cc" />
-    <ClCompile Include="GUI\Core\GUI_CursorPal.cc" />
-    <ClCompile Include="GUI\Core\GUI_OnKey.cc" />
-    <ClCompile Include="GUI\Core\GUI_UC.cc" />
-    <ClCompile Include="GUI\Core\GUI_UC_EncodeNone.cc" />
-    <ClCompile Include="GUI\Core\GUI__mem.cc" />
-    <ClCompile Include="GUI\Font\F08_1.cc" />
-    <ClCompile Include="GUI\Font\F08_ASCII.cc" />
-    <ClCompile Include="GUI\Font\F13_1.cc" />
-    <ClCompile Include="GUI\Font\F13_ASCII.cc" />
-    <ClCompile Include="GUI\Font\F6x8.cc" />
-    <ClCompile Include="GUI\Widget\BUTTON.cc" />
-    <ClCompile Include="GUI\Widget\CHECKBOX.cc" />
-    <ClCompile Include="GUI\Widget\DROPDOWN.cc" />
-    <ClCompile Include="GUI\Widget\EDIT.cc" />
-    <ClCompile Include="GUI\Widget\FRAMEWIN.cc" />
-    <ClCompile Include="GUI\Widget\FRAMEWIN_SetResizeable.cc" />
-    <ClCompile Include="GUI\Widget\GUI_ARRAY.cc" />
-    <ClCompile Include="GUI\Widget\GUI_DRAW.cc" />
-    <ClCompile Include="GUI\Widget\GUI_DRAW_BITMAP.cc" />
-    <ClCompile Include="GUI\Widget\GUI_DRAW_Self.cc" />
-    <ClCompile Include="GUI\Widget\HEADER.cc" />
-    <ClCompile Include="GUI\Widget\LISTBOX.cc" />
-    <ClCompile Include="GUI\Widget\LISTVIEW.cc" />
-    <ClCompile Include="GUI\Widget\MENU.cc" />
-    <ClCompile Include="GUI\Widget\MULTIEDIT.cc" />
-    <ClCompile Include="GUI\Widget\MULTIPAGE.cc" />
-    <ClCompile Include="GUI\Widget\PROGBAR.cc" />
-    <ClCompile Include="GUI\Widget\RADIO.cc" />
-    <ClCompile Include="GUI\Widget\SCROLLBAR.cc" />
-    <ClCompile Include="GUI\Widget\SLIDER.cc" />
-    <ClCompile Include="GUI\Widget\TEXT.cc" />
-    <ClCompile Include="GUI\Widget\WIDGET.cc" />
-    <ClCompile Include="GUI\Widget\WIDGET_Effect_None.cc" />
-    <ClCompile Include="GUI\WM\WM.cc" />
-    <ClCompile Include="GUI\WM\WMTouch.cc" />
-    <ClCompile Include="GUI_X\GUI_X.cc" />
+    <ClCompile Include="GUI\GUIChar.cc" />
+    <ClCompile Include="GUI\GUICore.cc" />
+    <ClCompile Include="GUI\GUI_Cursor.cc" />
+    <ClCompile Include="GUI\GUILCD.cc" />
+    <ClCompile Include="GUI\GUI_Memory.cc" />
+    <ClCompile Include="GUI\GUI_OnKey.cc" />
+    <ClCompile Include="GUI\GUI_UC.cc" />
+    <ClCompile Include="GUI\GUI_UC_EncodeNone.cc" />
+    <ClCompile Include="GUI\Resources\GUI_Font8_1_2.cc" />
+    <ClCompile Include="GUI\Resources\GUI_Font8_ASCII.cc" />
+    <ClCompile Include="GUI\Resources\GUI_Font13_1.cc" />
+    <ClCompile Include="GUI\Resources\GUI_Font13_ASCII.cc" />
+    <ClCompile Include="GUI\Resources\GUI_Font6x8_9.cc" />
+    <ClCompile Include="GUI\Resources\GUI_CursorArrowL.cc" />
+    <ClCompile Include="GUI\Resources\GUI_CursorArrowM.cc" />
+    <ClCompile Include="GUI\Resources\GUI_CursorArrowS.cc" />
+    <ClCompile Include="GUI\Resources\GUI_CursorCrossL.cc" />
+    <ClCompile Include="GUI\Resources\GUI_CursorCrossM.cc" />
+    <ClCompile Include="GUI\Resources\GUI_CursorCrossS.cc" />
+    <ClCompile Include="GUI\Resources\GUI_CursorHeaderM.cc" />
+    <ClCompile Include="GUI\Widget\Button.cc" />
+    <ClCompile Include="GUI\Widget\CheckBox.cc" />
+    <ClCompile Include="GUI\Widget\DropDown.cc" />
+    <ClCompile Include="GUI\Widget\Edit.cc">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release LLVM|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release LLVM|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="GUI\Widget\Frame.cc" />
+    <ClCompile Include="GUI\Widget\Header.cc">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release LLVM|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release LLVM|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="GUI\Widget\ListBox.cc" />
+    <ClCompile Include="GUI\Widget\ListView.cc">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release LLVM|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release LLVM|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="GUI\Widget\Menu.cc" />
+    <ClCompile Include="GUI\Widget\MultiEdit.cc">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release LLVM|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release LLVM|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="GUI\Widget\MultiPage.cc">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release LLVM|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release LLVM|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="GUI\Widget\ProgBar.cc" />
+    <ClCompile Include="GUI\Widget\Radio.cc" />
+    <ClCompile Include="GUI\Widget\ScrollBar.cc" />
+    <ClCompile Include="GUI\Widget\Slider.cc" />
+    <ClCompile Include="GUI\Widget\Static.cc" />
+    <ClCompile Include="GUI\Widget\WM.cc" />
     <ClCompile Include="GUI_X\GUI_X_LCD.cc" />
     <ClCompile Include="GUI_X\GUI_X_LCDA.cc" />
     <ClCompile Include="main.cc" />
+    <ClCompile Include="tests\test_checkbox_radio.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release LLVM|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release LLVM|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="tests\test_listbox_dropdown.cc" />
+    <ClCompile Include="tests\test_osk.cc">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release LLVM|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release LLVM|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="tests\test_progbar.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release LLVM|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release LLVM|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="GUI\Core\GUI.h" />
-    <ClInclude Include="GUI\Core\GUI_FontIntern.h" />
-    <ClInclude Include="GUI\Core\GUI_X.h" />
-    <ClInclude Include="GUI\Widget\BUTTON.h" />
-    <ClInclude Include="GUI\Widget\CHECKBOX.h" />
-    <ClInclude Include="GUI\Widget\DROPDOWN.h" />
-    <ClInclude Include="GUI\Widget\EDIT.h" />
-    <ClInclude Include="GUI\Widget\FRAMEWIN.h" />
-    <ClInclude Include="GUI\Widget\GUI_ARRAY.h" />
-    <ClInclude Include="GUI\Widget\HEADER.h" />
-    <ClInclude Include="GUI\Widget\LISTBOX.h" />
-    <ClInclude Include="GUI\Widget\LISTVIEW.h" />
-    <ClInclude Include="GUI\Widget\MENU.h" />
-    <ClInclude Include="GUI\Widget\MULTIEDIT.h" />
-    <ClInclude Include="GUI\Widget\MULTIPAGE.h" />
-    <ClInclude Include="GUI\Widget\PROGBAR.h" />
-    <ClInclude Include="GUI\Widget\RADIO.h" />
-    <ClInclude Include="GUI\Widget\SCROLLBAR.h" />
-    <ClInclude Include="GUI\Widget\SLIDER.h" />
-    <ClInclude Include="GUI\Widget\TEXT.h" />
-    <ClInclude Include="GUI\Widget\WIDGET.h" />
-    <ClInclude Include="GUI\WM\WM.h" />
+    <ClInclude Include="GUI\GUI.h" />
+    <ClInclude Include="GUI\GUI_Array.h" />
+    <ClInclude Include="GUI\Widget\Button.h" />
+    <ClInclude Include="GUI\Widget\CheckBox.h" />
+    <ClInclude Include="GUI\Widget\DropDown.h" />
+    <ClInclude Include="GUI\Widget\Edit.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release LLVM|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release LLVM|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="GUI\Widget\Frame.h" />
+    <ClInclude Include="GUI\Widget\Header.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release LLVM|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release LLVM|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="GUI\Widget\ListBox.h" />
+    <ClInclude Include="GUI\Widget\ListView.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release LLVM|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release LLVM|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="GUI\Widget\Menu.h" />
+    <ClInclude Include="GUI\Widget\MultiEdit.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release LLVM|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release LLVM|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="GUI\Widget\MultiPage.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release LLVM|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release LLVM|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="GUI\Widget\ProgBar.h" />
+    <ClInclude Include="GUI\Widget\Radio.h" />
+    <ClInclude Include="GUI\Widget\ScrollBar.h" />
+    <ClInclude Include="GUI\Widget\Slider.h" />
+    <ClInclude Include="GUI\Widget\Static.h" />
+    <ClInclude Include="GUI\Widget\WM.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="GUI\Core\chars_pic.inl" />
-    <None Include="GUI\Core\GUI_ID.inl" />
+    <None Include="GUI\GUI__CharPix.inl" />
+    <None Include="GUI\GUI__ID.inl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
@@ -219,7 +324,7 @@
       <SDLCheck>false</SDLCheck>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)\GUI\MemDev;$(ProjectDir)\GUI\Core;$(ProjectDir)\GUI\AntiAlias;$(ProjectDir)\GUI\Widget;$(ProjectDir)\GUI\WM;$(ProjectDir)\Config;$(ProjectDir)\SimDisp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\GUI;$(ProjectDir)\GUI\Widget;$(ProjectDir)\SimDisp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
@@ -236,7 +341,7 @@
       <SDLCheck>false</SDLCheck>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)\GUI\MemDev;$(ProjectDir)\GUI\Core;$(ProjectDir)\GUI\AntiAlias;$(ProjectDir)\GUI\Widget;$(ProjectDir)\GUI\WM;$(ProjectDir)\Config;$(ProjectDir)\SimDisp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\GUI;$(ProjectDir)\GUI\Widget;$(ProjectDir)\SimDisp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
@@ -255,7 +360,7 @@
       <SDLCheck>false</SDLCheck>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)\GUI\MemDev;$(ProjectDir)\GUI\Core;$(ProjectDir)\GUI\AntiAlias;$(ProjectDir)\GUI\Widget;$(ProjectDir)\GUI\WM;$(ProjectDir)\Config;$(ProjectDir)\SimDisp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\GUI;$(ProjectDir)\GUI\Widget;$(ProjectDir)\SimDisp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
@@ -272,7 +377,7 @@
       <SDLCheck>false</SDLCheck>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)\GUI\MemDev;$(ProjectDir)\GUI\Core;$(ProjectDir)\GUI\AntiAlias;$(ProjectDir)\GUI\Widget;$(ProjectDir)\GUI\WM;$(ProjectDir)\Config;$(ProjectDir)\SimDisp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\GUI;$(ProjectDir)\GUI\Widget;$(ProjectDir)\SimDisp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
@@ -289,7 +394,7 @@
       <SDLCheck>false</SDLCheck>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)\GUI\MemDev;$(ProjectDir)\GUI\Core;$(ProjectDir)\GUI\AntiAlias;$(ProjectDir)\GUI\Widget;$(ProjectDir)\GUI\WM;$(ProjectDir)\Config;$(ProjectDir)\SimDisp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\GUI;$(ProjectDir)\GUI\Widget;$(ProjectDir)\SimDisp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
@@ -308,7 +413,7 @@
       <SDLCheck>false</SDLCheck>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)\GUI\MemDev;$(ProjectDir)\GUI\Core;$(ProjectDir)\GUI\AntiAlias;$(ProjectDir)\GUI\Widget;$(ProjectDir)\GUI\WM;$(ProjectDir)\Config;$(ProjectDir)\SimDisp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\GUI;$(ProjectDir)\GUI\Widget;$(ProjectDir)\SimDisp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
@@ -318,6 +423,20 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|Win32'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(ProjectDir)\GUI;$(ProjectDir)\GUI\Widget;$(ProjectDir)\SimDisp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(ProjectDir)\GUI;$(ProjectDir)\GUI\Widget;$(ProjectDir)\SimDisp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

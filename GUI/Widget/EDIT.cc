@@ -1,12 +1,12 @@
 #include <memory.h>
+#include "Edit.h"
 
-#include "EDIT.h"
 #define EDIT_FONT_DEFAULT       &GUI_Font13_1
 #define EDIT_ALIGN_DEFAULT      GUI_TA_LEFT | GUI_TA_VCENTER
 #define EDIT_BKCOLOR0_DEFAULT   0xC0C0C0
-#define EDIT_BKCOLOR1_DEFAULT   GUI_WHITE
-#define EDIT_TEXTCOLOR0_DEFAULT GUI_BLACK
-#define EDIT_TEXTCOLOR1_DEFAULT GUI_BLACK
+#define EDIT_BKCOLOR1_DEFAULT   RGB_WHITE
+#define EDIT_TEXTCOLOR0_DEFAULT RGB_BLACK
+#define EDIT_TEXTCOLOR1_DEFAULT RGB_BLACK
 #define EDIT_BORDER_DEFAULT     1
 #define EDIT_XOFF               1
 #define EDIT_REALLOC_SIZE  16
@@ -19,17 +19,17 @@ EDIT_PROPS EDIT__DefaultProps = {
 	EDIT_BKCOLOR0_DEFAULT,
 	EDIT_BKCOLOR1_DEFAULT
 };
-static void _Paint(Edit_Obj *pObj) {
+static void _OnPaint(Edit *pObj) {
 	int CursorWidth;
-	SRect rFillRect, r, rText, rInvert;
+	SRect rText, rInvert;
 	int IsEnabled = pObj->Enable();
 	const char *pText = pObj->pText;
 	GUI.BkColor(pObj->Props.aBkColor[IsEnabled]);
 	GUI.PenColor(pObj->Props.aTextColor[0]);
 	GUI.Font(pObj->Props.pFont);
-	WM__GetClientRectWin(pObj, &r);
-	WIDGET__GetInsideRect(pObj, &rFillRect);
-	SRect rInside = rFillRect;
+	auto &&r = pObj->ClientRect();
+	auto &&rFill = pObj->InsideRect();
+	SRect rInside = rFill;
 	rInside.x0 += pObj->Props.Border + EDIT_XOFF;
 	rInside.x1 -= pObj->Props.Border + EDIT_XOFF;
 	GUI__CalcTextRect(pText, &rInside, &rText, pObj->Props.Align);
@@ -45,7 +45,7 @@ static void _Paint(Edit_Obj *pObj) {
 				if (pObj->CursorPos < NumChars) {
 					if (pObj->SelSize) {
 						CursorWidth = 0;
-						for (i = pObj->CursorPos; i < (int)(pObj->CursorPos + pObj->SelSize); i++) {
+						for (i = pObj->CursorPos; i < (int)(pObj->CursorPos + pObj->SelSize); ++i) {
 							CursorOffset = GUI_UC__NumChars2NumBytes(pText, i);
 							Char = GUI_UC_GetCharCode(pText + CursorOffset);
 							CursorWidth += GUI_GetCharDistX(Char);
@@ -61,28 +61,28 @@ static void _Paint(Edit_Obj *pObj) {
 				}
 			}
 			rInvert = rText;
-			for (i = 0; i != pObj->CursorPos; i++) {
+			for (i = 0; i != pObj->CursorPos; ++i) {
 				Char = GUI_UC__GetCharCodeInc(&p);
 				rInvert.x0 += GUI_GetCharDistX(Char);
 			}
 		}
 	}
-	WM_ITERATE_START() {
-		WObj::SetUserClipRect(&rFillRect);
-		WIDGET__FillStringInRect(pText, &rFillRect, &rInside, &rText);
+	if (WObj::IVR_Init()) do {
+		WObj::SetUserClipRect(&rFill);
+		WIDGET__FillStringInRect(pText, rFill, rInside, rText);
 		if (pObj->State & WIDGET_STATE_FOCUS) {
-			GUI.PenColor(GUI_BLACK);
-			GUI_DrawRect(rInvert.x0, rInvert.y0, rInvert.x0 + CursorWidth - 1, rInvert.y1);
+			GUI.PenColor(RGB_BLACK);
+			GUI.DrawRect({ rInvert.x0, rInvert.y0, rInvert.x0 + CursorWidth - 1, rInvert.y1 });
 		}
 		WObj::SetUserClipRect(nullptr);
-		WIDGET__EFFECT_DrawDown(pObj);
-	} WM_ITERATE_END();
+		pObj->DrawDown();
+	} while (WObj::IVR_Next());
 }
-static void _Delete(Edit_Obj *pObj) {
+static void _Delete(Edit *pObj) {
 	GUI_ALLOC_Free(pObj->pText);
 	pObj->pText = nullptr;
 }
-void EDIT_SetCursorAtPixel(Edit_Obj *pObj, int xPos) {
+void EDIT_SetCursorAtPixel(Edit *pObj, int xPos) {
 	if (!pObj)
 		return;
 	const char *pText = pObj->pText;
@@ -101,7 +101,7 @@ void EDIT_SetCursorAtPixel(Edit_Obj *pObj, int xPos) {
 		xPos -= xSize - TextWidth - (pObj->Props.Border + EDIT_XOFF);
 		break;
 	default:
-		xPos -= (pObj->Props.Border + EDIT_XOFF) + pObj->pEffect->EffectSize;
+		xPos -= (pObj->Props.Border + EDIT_XOFF) + pObj->EffectSize();
 	}
 	NumChars = GUI__GetNumChars(pText);
 	if (xPos < 0)
@@ -110,7 +110,7 @@ void EDIT_SetCursorAtPixel(Edit_Obj *pObj, int xPos) {
 		EDIT__SetCursorPos(pObj, NumChars);
 	else {
 		int i, x;
-		for (i = 0, x = 0; (i < NumChars) && (x < xPos); i++) {
+		for (i = 0, x = 0; (i < NumChars) && (x < xPos); ++i) {
 			uint16_t Char = GUI_UC__GetCharCodeInc(&pText);
 			int xLenChar = GUI_GetCharDistX(Char);
 			if (xPos < (x + xLenChar))
@@ -122,7 +122,7 @@ void EDIT_SetCursorAtPixel(Edit_Obj *pObj, int xPos) {
 	GUI.Font(pOldFont);
 	EDIT_Invalidate(pObj);
 }
-static int _IncrementBuffer(Edit_Obj *pObj, unsigned AddBytes) {
+static int _IncrementBuffer(Edit *pObj, unsigned AddBytes) {
 	int NewSize = pObj->BufferSize + AddBytes;
 	char *pNew = (char *)GUI_ALLOC_Realloc(pObj->pText, NewSize);
 	if (!pNew)
@@ -133,7 +133,7 @@ static int _IncrementBuffer(Edit_Obj *pObj, unsigned AddBytes) {
 	pObj->pText = pNew;
 	return 1;
 }
-static int _IsSpaceInBuffer(Edit_Obj *pObj, int BytesNeeded) {
+static int _IsSpaceInBuffer(Edit *pObj, int BytesNeeded) {
 	int NumBytes = 0;
 	if (pObj->pText)
 		NumBytes = (int)GUI__strlen(pObj->pText);
@@ -143,7 +143,7 @@ static int _IsSpaceInBuffer(Edit_Obj *pObj, int BytesNeeded) {
 			return 0;
 	return 1;
 }
-static int _IsCharsAvailable(Edit_Obj *pObj, int CharsNeeded) {
+static int _IsCharsAvailable(Edit *pObj, int CharsNeeded) {
 	if (CharsNeeded <= 0 || pObj->MaxLen <= 0)
 		return 1;
 	int NumChars = 0;
@@ -153,7 +153,7 @@ static int _IsCharsAvailable(Edit_Obj *pObj, int CharsNeeded) {
 		return 0;
 	return 1;
 }
-static void _DeleteChar(Edit_Obj *pObj) {
+static void _DeleteChar(Edit *pObj) {
 	char *pText = pObj->pText;
 	if (!pText)
 		return;
@@ -163,9 +163,9 @@ static void _DeleteChar(Edit_Obj *pObj) {
 	int NumBytes = GUI_UC_GetCharSize(pText);
 	pText += CursorOffset;
 	GUI__strcpy(pText, pText + NumBytes);
-	WM_NotifyParent(pObj, WM_NOTIFICATION_VALUE_CHANGED);
+	pObj->NotifyParent(WM_NOTIFICATION_VALUE_CHANGED);
 }
-static int _InsertChar(Edit_Obj *pObj, uint16_t Char) {
+static int _InsertChar(Edit *pObj, uint16_t Char) {
 	if (!_IsCharsAvailable(pObj, 1))
 		return 0;
 	int BytesNeeded = GUI_UC__CalcSizeOfChar(Char);
@@ -176,17 +176,17 @@ static int _InsertChar(Edit_Obj *pObj, uint16_t Char) {
 	pText += CursorOffset;
 	memmove(pText + BytesNeeded, pText, GUI__strlen(pText) + 1);
 	GUI_UC_Encode(pText, Char);
-	WM_NotifyParent(pObj, WM_NOTIFICATION_VALUE_CHANGED);
+	pObj->NotifyParent(WM_NOTIFICATION_VALUE_CHANGED);
 	return 1;
 }
-uint16_t EDIT__GetCurrentChar(Edit_Obj *pObj) {
+uint16_t EDIT__GetCurrentChar(Edit *pObj) {
 	const char *pText = pObj->pText;
 	if (!pText)
 		return 0;
 	pText += GUI_UC__NumChars2NumBytes(pText, pObj->CursorPos);
 	return GUI_UC_GetCharCode(pText);
 }
-void EDIT__SetCursorPos(Edit_Obj *pObj, int CursorPos) {
+void EDIT__SetCursorPos(Edit *pObj, int CursorPos) {
 	char *pText = pObj->pText;
 	if (!pText)
 		return;
@@ -202,8 +202,8 @@ void EDIT__SetCursorPos(Edit_Obj *pObj, int CursorPos) {
 		pObj->CursorPos = CursorPos;
 	pObj->SelSize = 0;
 }
-static void _OnTouch(Edit_Obj *pObj, WM_MESSAGE *pMsg) {
-	const PidState *pState = (const PidState *)pMsg->Data;
+static void _OnTouch(Edit *pObj, WM_MSG *pMsg) {
+	const PidState *pState = (const PidState *)pMsg->data;
 	if (!pState) {
 		return;
 	}
@@ -214,17 +214,17 @@ static void _OnTouch(Edit_Obj *pObj, WM_MESSAGE *pMsg) {
 	EDIT_SetCursorAtPixel(pObj, pState->x);
 	StartPress = pObj->CursorPos;
 }
-static void EDIT__Callback(WM_MESSAGE *pMsg) {
-	Edit_Obj *pObj = (Edit_Obj *)pMsg->pWin;
-	int IsEnabled = pObj->Enable();
-	if (WIDGET_HandleActive(pObj, pMsg) == 0)
+static void EDIT__Callback(WM_MSG *pMsg) {
+	Edit *pObj = (Edit *)pMsg->pWin;
+	bool IsEnabled = pObj->Enable();
+	if (!pObj->HandleActive(pMsg))
 		return;
-	switch (pMsg->MsgId) {
+	switch (pMsg->msgid) {
 	case WM_TOUCH:
 		_OnTouch(pObj, pMsg);
 		break;
 	case WM_PAINT:
-		_Paint(pObj);
+		_OnPaint(pObj);
 		return;
 	case WM_DELETE:
 		_Delete(pObj);
@@ -232,7 +232,7 @@ static void EDIT__Callback(WM_MESSAGE *pMsg) {
 	case WM_KEY:
 		if (!IsEnabled)
 			break;
-		const WM_KEY_INFO *ki = (const WM_KEY_INFO *)pMsg->Data;
+		const WM_KEY_INFO *ki = (const WM_KEY_INFO *)pMsg->data;
 		if (ki->PressedCnt <= 0)
 			break;
 		int Key = ki->Key;
@@ -244,9 +244,9 @@ static void EDIT__Callback(WM_MESSAGE *pMsg) {
 			return;
 		}
 	}
-	WM_DefaultProc(pMsg);
+	DefCallback(pMsg);
 }
-void EDIT_AddKey(Edit_Obj *pObj, int Key) {
+void EDIT_AddKey(Edit *pObj, int Key) {
 	if (!pObj)
 		return;
 	if (pObj->pfAddKeyEx) {
@@ -264,7 +264,7 @@ void EDIT_AddKey(Edit_Obj *pObj, int Key) {
 		uint16_t Char = GUI_UC_GetCharCode(pText);
 		if (Char < 0x7f) {
 			pText[0] = Char + 1;
-			WM_NotifyParent(pObj, WM_NOTIFICATION_VALUE_CHANGED);
+			pObj->NotifyParent(WM_NOTIFICATION_VALUE_CHANGED);
 		}
 		break;
 	}
@@ -277,7 +277,7 @@ void EDIT_AddKey(Edit_Obj *pObj, int Key) {
 		uint16_t Char = GUI_UC_GetCharCode(pText);
 		if (Char > 0x20) {
 			pText[0] = Char - 1;
-			WM_NotifyParent(pObj, WM_NOTIFICATION_VALUE_CHANGED);
+			pObj->NotifyParent(WM_NOTIFICATION_VALUE_CHANGED);
 		}
 		break;
 	}
@@ -315,13 +315,13 @@ void EDIT_AddKey(Edit_Obj *pObj, int Key) {
 	}
 	EDIT_Invalidate(pObj);
 }
-void EDIT_SetFont(Edit_Obj *pObj, CFont *pfont) {
+void EDIT_SetFont(Edit *pObj, CFont *pfont) {
 	if (!pObj)
 		return;
 	pObj->Props.pFont = pfont;
 	EDIT_Invalidate(pObj);
 }
-void EDIT_SetBkColor(Edit_Obj *pObj, unsigned int Index, RGBC color) {
+void EDIT_SetBkColor(Edit *pObj, unsigned int Index, RGBC color) {
 	if (!pObj)
 		return;
 	if (Index >= GUI_COUNTOF(pObj->Props.aBkColor))
@@ -329,7 +329,7 @@ void EDIT_SetBkColor(Edit_Obj *pObj, unsigned int Index, RGBC color) {
 	pObj->Props.aBkColor[Index] = color;
 	EDIT_Invalidate(pObj);
 }
-void EDIT_SetTextColor(Edit_Obj *pObj, unsigned int Index, RGBC color) {
+void EDIT_SetTextColor(Edit *pObj, unsigned int Index, RGBC color) {
 	if (!pObj)
 		return;
 	if (Index >= GUI_COUNTOF(pObj->Props.aTextColor))
@@ -337,7 +337,7 @@ void EDIT_SetTextColor(Edit_Obj *pObj, unsigned int Index, RGBC color) {
 	pObj->Props.aTextColor[Index] = color;
 	EDIT_Invalidate(pObj);
 }
-void EDIT_SetText(Edit_Obj *pObj, const char *s) {
+void EDIT_SetText(Edit *pObj, const char *s) {
 	if (!pObj)
 		return;
 	if (!s) {
@@ -365,7 +365,7 @@ void EDIT_SetText(Edit_Obj *pObj, const char *s) {
 	}
 	EDIT_Invalidate(pObj);
 }
-void EDIT_GetText(Edit_Obj *pObj, char *sDest, int MaxLen) {
+void EDIT_GetText(Edit *pObj, char *sDest, int MaxLen) {
 	if (!pObj || !sDest)
 		return;
 	*sDest = 0;
@@ -379,7 +379,7 @@ void EDIT_GetText(Edit_Obj *pObj, char *sDest, int MaxLen) {
 	GUI__memcpy(sDest, pText, NumBytes);
 	sDest[NumBytes] = '\0';
 }
-void EDIT_SetMaxLen(Edit_Obj *pObj, int MaxLen) {
+void EDIT_SetMaxLen(Edit *pObj, int MaxLen) {
 	if (!pObj)
 		return;
 	if (MaxLen == pObj->MaxLen)
@@ -396,13 +396,13 @@ void EDIT_SetMaxLen(Edit_Obj *pObj, int MaxLen) {
 	pObj->MaxLen = MaxLen;
 	EDIT_Invalidate(pObj);
 }
-void EDIT_SetTextAlign(Edit_Obj *pObj, int Align) {
+void EDIT_SetTextAlign(Edit *pObj, int Align) {
 	if (!pObj)
 		return;
 	pObj->Props.Align = Align;
 	EDIT_Invalidate(pObj);
 }
-void EDIT_SetSel(Edit_Obj *pObj, int FirstChar, int LastChar) {
+void EDIT_SetSel(Edit *pObj, int FirstChar, int LastChar) {
 	if (!pObj)
 		return;
 	if (FirstChar == -1) {
@@ -420,38 +420,27 @@ void EDIT_SetSel(Edit_Obj *pObj, int FirstChar, int LastChar) {
 		pObj->SelSize = LastChar - FirstChar + 1;
 	}
 }
-Edit_Obj *EDIT_CreateEx(int x0, int y0,
+Edit *EDIT_CreateEx(int x0, int y0,
 						  int xsize, int ysize,
-						  WObj *pParent, int WinFlags, int ExFlags,
-						  int Id, int MaxLen) {
-	auto pObj = (Edit_Obj *)WObj::Create(
-		x0, y0, xsize, ysize,
-		pParent, WC_VISIBLE | WC_LATE_CLIP | WinFlags, EDIT__Callback,
-		sizeof(Edit_Obj) - sizeof(WObj));
-	if (!pObj)
-		return nullptr;
-	WIDGET__Init(pObj, Id, WIDGET_STATE_FOCUSSABLE);
-	pObj->Props = EDIT__DefaultProps;
-	pObj->XSizeCursor = 1;
-	pObj->MaxLen = (MaxLen == 0) ? 8 : MaxLen;
-	pObj->BufferSize = 0;
-	pObj->pText = nullptr;
-	if (_IncrementBuffer(pObj, pObj->MaxLen + 1) == 0) {
-		pObj->Delete();
-		return nullptr;
-	}
-	return pObj;
-}
-Edit_Obj *EDIT_CreateIndirect(const GUI_WIDGET_CREATE_INFO *pCreateInfo,
-								WObj *pParent,
-								int x0, int y0, WM_CALLBACK *cb) {
-	Edit_Obj *pEdit = EDIT_CreateEx(
-		pCreateInfo->x0 + x0, pCreateInfo->y0 + y0,
-		pCreateInfo->xSize, pCreateInfo->ySize,
-		pParent, 0, pCreateInfo->Flags, pCreateInfo->Id, pCreateInfo->Para);
-	if (pEdit)
-		EDIT_SetTextAlign(pEdit, pCreateInfo->Flags);
-	return pEdit;
+						  WObj *pParent, uint16_t Flags, uint16_t ExFlags,
+						  uint16_t Id, int MaxLen) {
+	//auto pObj = (Edit *)WObj::Create(
+	//	x0, y0, xsize, ysize,
+	//	pParent, WC_VISIBLE | WC_LATE_CLIP | Flags, EDIT__Callback,
+	//	sizeof(Edit) - sizeof(WObj));
+	//if (!pObj)
+	//	return nullptr;
+	//pObj->Init(Id, WIDGET_STATE_FOCUSSABLE);
+	//pObj->Props = EDIT__DefaultProps;
+	//pObj->XSizeCursor = 1;
+	//pObj->MaxLen = (MaxLen == 0) ? 8 : MaxLen;
+	//pObj->BufferSize = 0;
+	//pObj->pText = nullptr;
+	//if (_IncrementBuffer(pObj, pObj->MaxLen + 1) == 0) {
+	//	pObj->Delete();
+	//	return nullptr;
+	//}
+	//return pObj;
 }
 void EDIT_SetDefaultFont(CFont *pFont) { EDIT__DefaultProps.pFont = pFont; }
 CFont *EDIT_GetDefaultFont(void) { return EDIT__DefaultProps.pFont; }
@@ -473,7 +462,7 @@ RGBC EDIT_GetDefaultBkColor(unsigned int Index) {
 	return Index < GUI_COUNTOF(EDIT__DefaultProps.aBkColor) ?
 		EDIT__DefaultProps.aBkColor[Index] : 0;
 }
-int EDIT_GetNumChars(Edit_Obj *pObj) {
+int EDIT_GetNumChars(Edit *pObj) {
 	if (!pObj)
 		return 0;
 	char *pText = pObj->pText;
@@ -481,25 +470,25 @@ int EDIT_GetNumChars(Edit_Obj *pObj) {
 		return 0;
 	return GUI__GetNumChars(pText);
 }
-void EDIT_SetCursorAtChar(Edit_Obj *pObj, int Pos) {
+void EDIT_SetCursorAtChar(Edit *pObj, int Pos) {
 	if (!pObj)
 		return;
 	EDIT__SetCursorPos(pObj, Pos);
 	EDIT_Invalidate(pObj);
 }
-int EDIT_SetInsertMode(Edit_Obj *pObj, int OnOff) {
+int EDIT_SetInsertMode(Edit *pObj, int OnOff) {
 	if (!pObj)
 		return 0;
 	int PrevMode = pObj->EditMode;
 	pObj->EditMode = OnOff ? GUI_EDIT_MODE_INSERT : GUI_EDIT_MODE_OVERWRITE;
 	return PrevMode;
 }
-void EDIT_SetpfAddKeyEx(Edit_Obj *pObj, tEDIT_AddKeyEx *pfAddKeyEx) {
+void EDIT_SetpfAddKeyEx(Edit *pObj, tEDIT_AddKeyEx *pfAddKeyEx) {
 	if (!pObj)
 		return;
 	pObj->pfAddKeyEx = pfAddKeyEx;
 }
-void EDIT_SetpfUpdateBuffer(Edit_Obj *pObj, tEDIT_UpdateBuffer *pfUpdateBuffer) {
+void EDIT_SetpfUpdateBuffer(Edit *pObj, tEDIT_UpdateBuffer *pfUpdateBuffer) {
 	if (!pObj)
 		return;
 	pObj->pfUpdateBuffer = pfUpdateBuffer;

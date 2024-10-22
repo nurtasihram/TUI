@@ -1,99 +1,63 @@
-#include "GUI.h"
-#include "CHECKBOX.h"
-extern const Bitmap CHECKBOX__abmCheck[2];
-#define CHECKBOX_FONT_DEFAULT      &GUI_Font13_1          /* Define default fonts */
-#define CHECKBOX_IMAGE0_DEFAULT    &CHECKBOX__abmCheck[0] /* Define default images */
-#define CHECKBOX_IMAGE1_DEFAULT    &CHECKBOX__abmCheck[1]
-#define CHECKBOX_BKCOLOR_DEFAULT   0xC0C0C0               /* Text background color */
-#define CHECKBOX_BKCOLOR0_DEFAULT  0x808080           /* Inactive color */
-#define CHECKBOX_BKCOLOR1_DEFAULT  GUI_WHITE          /* Active color */
-#define CHECKBOX_FGCOLOR0_DEFAULT  0x101010
-#define CHECKBOX_FGCOLOR1_DEFAULT  GUI_BLACK
-#define CHECKBOX_SPACING_DEFAULT   4
-#define CHECKBOX_TEXTCOLOR_DEFAULT GUI_BLACK
-#define CHECKBOX_TEXTALIGN_DEFAULT (GUI_TA_LEFT | GUI_TA_VCENTER)
-CHECKBOX_PROPS CHECKBOX__DefaultProps = {
-	CHECKBOX_FONT_DEFAULT,
-	CHECKBOX_BKCOLOR0_DEFAULT,
-	CHECKBOX_BKCOLOR1_DEFAULT,
-	CHECKBOX_BKCOLOR_DEFAULT,
-	CHECKBOX_TEXTCOLOR_DEFAULT,
-	CHECKBOX_TEXTALIGN_DEFAULT,
-	CHECKBOX_SPACING_DEFAULT,
-	CHECKBOX_IMAGE0_DEFAULT,
-	CHECKBOX_IMAGE1_DEFAULT
-};
-static void _Paint(CheckBox_Obj *pObj) {
-	SRect RectBox;
-	int EffectSize = pObj->pEffect->EffectSize,
-		ColorIndex = pObj->Enable();
-	if (pObj->Props.BkColor == GUI_INVALID_COLOR)
-		GUI.BkColor(WIDGET__GetBkColor(pObj));
-	else
-		GUI.BkColor(pObj->Props.BkColor);
-	GUI_Clear();
-	RectBox.x1 = pObj->Props.apBm[0]->XSize - 1 + 2 * EffectSize;
-	RectBox.y1 = pObj->Props.apBm[0]->YSize - 1 + 2 * EffectSize;
-	WObj::SetUserClipRect(&RectBox);
-	GUI.BkColor(pObj->Props.aBkColorBox[ColorIndex]);
-	GUI_Clear();
-	if (pObj->CurrentState) {
-		int Index = (pObj->CurrentState - 1) * 2 + ColorIndex;
-		GUI_DrawBitmap(pObj->Props.apBm[Index], EffectSize, EffectSize);
-	}
-	WIDGET__EFFECT_DrawDownRect(pObj, &RectBox);
+#include "CheckBox.h"
+
+CheckBox::Property CheckBox::DefaultProps;
+
+void CheckBox::_OnPaint() {
+	int EffectSize = this->EffectSize();
+	int ColorIndex = this->Enable();
+	SRect rBox;
+	rBox.right_bottom(Props.apBm[0]->Size - 1 + 2 * EffectSize);
+	GUI.BkColor(BkColorProp(Props.BkColor));
+	GUI.Clear();
+	WObj::SetUserClipRect(&rBox);
+	GUI.BkColor(Props.aBkColorBox[ColorIndex]);
+	GUI.Clear();
+	if (CurrentState)
+		GUI.DrawBitmap(*Props.apBm[(CurrentState - 1) * 2 + ColorIndex], EffectSize);
+	DrawDown(rBox);
 	WObj::SetUserClipRect(nullptr);
-	if (!pObj->pText)
-		return;
-	SRect RectText;
-	const char *s = pObj->pText;
-	WM_GetClientRect(&RectText);
-	RectText.x0 += RectBox.x1 + 1 + pObj->Props.Spacing;
+	if (!text) return;
+	auto &&rText = ClientRect();
+	rText.x0 += rBox.x1 + 1 + Props.Spacing;
 	GUI_SetTextMode(DRAWMODE_TRANS);
-	GUI.PenColor(pObj->Props.TextColor);
-	GUI.Font(pObj->Props.pFont);
-	GUI_DispStringInRect(s, &RectText, pObj->Props.Align);
-	if (!(pObj->State & WIDGET_STATE_FOCUS))
+	GUI.PenColor(Props.TextColor);
+	GUI.Font(Props.pFont);
+	GUI_DispStringInRect(text, rText, Props.Align);
+	if (!(State & WIDGET_STATE_FOCUS))
 		return;
-	int xSizeText = GUI_GetStringDistX(s);
-	int ySizeText = GUI_GetFontSizeY();
-	SRect RectFocus = RectText;
-	
-	switch (pObj->Props.Align & ~(GUI_TA_HORIZONTAL)) {
-	
+	auto xSizeText = GUI_GetStringDistX(text);
+	auto ySizeText = GUI_GetFontSizeY();
+	auto rFocus = rText;
+	switch (Props.Align & ~GUI_TA_HORIZONTAL) {
 	case GUI_TA_VCENTER:
-		RectFocus.y0 = (RectText.y1 - ySizeText) / 2;
+		rFocus.y0 = (rText.y1 - ySizeText) / 2;
 		break;
-	
 	case GUI_TA_BOTTOM:
-		RectFocus.y0 = RectText.y1 - ySizeText;
+		rFocus.y0 = rText.y1 - ySizeText;
 		break;
-	
 	}
-	switch (pObj->Props.Align & ~(GUI_TA_VERTICAL)) {
+	switch (Props.Align & ~GUI_TA_VCENTER) {
 	case GUI_TA_HCENTER:
-		RectFocus.x0 += ((RectText.x1 - RectText.x0) - xSizeText) / 2;
+		rFocus.x0 += (rText.dx() - xSizeText) / 2;
 		break;
 	case GUI_TA_RIGHT:
-		RectFocus.x0 += (RectText.x1 - RectText.x0) - xSizeText;
+		rFocus.x0 +=  rText.dx() - xSizeText;
 		break;
 	}
-	RectFocus.x1 = RectFocus.x0 + xSizeText;
-	RectFocus.y1 = RectFocus.y0 + ySizeText;
-	
-	GUI.PenColor(GUI_BLACK);
-	WIDGET__DrawFocusRect(pObj, &RectFocus, 0);
+	rFocus.x1 = rFocus.x0 + xSizeText;
+	rFocus.y1 = rFocus.y0 + ySizeText;
+	GUI.PenColor(RGB_BLACK);
+	DrawFocus(rFocus);
 }
-static void _OnTouch(CheckBox_Obj *pObj, WM_MESSAGE* pMsg) {
+void CheckBox::_OnTouch(WM_MSG* pMsg) {
 	int Notification = 0;
 	int Hit = 0;
-	const PidState *pState = (const PidState *)pMsg->Data;
-	if (pState) {
-		if (!WM_HasCaptured(pObj)) {
+	if (auto pState = (const PidState *)pMsg->data) {
+		if (!Captured()) {
 			if (pState->Pressed) {
-				WM_SetCapture(pObj, 1);
-				pObj->CurrentState = (pObj->CurrentState + 1) % pObj->NumStates;
-				pObj->Invalidate();
+				Capture(true);
+				CurrentState = (CurrentState + 1) % nStates;
+				Invalidate();
 				Notification = WM_NOTIFICATION_CLICKED;
 			}
 			else {
@@ -104,156 +68,61 @@ static void _OnTouch(CheckBox_Obj *pObj, WM_MESSAGE* pMsg) {
 	}
 	else
 		Notification = WM_NOTIFICATION_MOVED_OUT;
-	
-	WM_NotifyParent(pObj, Notification);
-	
-	if (Hit == 1) {
-		GUI_StoreKey(pObj->Id);
-	}
+	NotifyParent(Notification);
+	if (Hit == 1)
+		GUI_StoreKey(Id);
 }
-static void _OnKey(CheckBox_Obj *pObj, WM_MESSAGE* pMsg) {
-	if (!pObj->Enable())
-		return;
-	const WM_KEY_INFO *pKeyInfo = (const WM_KEY_INFO *)pMsg->Data;
+bool CheckBox::_OnKey(WM_MSG* pMsg) {
+	if (!Enable()) return false;
+	auto pKeyInfo = (const WM_KEY_INFO *)pMsg->data;
 	if (pKeyInfo->PressedCnt <= 0)
-		return;
+		return false;
 	switch (pKeyInfo->Key) {
 	case GUI_KEY_SPACE:
-		pObj->CurrentState = (pObj->CurrentState + 1) % pObj->NumStates;
-		pObj->Invalidate();
+		CurrentState = (CurrentState + 1) % nStates;
+		Invalidate();
 		break;
 	}
+	return true;
 }
-static void _CHECKBOX_Callback(WM_MESSAGE* pMsg) {
-	auto pObj = (CheckBox_Obj *)pMsg->pWin;
-	if (!WIDGET_HandleActive(pObj, pMsg))
+void CheckBox::_Callback(WM_MSG* pMsg) {
+	auto pObj = (CheckBox *)pMsg->pWin;
+	if (!pObj->HandleActive(pMsg))
 		return;
-	switch (pMsg->MsgId) {
+	switch (pMsg->msgid) {
 	case WM_KEY:
-		_OnKey(pObj, pMsg);
+		if (!pObj->_OnKey(pMsg))
+			return;
 		break;
 	case WM_PAINT:
-		_Paint(pObj);
+		pObj->_OnPaint();
 		return;
+	case WM_DELETE:
+		pObj->~CheckBox();
+		break;
 	case WM_TOUCH:
-		_OnTouch(pObj, pMsg);
+		pObj->_OnTouch(pMsg);
 		break;
 	}
-	WM_DefaultProc(pMsg);
+	DefCallback(pMsg);
 }
-CheckBox_Obj *CHECKBOX_CreateEx(
-	int x0, int y0, int xsize, int ysize, WObj *pParent,
-	int WinFlags, int ExFlags, int Id) {
-	if ((xsize | ysize) == 0) {
-		int EffectSize = Widget::DefaultEffect()->EffectSize;
-		if (xsize == 0)
-			xsize = CHECKBOX__DefaultProps.apBm[0]->XSize + 2 * EffectSize;
-		if (ysize == 0)
-			ysize = CHECKBOX__DefaultProps.apBm[0]->YSize + 2 * EffectSize;
-	}
-	auto pObj = (CheckBox_Obj *)WObj::Create(
-		x0, y0, xsize, ysize,
-		pParent, WinFlags, _CHECKBOX_Callback,
-		sizeof(CheckBox_Obj) - sizeof(WObj));
-	if (!pObj) {
-		return 0;
-	}
-	WIDGET__Init(pObj, Id, WIDGET_STATE_FOCUSSABLE);
-	pObj->Props = CHECKBOX__DefaultProps;
-	pObj->NumStates = 2; /* Default behaviour is 2 states: checked and unchecked */
-	return pObj;
-}
-void CHECKBOX_SetFont(CheckBox_Obj *pObj, CFont* pFont) {
-	if (!pObj)
-		return;
-	if (pObj->Props.pFont == pFont)
-		return;
-	pObj->Props.pFont = pFont;
-	pObj->Invalidate();
-}
-void CHECKBOX_SetTextColor(CheckBox_Obj *pObj, RGBC Color) {
-	if (!pObj)
-		return;
-	if (pObj->Props.TextColor == Color)
-		return;
-	pObj->Props.TextColor = Color;
-	pObj->Invalidate();
-}
-void CHECKBOX_SetBkColor(CheckBox_Obj *pObj, RGBC Color) {
-	if (!pObj)
-		return;
-	if (pObj->Props.BkColor == Color)
-		return;
-	pObj->Props.BkColor = Color;
-	pObj->Invalidate();
-}
-void CHECKBOX_SetImage(CheckBox_Obj *pObj, const Bitmap *pBitmap, unsigned int Index) {
-	if (!pObj)
-		return;
-	if (Index < GUI_COUNTOF(pObj->Props.apBm))
-		pObj->Props.apBm[Index] = pBitmap;
-}
-void CHECKBOX_SetSpacing(CheckBox_Obj *pObj, unsigned Spacing) {
-	if (!pObj)
-		return;
-	if (pObj->Props.Spacing == Spacing)
-		return;
-	pObj->Props.Spacing = Spacing;
-	pObj->Invalidate();
-}
-void CHECKBOX_SetState(CheckBox_Obj *pObj, unsigned State) {
-	if (!pObj)
-		return;
-	if (pObj->NumStates < State)
-		return;
-	pObj->CurrentState = State;
-	pObj->Invalidate();
-}
-void CHECKBOX_SetText(CheckBox_Obj *pObj, const char *s) {
-	if (!pObj || !s)
-		return;
-	if (GUI__SetText(&pObj->pText, s))
-		pObj->Invalidate();
-}
-void CHECKBOX_SetTextAlign(CheckBox_Obj *pObj, int Align) {
-	if (!pObj)
-		return;
-	if (pObj->Props.Align == Align)
-		return;
-	pObj->Props.Align = Align;
-	pObj->Invalidate();
-}
-int CHECKBOX_GetState(CheckBox_Obj *pObj) {
-	if (!pObj)
-		return 0;
-	return pObj->CurrentState;
-}
-bool CHECKBOX_IsChecked(CheckBox_Obj *pObj) {
-	return CHECKBOX_GetState(pObj) == 1;
-}
-void CHECKBOX_SetDefaultImage(const Bitmap *pBitmap, unsigned int Index) {
-	if (Index < GUI_COUNTOF(CHECKBOX__DefaultProps.apBm))
-		CHECKBOX__DefaultProps.apBm[Index] = pBitmap;
-}
-void CHECKBOX_SetDefaultSpacing(int Spacing) { CHECKBOX__DefaultProps.Spacing = Spacing; }
-void CHECKBOX_SetDefaultTextColor(RGBC Color) { CHECKBOX__DefaultProps.TextColor = Color; }
-void CHECKBOX_SetDefaultBkColor(RGBC Color) { CHECKBOX__DefaultProps.BkColor = Color; }
-void CHECKBOX_SetDefaultFont(CFont* pFont) { CHECKBOX__DefaultProps.pFont = pFont; }
-void CHECKBOX_SetDefaultAlign(int Align) { CHECKBOX__DefaultProps.Align = Align; }
-int CHECKBOX_GetDefaultSpacing(void) { return CHECKBOX__DefaultProps.Spacing; }
-RGBC CHECKBOX_GetDefaultTextColor(void) { return CHECKBOX__DefaultProps.TextColor; }
-RGBC CHECKBOX_GetDefaultBkColor(void) { return CHECKBOX__DefaultProps.BkColor; }
-CFont* CHECKBOX_GetDefaultFont(void) { return CHECKBOX__DefaultProps.pFont; }
-int CHECKBOX_GetDefaultAlign(void) { return CHECKBOX__DefaultProps.Align; }
-#include "chars_pic.inl"
+
+CheckBox::CheckBox(int x0, int y0, int xsize, int ysize,
+				   WObj *pParent, uint16_t Id, uint16_t Flags, const char *pText) :
+	Widget(x0, y0,
+		   xsize ? xsize : DefaultProps.apBm[0]->Size.x + 2 * DefaultEffect()->EffectSize,
+		   ysize ? ysize : DefaultProps.apBm[0]->Size.y + 2 * DefaultEffect()->EffectSize,
+		   _Callback, pParent, Id, Flags, WIDGET_STATE_FOCUSSABLE), text(pText) {}
+
+#pragma region Images
 /* Colors */
-static const RGBC _aColorDisabled[] = { CHECKBOX_FGCOLOR0_DEFAULT, CHECKBOX_BKCOLOR0_DEFAULT };
-static const RGBC _aColorEnabled[]  = { CHECKBOX_FGCOLOR1_DEFAULT, CHECKBOX_BKCOLOR1_DEFAULT };
+static const RGBC _aColorDisabled[]{ RGBC_GRAY(0x10), RGBC_GRAY(0x80) };
+static const RGBC _aColorEnabled[]{ RGB_BLACK, RGB_WHITE };
 /* Palettes */
-static const LogPalette _PalCheckDisabled = { 2, 0, _aColorDisabled };
-static const LogPalette _PalCheckEnabled  = { 2, 0, _aColorEnabled  };
+static CPalette _PalCheckDisabled{ _aColorDisabled };
+static CPalette _PalCheckEnabled{ _aColorEnabled };
 /* Pixel data */
-static const uint8_t _acCheck[] = {
+static const BPP1_DAT _acCheck[]{
 	XXXXXXXXXXXXXXXX,XXXXXX__________,
 	XXXXXXXXXXXXXXXX,XXXXXX__________,
 	XXXXXXXXXXXXXXXX,__XXXX__________,
@@ -267,39 +136,49 @@ static const uint8_t _acCheck[] = {
 	XXXXXXXXXXXXXXXX,XXXXXX__________
 };
 /* Bitmaps */
-const Bitmap CHECKBOX__abmCheck[2] = {
-	{ 11, 11, 2, 1, _acCheck,  &_PalCheckDisabled },
-	{ 11, 11, 2, 1, _acCheck,  &_PalCheckEnabled  }
+CBitmap CheckBox::abmCheck[2] {
+	{
+		/* Size */ { 11, 11 },
+		/* BytesPerLine */ 2,
+		/* Bits */ _acCheck,
+		/* Palette */ &_PalCheckDisabled,
+		/* Transparent */ true
+	}, {
+		/* Size */ { 11, 11 },
+		/* BytesPerLine */ 2,
+		/* Bits */ _acCheck,
+		/* Palette */ &_PalCheckEnabled,
+		/* Transparent */ true
+	}
 };
 /* Pixel data */
-static const uint8_t _acCheckDis[] = {
+static const BPP1_DAT _acCheck3[] {
 	XXXXXXXXXXXXXXXX,XXXXXX__________,
 	XXXXXXXXXXXXXXXX,XXXXXX__________,
-	XXXXXXXXXXXXXXXX,__XXXX__________,
-	XXXXXXXXXXXXXX__,XXXXXX__________,
-	XXXX__XXXXXX__XX,__XXXX__________,
-	XXXXXX__XX__XX__,XXXXXX__________,
-	XXXX__XX__XX__XX,XXXXXX__________,
-	XXXXXX__XX__XXXX,XXXXXX__________,
-	XXXXXXXX__XXXXXX,XXXXXX__________,
+	XXXX____________,__XXXX__________,
+	XXXX____________,__XXXX__________,
+	XXXX____________,__XXXX__________,
+	XXXX____________,__XXXX__________,
+	XXXX____________,__XXXX__________,
+	XXXX____________,__XXXX__________,
+	XXXX____________,__XXXX__________,
 	XXXXXXXXXXXXXXXX,XXXXXX__________,
 	XXXXXXXXXXXXXXXX,XXXXXX__________
 };
 /* Bitmaps */
-static const Bitmap _abmCheck[2] = {
-	{ 11, 11, 2, 1, _acCheckDis, &_PalCheckDisabled },
-	{ 11, 11, 2, 1, _acCheckDis, &_PalCheckEnabled  }
+CBitmap CheckBox::abmCheck3[2] {
+	{
+		/* Size */ { 11, 11 },
+		/* BytesPerLine */ 2,
+		/* Bits */_acCheck3,
+		/* Palette */ &_PalCheckDisabled,
+		/* Transparent */ true
+	}, {
+		/* Size */ { 11, 11 },
+		/* BytesPerLine */ 2,
+		/* Bits */_acCheck3,
+		/* Palette */ &_PalCheckEnabled,
+		/* Transparent */ true
+	}
 };
-void CHECKBOX_SetNumStates(CheckBox_Obj *pObj, unsigned NumStates) {
-	if (!CHECKBOX__DefaultProps.apBm[2])
-		CHECKBOX_SetDefaultImage(&_abmCheck[0], 2);
-	if (!CHECKBOX__DefaultProps.apBm[3])
-		CHECKBOX_SetDefaultImage(&_abmCheck[1], 3);
-	if (!pObj)
-		return;
-	if (NumStates != 2 && NumStates != 3)
-		return;
-	pObj->Props.apBm[2] = CHECKBOX__DefaultProps.apBm[2];
-	pObj->Props.apBm[3] = CHECKBOX__DefaultProps.apBm[3];
-	pObj->NumStates = NumStates;
-}
+#pragma endregion

@@ -1,26 +1,90 @@
 #pragma once
-#include "Widget.h"
-struct ProgBar_Obj : public Widget {
-	int v;
-	CFont* pFont;
-	RGBC BarColor[2];
-	RGBC TextColor[2];
-	char * pText;
-	int16_t XOff, YOff;
-	int16_t TextAlign;
-	int Min, Max;
+#include "WM.h"
+
+struct ProgBar : public Widget {
+public:
+	struct Property {
+		CFont *pFont = &GUI_Font6x8;
+		RGBC aBarColor[2]{
+			RGBC_GRAY(0x55),
+			RGBC_GRAY(0xAA)
+		};
+		RGBC aTextColor[2]{
+			RGB_WHITE,
+			RGB_BLACK
+		};
+		TEXTALIGN Align = GUI_TA_HCENTER;
+	} static DefaultProps;
+private:
+	TString text;
+	Point Off;
+	int16_t Min = 0, Max = 100, v = 0;
+	Property Props;
+public:
+	ProgBar(int x0, int y0, int xsize, int ysize,
+			WObj *pParent, uint16_t Id = 0, uint16_t Flags = 0, uint16_t ExFlags = 0,
+			int16_t Min = 0, int16_t Max = 0, int16_t v = 0, const char *s = nullptr);
+protected:
+	~ProgBar() = default;
+
+private:
+	int _Value2X(int v) const;
+	void _DrawPart(int Index, Point ptText, const char *pText) const;
+	const char *_GetText(char *pBuffer) const;
+	SRect _GetTextRect(const char *pText) const;
+
+	void _OnPaint() const;
+	static void _Callback(WM_MSG *);
+
+#pragma region Properties
+public: // Property - Font
+	/* R */ inline auto Font() const { return Props.pFont; }
+	/* W */ inline void Font(CFont *pFont) {
+		if (Props.pFont != pFont && pFont) {
+			Props.pFont = pFont;
+			Invalidate();
+		}
+	}
+public: // Property - BarColor
+	/* R */ inline auto BarColor(uint8_t Index) const { return Props.aBarColor[Index]; }
+	/* W */ inline void BarColor(uint8_t Index, RGBC Color) {
+		if (Props.aBarColor[Index] != Color) {
+			Props.aBarColor[Index] = Color;
+			Invalidate();
+		}
+	}
+public: // Property - TextColor
+	/* R */ inline auto TextColor(uint8_t Index) const { return Props.aTextColor[Index]; }
+	/* W */ inline void TextColor(uint8_t Index, RGBC Color) {
+		if (Props.aTextColor[Index] != Color) {
+			Props.aTextColor[Index] = Color;
+			Invalidate();
+		}
+	}
+public: // Property - TextAlign
+	/* R */ inline auto TextAlign() const { return Props.Align; }
+	/* W */ inline void TextAlign(int Align) {
+		if (Props.Align != Align) {
+			Props.Align = Align;
+			Invalidate();
+		}
+	}
+public: // Property - Value
+	/* R */ inline auto Value() const { return v; }
+	/* W */ void Value(int16_t v);
+public: // Property - Text
+	/* R */ inline const char *Text() const { return text; }
+	/* W */ void Text(const char *s);
+public: // Property - TextPos
+	/* W */ void TextPos(Point Off) {
+		if (this->Off != Off) {
+			this->Off = Off;
+			Invalidate();
+		}
+	}
+public: // Property - Range
+	/* R */ inline auto Range() const { struct { int16_t Min, Max; } r{ Min, Max }; return r; }
+	/* W */ void Range(int Min, int Max);
+#pragma endregion
+
 };
-ProgBar_Obj *PROGBAR_CreateEx      (int x0, int y0, int xsize, int ysize, WObj *pParent, int WinFlags, int ExFlags, int Id);
-ProgBar_Obj *PROGBAR_CreateIndirect(const GUI_WIDGET_CREATE_INFO *pCreateInfo, WObj *pParent, int x0, int y0, WM_CALLBACK *cb);
-#define PROGBAR_Create(x0, y0, xsize, ysize, Flags) PROGBAR_CreateEx(x0, y0, xsize, ysize, 0, Flags, 0, 0)
-#define PROGBAR_CreateAsChild(x0, y0, xsize, ysize, pParent, Id, Flags) PROGBAR_CreateEx(x0, y0, xsize, ysize, pParent, Flags, 0, Id)
-#define PROGBAR_Delete(pObj)        WM_DeleteWindow(pObj)
-#define PROGBAR_Paint(pObj)         WM_Paint(pObj)
-void PROGBAR_SetBarColor (ProgBar_Obj *pObj, unsigned int index, RGBC color);
-void PROGBAR_SetFont     (ProgBar_Obj *pObj, CFont* pfont);
-void PROGBAR_SetMinMax   (ProgBar_Obj *pObj, int Min, int Max);
-void PROGBAR_SetText     (ProgBar_Obj *pObj, const char* s);
-void PROGBAR_SetTextAlign(ProgBar_Obj *pObj, int Align);
-void PROGBAR_SetTextColor(ProgBar_Obj *pObj, unsigned int index, RGBC color);
-void PROGBAR_SetTextPos  (ProgBar_Obj *pObj, int XOff, int YOff);
-void PROGBAR_SetValue    (ProgBar_Obj *pObj, int v);

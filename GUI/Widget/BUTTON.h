@@ -1,59 +1,103 @@
 #pragma once
-#include "Widget.h"
-/* For compatibility only ! */
-#define BUTTON_CF_HIDE   WC_HIDE
-#define BUTTON_CF_SHOW   WC_VISIBLE
+#include "WM.h"
+
 #define BUTTON_CI_UNPRESSED 0
 #define BUTTON_CI_PRESSED   1
 #define BUTTON_CI_DISABLED  2
+
 #define BUTTON_BI_UNPRESSED 0
 #define BUTTON_BI_PRESSED   1
 #define BUTTON_BI_DISABLED  2
-#define BUTTON_STATE_FOCUS      WIDGET_STATE_FOCUS
-#define BUTTON_STATE_PRESSED    WIDGET_STATE_USER0
+
 #define BUTTON_STATE_HASFOCUS 0
-typedef struct {
-	RGBC aBkColor[3];
-	RGBC aTextColor[3];
-	CFont *pFont;
-	int16_t Align;
-} BUTTON_PROPS;
-struct Button : public Widget {
-	BUTTON_PROPS Props;
-	char *pText;
-	GUI_DRAW *apDrawObj[3];
+#define BUTTON_STATE_FOCUS    WIDGET_STATE_FOCUS
+#define BUTTON_STATE_PRESSED  WIDGET_STATE_USER0
+
+class Button : public Widget {
+public:
+	struct Property {
+		CFont *pFont = &GUI_Font13_1;
+		RGBC aTextColor[3] = {
+			RGB_BLACK,
+			RGB_BLACK,
+			RGB_DARKGRAY
+		};
+		RGBC aBkColor[3] = {
+			RGBC_GRAY(0xD0),
+			RGB_WHITE,
+			RGB_LIGHTGRAY
+		};
+		int16_t Align = GUI_TA_HCENTER | GUI_TA_VCENTER;
+	};
+	static Property DefaultProps;
+private:
+	Property Props;
+	TString text;
+	GUI_DRAW_BASE *apDrawObj[3] = { 0 };
+
+#pragma region Callbacks
+private:
+	void _Pressed();
+	void _Released(int Notification);
+private:
+	void _OnPaint() const;
+	void _OnTouch(const PidState *);
+	void _OnPidStateChange(const WM_PID_STATE_CHANGED_INFO *pState);
+	bool _OnKey(const WM_KEY_INFO *);
+
+	static void _Callback(WM_MSG *);
+#pragma endregion
+
+public:
+	Button(int x0, int y0, int xsize, int ysize,
+		   WObj *pParent, uint16_t Id = 0, uint16_t Flags = 0,
+		   const char *pText = nullptr);
+	Button(const WM_CREATESTRUCT &wc) : Button(wc.x, wc.y, wc.xsize, wc.ysize, wc.pParent, wc.Id, wc.Flags, wc.pCaption) {}
+protected:
+	~Button();
+
+#pragma region Properties
+public: // Property - BkColor
+	/* R */ inline RGBC BkColor(uint8_t Index) { return Props.aBkColor[Index]; }
+public: // Property - TextColor
+	/* R */ inline RGBC TextColor(uint8_t Index) { return Props.aTextColor[Index]; }
+public: // Property - TextAlign
+	/* W */ inline void TextAlign(uint16_t Align) {
+		if (Props.Align != Align) {
+			Props.Align = Align;
+			Invalidate();
+		}
+	}
+	/* R */ inline auto TextAlign() const { return Props.Align; }
+public: // Property - Font
+	/* W */ inline void Font(CFont *pFont) {
+		if (Props.pFont != pFont) {
+			Props.pFont = pFont;
+			Invalidate();
+		}
+	}
+	/* R */ inline auto Font() const { return Props.pFont; }
+public: // Property - Pressed
+	/* W */ void Pressed(bool bPressed);
+	/* R */ inline bool Pressed() const { return State & BUTTON_STATE_PRESSED; }
+public: // Property - Focussable
+	/* W */ void Focussable(bool bFocussable);
+	/* R */ inline bool Focussable() const { return State & WIDGET_STATE_FOCUSSABLE; }
+public: // Property - Text
+	/* W */ inline void Text(const char *pText) {
+		if (GUI__SetText(&this->text, pText))
+			Invalidate();
+	}
+	/* R */ inline auto Text() const { return text; }
+public: // Property - SelfDraw
+	/* W */ inline void SelfDraw(uint8_t Index, GUI_DRAW_BASE *pDrawObj) {
+		GUI_ALLOC_Free(apDrawObj[Index]);
+		apDrawObj[Index] = pDrawObj;
+		Invalidate();
+	}
+	/* W */ inline void SelfDraw(uint8_t Index, GUI_DRAW_CB *pDrawCb) { SelfDraw(Index, GUI_DRAW_SELF::Create(pDrawCb)); }
+	/* W */ inline void SelfDraw(uint8_t Index, CBitmap *pBitmap) { SelfDraw(Index, GUI_DRAW_BMP::Create(pBitmap)); }
+	/* R */ inline auto SelfDraw(uint8_t Index) const { return apDrawObj[Index]; }
+#pragma endregion
+
 };
-Button *BUTTON_CreateEx(int x0, int y0, int xsize, int ysize, WObj *pParent, int WinFlags, int ExFlags, int Id);
-#define BUTTON_Create(x0, y0, xsize, ysize, Id, Flags) BUTTON_CreateEx(x0, y0, xsize, ysize, nullptr, Flags, 0, Id)
-#define BUTTON_CreateAsChild(x0, y0, xsize, ysize, pParent, Id, Flags) BUTTON_CreateEx(x0, y0, xsize, ysize, pParent, Flags, 0, Id)
-Button *BUTTON_CreateIndirect(const GUI_WIDGET_CREATE_INFO *pCreateInfo, WObj *pParent, int x0, int y0, WM_CALLBACK *cb);
-RGBC   BUTTON_GetDefaultBkColor  (unsigned Index);
-CFont* BUTTON_GetDefaultFont     (void);
-int    BUTTON_GetDefaultTextAlign(void);
-RGBC   BUTTON_GetDefaultTextColor(unsigned Index);
-void   BUTTON_SetDefaultBkColor  (RGBC Color, unsigned Index);
-void   BUTTON_SetDefaultFont     (CFont* pFont);
-void   BUTTON_SetDefaultTextAlign(int Align);
-void   BUTTON_SetDefaultTextColor(RGBC Color, unsigned Index);
-RGBC   BUTTON_GetBkColor   (Button *pObj, unsigned int Index);
-CFont *BUTTON_GetFont      (Button *pObj);
-void   BUTTON_GetText      (Button *pObj, char * pBuffer, int MaxLen);
-RGBC   BUTTON_GetTextColor (Button *pObj, unsigned int Index);
-bool   BUTTON_IsPressed    (Button *pObj);
-void   BUTTON_SetBkColor   (Button *pObj, unsigned int Index, RGBC Color);
-void   BUTTON_SetFont      (Button *pObj, CFont* pfont);
-void   BUTTON_SetState     (Button *pObj, int State);
-void   BUTTON_SetPressed   (Button *pObj, int State);
-void   BUTTON_SetFocussable(Button *pObj, int State);
-void   BUTTON_SetText      (Button *pObj, const char* s);
-void   BUTTON_SetTextAlign (Button *pObj, int Align);
-void   BUTTON_SetTextColor (Button *pObj, unsigned int Index, RGBC Color);
-void   BUTTON_SetDrawObj   (Button *pObj, int Index, GUI_DRAW *pDrawObj);
-void   BUTTON_Callback(WM_MESSAGE *pMsg);
-#define BUTTON_SetSelfDrawEx(pObj, Index, pDraw, x, y)  BUTTON_SetDrawObj(pObj, Index, GUI_DRAW_SELF_Create(pDraw, x, y))
-#define BUTTON_SetBitmapEx(pObj, Index, pBitmap, x, y)  BUTTON_SetDrawObj(pObj, Index, GUI_DRAW_BITMAP_Create(pBitmap, x, y))
-#define BUTTON_SetBitmap(pObj, Index, pBitmap)  BUTTON_SetBitmapEx(pObj, Index, pBitmap, 0, 0)
-#define BUTTON_SetSelfDraw(pObj, Index, pDraw)  BUTTON_SetSelfDrawEx(pObj, Index, pDraw, 0, 0)
-#define BUTTON_Delete(pObj)        WM_DeleteWindow    (pObj)
-#define BUTTON_Paint(pObj)         WM_Paint           (pObj)
-#define BUTTON_Invalidate(pObj)    pObj->Invalidate()

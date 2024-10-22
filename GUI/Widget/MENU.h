@@ -1,6 +1,7 @@
 #pragma once
-#include "GUI_ARRAY.h"
-#include "Widget.h"
+#include "GUI_Array.h"
+#include "WM.h"
+
 #define MENU_CF_HORIZONTAL              (0<<0)
 #define MENU_CF_VERTICAL                (1<<0)
 #define MENU_CF_OPEN_ON_POINTEROVER     (1<<1)
@@ -23,50 +24,64 @@
 #define MENU_ON_OPEN              3   /* Internal message of menu widget (send to submenus) */
 #define MENU_ON_CLOSE             4   /* Internal message of menu widget (send to submenus) */
 #define MENU_IS_MENU              5   /* Internal message of menu widget. Owner must call   */
-									  /* WM_DefaultProc() when not handle the message.      */
-typedef struct {
+									  /* DefCallback() when not handle the message.      */
+
+struct MENU_MSG_DATA {
 	uint16_t MsgType;
 	uint16_t ItemId;
-} MENU_MSG_DATA;
-typedef struct {
-	RGBC    aTextColor[5];
-	RGBC    aBkColor[5];
-	uint8_t aBorder[4];
-	CFont  *pFont;
-} MENU_PROPS;
-struct Menu : public Widget {
-	MENU_PROPS  Props;
-	GUI_ARRAY   ItemArray;
-	WObj     *pOwner;
-	uint16_t    Flags;
-	char        IsSubmenuActive;
-	int         Width;
-	int         Height;
-	int         Sel;
 };
-typedef struct {
-	char     *pText;
-	uint16_t  Id;
-	uint16_t  Flags;
-	Menu *pSubmenu;
-} MENU_ITEM_DATA;
-typedef struct {
-	Menu   *pSubmenu;
-	uint16_t    Id;
-	uint16_t    Flags;
-	int         TextWidth;
-	char        acText[1];
-} MENU_ITEM;
-Menu *MENU_CreateEx      (int x0, int y0, int xSize, int ySize, WObj *pParent, int WinFlags, int ExFlags, int Id);
-Menu *MENU_CreateIndirect(const GUI_WIDGET_CREATE_INFO *pCreateInfo, WObj *pParent, int x0, int y0, WM_CALLBACK *cb);
-void      MENU_Attach       (Menu *pObj, WObj *pDestWin, Point Pos, Point Size, int Flags);
-void      MENU_Popup        (Menu *pObj, WObj *pDestWin, Point Pos, Point Size, int Flags);
+struct Menu : public Widget {
+public:		
+	struct Property {
+		CFont *pFont = &GUI_Font13_1;
+		RGBC aTextColor[5]{
+			RGB_BLACK,
+			RGB_WHITE,
+			0x7C7C7C,
+			RGB_LIGHTGRAY,
+			RGB_WHITE
+		};
+		RGBC aBkColor[5]{
+			RGB_LIGHTGRAY,
+			0x980000,
+			RGB_LIGHTGRAY,
+			0x980000,
+			0x7C7C7C
+		};
+		uint8_t aBorder[4]{
+			4,
+			4,
+			2,
+			2,
+		};
+	} static DefaultProps;
+	struct Item {
+		Menu *pSubmenu = nullptr;
+		char *pText = nullptr;
+		uint16_t Id, Flags;
+		uint16_t TextWidth;
+	};
+// private:
+	Property  Props;
+	GUI_Array<Item> ItemArray;
+	WObj *pOwner;
+	uint16_t Flags;
+	uint16_t Width;
+	uint16_t Height;
+	uint16_t Sel;
+	bool bSubmenuActive;
+public:
+};
+
+Menu *MENU_CreateEx      (int x0, int y0, int xSize, int ySize, WObj *pParent, uint16_t Flags, uint16_t ExFlags, uint16_t Id);
+void      MENU_Attach       (Menu *pObj, WObj *pDestWin, Point Pos, Point Size, uint16_t Flags);
+void      MENU_Popup        (Menu *pObj, WObj *pDestWin, Point Pos, Point Size, uint16_t Flags);
 void      MENU_SetOwner     (Menu *pObj, WObj *pOwner);
-void      MENU_AddItem      (Menu *pObj, const MENU_ITEM_DATA *pItemData);
+void      MENU_AddItem      (Menu *pObj, const Menu::Item *pItem);
 void      MENU_DeleteItem   (Menu *pObj, uint16_t ItemId);
-void      MENU_InsertItem   (Menu *pObj, uint16_t ItemId, const MENU_ITEM_DATA *pItemData);
-void      MENU_SetItem      (Menu *pObj, uint16_t ItemId, const MENU_ITEM_DATA *pItemData);
-void      MENU_GetItem      (Menu *pObj, uint16_t ItemId, MENU_ITEM_DATA *pItemData);
+void      MENU_InsertItem   (Menu *pObj, uint16_t ItemId, const Menu::Item *pItem);
+void      MENU_SetItem      (Menu *pObj, uint16_t ItemId, const Menu::Item *pItem);
+void      MENU_GetItem      (Menu *pObj, uint16_t ItemId, Menu::Item *pItem);
 void      MENU_GetItemText  (Menu *pObj, uint16_t ItemId, char *pBuffer, unsigned BufferSize);
 unsigned  MENU_GetNumItems  (Menu *pObj);
 void      MENU_DisableItem  (Menu *pObj, uint16_t ItemId);
@@ -75,24 +90,10 @@ void      MENU_SetTextColor (Menu *pObj, unsigned ColorIndex, RGBC Color);
 void      MENU_SetBkColor   (Menu *pObj, unsigned ColorIndex, RGBC Color);
 void      MENU_SetBorderSize(Menu *pObj, unsigned BorderIndex, uint8_t BorderSize);
 void      MENU_SetFont      (Menu *pObj, CFont *pFont);
-RGBC                 MENU_GetDefaultTextColor (unsigned ColorIndex);
-RGBC                 MENU_GetDefaultBkColor   (unsigned ColorIndex);
-uint8_t              MENU_GetDefaultBorderSize(unsigned BorderIndex);
-const Widget::Effect *MENU_GetDefaultEffect    (void);
-CFont               *MENU_GetDefaultFont      (void);
-void                 MENU_SetDefaultTextColor (unsigned ColorIndex, RGBC Color);
-void                 MENU_SetDefaultBkColor   (unsigned ColorIndex, RGBC Color);
-void                 MENU_SetDefaultBorderSize(unsigned BorderIndex, uint8_t BorderSize);
-void                 MENU_SetDefaultEffect    (const Widget::Effect *pEffect);
-void                 MENU_SetDefaultFont      (CFont *pFont);
-#define MENU_Delete(pObj)         WM_DeleteWindow(pObj)
-#define MENU_Paint(pObj)          WM_Paint(pObj)
-#define MENU_Invalidate(pObj)     pObj->Invalidate()
 // private
 void      MENU__RecalcTextWidthOfItems(Menu* pObj);
 void      MENU__ResizeMenu            (Menu *pObj);
-unsigned  MENU__GetNumItems           (Menu* pObj);
-char      MENU__SetItem               (Menu *pObj, unsigned Index, const MENU_ITEM_DATA* pItemData);
+void      MENU__SetItem               (Menu *pObj, unsigned Index, const Menu::Item *pItemData);
 void      MENU__SetItemFlags          (Menu* pObj, unsigned Index, uint16_t Mask, uint16_t Flags);
 void      MENU__InvalidateItem        (Menu *pObj, unsigned Index);
 int       MENU__FindItem              (Menu *pObj, uint16_t ItemId, Menu **ppMenu);
