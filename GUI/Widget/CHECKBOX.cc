@@ -142,13 +142,13 @@ CBitmap CheckBox::abmCheck[2] {
 		/* BytesPerLine */ 2,
 		/* Bits */ _acCheck,
 		/* Palette */ &_PalCheckDisabled,
-		/* Transparent */ true
+		/* Transparent */ false
 	}, {
 		/* Size */ { 11, 11 },
 		/* BytesPerLine */ 2,
 		/* Bits */ _acCheck,
 		/* Palette */ &_PalCheckEnabled,
-		/* Transparent */ true
+		/* Transparent */ false
 	}
 };
 /* Pixel data */
@@ -172,13 +172,13 @@ CBitmap CheckBox::abmCheck3[2] {
 		/* BytesPerLine */ 2,
 		/* Bits */_acCheck3,
 		/* Palette */ &_PalCheckDisabled,
-		/* Transparent */ true
+		/* Transparent */ false
 	}, {
 		/* Size */ { 11, 11 },
 		/* BytesPerLine */ 2,
 		/* Bits */_acCheck3,
 		/* Palette */ &_PalCheckEnabled,
-		/* Transparent */ true
+		/* Transparent */ false
 	}
 };
 #pragma endregion
