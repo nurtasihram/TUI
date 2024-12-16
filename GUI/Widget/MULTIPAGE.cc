@@ -174,7 +174,7 @@ static void _DrawTextItem(MultiPage *pObj, const char *pText, unsigned Index,
 		}
 	}
 	GUI.PenColor(pObj->aBkColor[ColorIndex]);
-	pObj->FillRect(r);
+	pObj->Fill(r);
 	GUI.BkColor(pObj->aBkColor[ColorIndex]);
 	GUI.PenColor(pObj->aTextColor[ColorIndex]);
 	GUI_DispStringAt(pText, { r.x0 + 4, pRect->y0 + 3 });

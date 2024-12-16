@@ -11,8 +11,8 @@ void Radio::_OnPaint() const {
 	rFocus.y1 = height + (NumItems() - 1) * spacing - 1;
 	GUI.PenColor(Props.TextColor);
 	GUI.Font(Props.pFont);
-	GUI_SetTextMode(DRAWMODE_TRANS);
-	auto FontDistY = GUI.pAFont->YDist;
+	GUI.TextMode(DRAWMODE_TRANS);
+	auto FontDistY = GUI.Font()->YDist;
 	auto CHeight = Props.pFont->CHeight;
 	auto SpaceAbove = Props.pFont->Baseline - CHeight;
 	SRect rect;
@@ -46,7 +46,7 @@ void Radio::_OnPaint() const {
 	}
 	if (bFocussed) {
 		GUI.PenColor(RGB_BLACK);
-		DrawFocus(rFocus);
+		OutlineFocus(rFocus);
 	}
 }
 void Radio::_OnTouch(PidState *pState) {

@@ -449,12 +449,12 @@ int ListBox::OwnerDrawProc(const WIDGET_ITEM_DRAW_INFO *pDrawItemInfo) {
 			return DistX;
 		}
 		case WIDGET_ITEM_GET_YSIZE:
-			return GUI_GetYDistOfFont(pObj->Props.pFont) + pObj->ItemSpacing;
+			return pObj->Props.pFont->YDist + pObj->ItemSpacing;
 		case WIDGET_ITEM_DRAW:
 		{
 			auto ItemIndex = pDrawItemInfo->ItemIndex;
 			auto &item = pObj->ItemArray[ItemIndex];
-			int FontDistY = GUI.pAFont->YDist;
+			int FontDistY = GUI.Font()->YDist;
 			bool bDisabled = item.Status & LISTBOX_ITEM_DISABLED,
 				bSelected = item.Status & LISTBOX_ITEM_SELECTED;
 			int ColorIndex = (pObj->Flags & LISTBOX_CF_MULTISEL) ?
@@ -464,7 +464,7 @@ int ListBox::OwnerDrawProc(const WIDGET_ITEM_DRAW_INFO *pDrawItemInfo) {
 				(pObj->State & WIDGET_STATE_FOCUS) ? 2 : 1 : 0;
 			GUI.BkColor(pObj->Props.aBkColor[ColorIndex]);
 			GUI.PenColor(pObj->Props.aTextColor[ColorIndex]);
-			GUI_SetTextMode(DRAWMODE_TRANS);
+			GUI.TextMode(DRAWMODE_TRANS);
 			GUI.Clear();
 			GUI_DispStringAt(pObj->ItemArray[ItemIndex].Text, { pDrawItemInfo->x0 + 1, pDrawItemInfo->y0 });
 			if (!(pObj->Flags & LISTBOX_CF_MULTISEL) || ItemIndex != pObj->sel)
@@ -475,7 +475,7 @@ int ListBox::OwnerDrawProc(const WIDGET_ITEM_DRAW_INFO *pDrawItemInfo) {
 			rFocus.x1 = pObj->InsideRect().x1;
 			rFocus.y1 = pDrawItemInfo->y0 + FontDistY - 1;
 			GUI.PenColor(RGB_WHITE - pObj->Props.aBkColor[ColorIndex]);
-			GUI.DrawFocus(rFocus);
+			GUI.OutlineFocus(rFocus);
 		}
 	}
 	return 0;

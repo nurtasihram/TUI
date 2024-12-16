@@ -1,7 +1,7 @@
 #include "ScrollBar.h"
 #include "ListView.h"
 
-#define LISTVIEW_ALIGN_DEFAULT (GUI_TA_VCENTER | GUI_TA_HCENTER)
+#define LISTVIEW_ALIGN_DEFAULT (TEXTALIGN_VCENTER | TEXTALIGN_HCENTER)
 
 ListView::Property ListView::DefaultProps;
 
@@ -36,7 +36,7 @@ static void _OnPaint(ListView *pObj, WM_MSG *pMsg) {
 	rClip &= rect;
 	GUI.PenColor(pObj->Props.aTextColor[0]);
 	GUI.Font(pObj->Props.pFont);
-	GUI_SetTextMode(DRAWMODE_TRANS);
+	GUI.TextMode(DRAWMODE_TRANS);
 	for (auto i = pObj->scrollStateV.v; i < EndRow; ++i) {
 		auto &row = pObj->RowArray[i];
 		rect.y0 = yPos;
@@ -329,7 +329,7 @@ void LISTVIEW_DeleteColumn(ListView *pObj, unsigned Index) {
 		auto &Row = pObj->RowArray[i];
 		auto &Item = Row[Index];
 		if (auto pItemInfo = Item.pItemInfo)
-			GUI_ALLOC_Free(pItemInfo);
+			GUI_MEM_Free(pItemInfo);
 		Row.Delete(Index);
 	}
 	LISTVIEW__UpdateScrollParas(pObj);
@@ -493,7 +493,7 @@ static LISTVIEW_ITEM_INFO *_GetpItemInfo(ListView *pObj, unsigned Column, unsign
 	pItemInfo = Item.pItemInfo;
 	if (pItemInfo)
 		return pItemInfo;
-	Item.pItemInfo = (LISTVIEW_ITEM_INFO *)GUI_ALLOC_AllocZero(sizeof(LISTVIEW_ITEM_INFO));
+	Item.pItemInfo = (LISTVIEW_ITEM_INFO *)GUI_MEM_AllocZero(sizeof(LISTVIEW_ITEM_INFO));
 	pItemInfo = Item.pItemInfo;
 	for (int i = 0; i < GUI_COUNTOF(pItemInfo->aTextColor); ++i) {
 		pItemInfo->aTextColor[i] = LISTVIEW_GetTextColor(pObj, i);

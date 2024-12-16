@@ -168,12 +168,12 @@ void WObj::Delete() {
 	if (Status & WC_ACTIVATE)
 		--nInvalidWindows;
 	--nWindows;
-	GUI_ALLOC_Free(this);
+	GUI_MEM_Free(this);
 	pWinFirst->Select();
 }
 void WObj::Select() {
 	pWinActive = this;
-	GUI_LCD_SetClipRectMax();
+	GUI.ClipRect();
 	GUI.off = rect.left_top();
 }
 
@@ -238,24 +238,14 @@ void WObj::_Paint1() {
 	if (!(Status & WC_VISIBLE))
 		return;
 	++nPaintCallback;
-	if (Status & WC_LATE_CLIP) {
+	if (WObj::IVR_Init(&rInvalid)) do {
 		WM_MSG msg;
 		msg.pWin = this;
 		msg.msgid = WM_PAINT;
 		msg.data = (size_t)&rInvalid;
-		GUI_SetDefault();
+		GUI.Props = GUI.DefaultProps;
 		SendMessage(&msg);
-	}
-	else {
-		if (WObj::IVR_Init(&rInvalid)) do {
-			WM_MSG msg;
-			msg.pWin = this;
-			msg.msgid = WM_PAINT;
-			msg.data = (size_t)&rInvalid;
-			GUI_SetDefault();
-			SendMessage(&msg);
-		} while (WObj::IVR_Next());
-	}
+	} while (WObj::IVR_Next());
 	--nPaintCallback;
 }
 bool WObj::_OnPaint() {
@@ -291,7 +281,7 @@ bool WObj::PaintNext() {
 WObj::ContextIVR WObj::_ClipContext;
 void WObj::_ActivateClipRect() {
 	auto &rSrc = WM_IsActive ? _ClipContext.CurRect : pWinActive->rect;
-	GUI_LCD_SetClipRectEx(
+	GUI.ClipRect(
 		GUI.pUserClipRect ?
 		pWinActive->ClientToScreen(*GUI.pUserClipRect) & rSrc : rSrc);
 }
@@ -430,12 +420,12 @@ bool WObj::Exec1() {
 	return false;
 }
 
-void WM_Activate(void) {
+void WM_Activate() {
 	WM_IsActive = 1;
 }
-void WM_Deactivate(void) {
+void WM_Deactivate() {
 	WM_IsActive = 0;
-	GUI_LCD_SetClipRectMax();
+	GUI.ClipRect();
 }
 void WObj::DefCallback(WM_MSG *pMsg) {
 	auto pWin = pMsg->pWin;
@@ -675,7 +665,7 @@ bool WObj::OnKey(int Key, int Pressed) {
 }
 void WObj::Paint() {
 	Select();
-	GUI_SetDefault();
+	GUI.Props = GUI.DefaultProps;
 	Invalidate();  /* Important ... Window procedure is informed about invalid rect and may optimize */
 	_Paint1();
 	Validate();
@@ -1169,7 +1159,7 @@ void WIDGET__FillStringInRect(const char *pText, const SRect &rFill, const SRect
 	/* Right */	 GUI.Clear({ rText.x1 + 1, rText.y0, rFill.x1, rText.y1 });
 	/* Bottom */ GUI.Clear({ rFill.x0, rText.y1 + 1, rFill.x1, rFill.y1 });
 	auto pOldClipRect = WObj::SetUserClipRect(&rTextMax);
-	GUI_SetTextMode(DRAWMODE_NORMAL);
+	GUI.TextMode(DRAWMODE_NORMAL);
 	GUI_DispStringAt(pText, rTextAct.left_top());
 	WObj::SetUserClipRect(pOldClipRect);
 }
@@ -1178,17 +1168,17 @@ void Widget::DrawVLine(int x, int y0, int y1) const {
 	SRect r = { x, y0, x, y1 };
 	if (State & WIDGET_STATE_VERTICAL)
 		r = r.rot90().xmove(WObj::SizeX() - 1);
-	GUI.FillRect(r);
+	GUI.Fill(r);
 }
-void Widget::FillRect(SRect r) const {
+void Widget::Fill(SRect r) const {
 	if (State & WIDGET_STATE_VERTICAL)
 		r = r.rot90().xmove(WObj::SizeX() - 1);
-	GUI.FillRect(r);
+	GUI.Fill(r);
 }
-void Widget::DrawFocus(SRect r, int Dist) const {
+void Widget::OutlineFocus(SRect r, int Dist) const {
 	if (State & WIDGET_STATE_VERTICAL)
 		r = r.rot90().xmove(WObj::SizeX() - 1);
-	GUI.DrawFocus(r, Dist);
+	GUI.OutlineFocus(r, Dist);
 }
 
 bool Widget::_EffectRequiresRedraw(const SRect &r) const {
@@ -1240,11 +1230,11 @@ public:
 	Effect_Simple() : Widget::EffectItf(1) {}
 	void DrawUp(const SRect &r) const override {
 		GUI.PenColor(RGB_BLACK);
-		GUI.DrawRect(r); /* Draw rectangle around it */
+		GUI.Outline(r); /* Draw rectangle around it */
 	}
 	void DrawDown(const SRect &r) const override {
 		GUI.PenColor(RGB_BLACK);
-		GUI.DrawRect(r); /* Draw rectangle around it */
+		GUI.Outline(r); /* Draw rectangle around it */
 	}
 };
 const Widget::EffectItf &&Widget::EffectItf::Simple = Effect_Simple();
@@ -1256,7 +1246,7 @@ public:
 	Effect_D3() : Widget::EffectItf(2) {}
 	void DrawUp(const SRect &r) const override {
 		GUI.PenColor(RGB_BLACK);
-		GUI.DrawRect(r);
+		GUI.Outline(r);
 		GUI.PenColor(RGB_WHITE);
 		GUI.DrawLineH(r.y0 + 1, r.x0 + 1, r.x1 - 2);
 		GUI.DrawLineV(r.x0 + 1, r.y0 + 1, r.y1 - 2);

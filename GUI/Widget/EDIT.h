@@ -1,12 +1,12 @@
 #pragma once
 #include "WM.h"
 
-#define EDIT_CF_LEFT    GUI_TA_LEFT
-#define EDIT_CF_RIGHT   GUI_TA_RIGHT
-#define EDIT_CF_HCENTER GUI_TA_HCENTER
-#define EDIT_CF_VCENTER GUI_TA_VCENTER
-#define EDIT_CF_TOP     GUI_TA_TOP
-#define EDIT_CF_BOTTOM  GUI_TA_BOTTOM
+#define EDIT_CF_LEFT    TEXTALIGN_LEFT
+#define EDIT_CF_RIGHT   TEXTALIGN_RIGHT
+#define EDIT_CF_HCENTER TEXTALIGN_HCENTER
+#define EDIT_CF_VCENTER TEXTALIGN_VCENTER
+#define EDIT_CF_TOP     TEXTALIGN_TOP
+#define EDIT_CF_BOTTOM  TEXTALIGN_BOTTOM
 #define EDIT_CI_DISABLED 0
 #define EDIT_CI_ENABLED  1
 #define GUI_EDIT_NORMAL 0
@@ -49,8 +49,8 @@ void   EDIT_SetDefaultFont     (CFont* pFont);
 void   EDIT_SetDefaultTextAlign(int Align);
 void   EDIT_SetDefaultTextColor(unsigned int Index, RGBC Color);
 RGBC   EDIT_GetDefaultBkColor  (unsigned int Index);
-CFont* EDIT_GetDefaultFont     (void);
-int    EDIT_GetDefaultTextAlign(void);
+CFont* EDIT_GetDefaultFont     ();
+int    EDIT_GetDefaultTextAlign();
 RGBC   EDIT_GetDefaultTextColor(unsigned int Index);
 void EDIT_AddKey           (Edit *pObj, int Key);
 void EDIT_SetBkColor       (Edit *pObj, unsigned int Index, RGBC color);

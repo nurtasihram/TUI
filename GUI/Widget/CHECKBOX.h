@@ -24,7 +24,7 @@ public:
 		};
 		RGBC BkColor = RGB_INVALID_COLOR;
 		RGBC TextColor = RGB_BLACK;
-		int16_t Align = GUI_TA_LEFT | GUI_TA_VCENTER;
+		int16_t Align = TEXTALIGN_LEFT | TEXTALIGN_VCENTER;
 		uint8_t Spacing = 4;
 	} static DefaultProps;
 private:

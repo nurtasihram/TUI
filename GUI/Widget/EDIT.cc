@@ -2,7 +2,7 @@
 #include "Edit.h"
 
 #define EDIT_FONT_DEFAULT       &GUI_Font13_1
-#define EDIT_ALIGN_DEFAULT      GUI_TA_LEFT | GUI_TA_VCENTER
+#define EDIT_ALIGN_DEFAULT      TEXTALIGN_LEFT | TEXTALIGN_VCENTER
 #define EDIT_BKCOLOR0_DEFAULT   0xC0C0C0
 #define EDIT_BKCOLOR1_DEFAULT   RGB_WHITE
 #define EDIT_TEXTCOLOR0_DEFAULT RGB_BLACK
@@ -48,7 +48,7 @@ static void _OnPaint(Edit *pObj) {
 						for (i = pObj->CursorPos; i < (int)(pObj->CursorPos + pObj->SelSize); ++i) {
 							CursorOffset = GUI_UC__NumChars2NumBytes(pText, i);
 							Char = GUI_UC_GetCharCode(pText + CursorOffset);
-							CursorWidth += GUI_GetCharDistX(Char);
+							CursorWidth += GUI.Font()->XDist(Char);
 						}
 						if (!CursorWidth)
 							CursorWidth = 1;
@@ -56,14 +56,14 @@ static void _OnPaint(Edit *pObj) {
 					else {
 						CursorOffset = GUI_UC__NumChars2NumBytes(pText, pObj->CursorPos);
 						Char = GUI_UC_GetCharCode(pText + CursorOffset);
-						CursorWidth = GUI_GetCharDistX(Char);
+						CursorWidth = GUI.Font()->XDist(Char);
 					}
 				}
 			}
 			rInvert = rText;
 			for (i = 0; i != pObj->CursorPos; ++i) {
 				Char = GUI_UC__GetCharCodeInc(&p);
-				rInvert.x0 += GUI_GetCharDistX(Char);
+				rInvert.x0 += GUI.Font()->XDist(Char);
 			}
 		}
 	}
@@ -72,14 +72,14 @@ static void _OnPaint(Edit *pObj) {
 		WIDGET__FillStringInRect(pText, rFill, rInside, rText);
 		if (pObj->State & WIDGET_STATE_FOCUS) {
 			GUI.PenColor(RGB_BLACK);
-			GUI.DrawRect({ rInvert.x0, rInvert.y0, rInvert.x0 + CursorWidth - 1, rInvert.y1 });
+			GUI.Outline({ rInvert.x0, rInvert.y0, rInvert.x0 + CursorWidth - 1, rInvert.y1 });
 		}
 		WObj::SetUserClipRect(nullptr);
 		pObj->DrawDown();
 	} while (WObj::IVR_Next());
 }
 static void _Delete(Edit *pObj) {
-	GUI_ALLOC_Free(pObj->pText);
+	GUI_MEM_Free(pObj->pText);
 	pObj->pText = nullptr;
 }
 void EDIT_SetCursorAtPixel(Edit *pObj, int xPos) {
@@ -93,11 +93,11 @@ void EDIT_SetCursorAtPixel(Edit *pObj, int xPos) {
 	int xSize = pObj->SizeX();
 	int TextWidth = GUI_GetStringDistX(pText);
 	int NumChars;
-	switch (pObj->Props.Align & GUI_TA_HORIZONTAL) {
-	case GUI_TA_HCENTER:
+	switch (pObj->Props.Align & TEXTALIGN_HORIZONTAL) {
+	case TEXTALIGN_HCENTER:
 		xPos -= (xSize - TextWidth + 1) / 2;
 		break;
-	case GUI_TA_RIGHT:
+	case TEXTALIGN_RIGHT:
 		xPos -= xSize - TextWidth - (pObj->Props.Border + EDIT_XOFF);
 		break;
 	default:
@@ -112,7 +112,7 @@ void EDIT_SetCursorAtPixel(Edit *pObj, int xPos) {
 		int i, x;
 		for (i = 0, x = 0; (i < NumChars) && (x < xPos); ++i) {
 			uint16_t Char = GUI_UC__GetCharCodeInc(&pText);
-			int xLenChar = GUI_GetCharDistX(Char);
+			int xLenChar = GUI.Font()->XDist(Char);
 			if (xPos < (x + xLenChar))
 				break;
 			x += xLenChar;
@@ -124,7 +124,7 @@ void EDIT_SetCursorAtPixel(Edit *pObj, int xPos) {
 }
 static int _IncrementBuffer(Edit *pObj, unsigned AddBytes) {
 	int NewSize = pObj->BufferSize + AddBytes;
-	char *pNew = (char *)GUI_ALLOC_Realloc(pObj->pText, NewSize);
+	char *pNew = (char *)GUI_MEM_Realloc(pObj->pText, NewSize);
 	if (!pNew)
 		return 0;
 	if (!pObj->pText)
@@ -341,7 +341,7 @@ void EDIT_SetText(Edit *pObj, const char *s) {
 	if (!pObj)
 		return;
 	if (!s) {
-		GUI_ALLOC_Free(pObj->pText);
+		GUI_MEM_Free(pObj->pText);
 		pObj->pText = nullptr;
 		pObj->BufferSize = 0;
 		pObj->CursorPos = 0;
@@ -426,7 +426,7 @@ Edit *EDIT_CreateEx(int x0, int y0,
 						  uint16_t Id, int MaxLen) {
 	//auto pObj = (Edit *)WObj::Create(
 	//	x0, y0, xsize, ysize,
-	//	pParent, WC_VISIBLE | WC_LATE_CLIP | Flags, EDIT__Callback,
+	//	pParent, WC_VISIBLE | Flags, EDIT__Callback,
 	//	sizeof(Edit) - sizeof(WObj));
 	//if (!pObj)
 	//	return nullptr;
@@ -443,9 +443,9 @@ Edit *EDIT_CreateEx(int x0, int y0,
 	//return pObj;
 }
 void EDIT_SetDefaultFont(CFont *pFont) { EDIT__DefaultProps.pFont = pFont; }
-CFont *EDIT_GetDefaultFont(void) { return EDIT__DefaultProps.pFont; }
+CFont *EDIT_GetDefaultFont() { return EDIT__DefaultProps.pFont; }
 void EDIT_SetDefaultTextAlign(int Align) { EDIT__DefaultProps.Align = Align; }
-int EDIT_GetDefaultTextAlign(void) { return EDIT__DefaultProps.Align; }
+int EDIT_GetDefaultTextAlign() { return EDIT__DefaultProps.Align; }
 void EDIT_SetDefaultTextColor(unsigned int Index, RGBC Color) {
 	if (Index < GUI_COUNTOF(EDIT__DefaultProps.aTextColor))
 		EDIT__DefaultProps.aTextColor[Index] = Color;

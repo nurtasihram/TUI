@@ -123,7 +123,7 @@ static Button *hbCaps = nullptr, *hbFn = nullptr;
 static Button *hbShiftL = nullptr, *hbShiftR = nullptr;
 static Button *hbCtrlL = nullptr, *hbCtrlR = nullptr;
 static Button *hbAltL = nullptr, *hbAltR = nullptr;
-static void _OSK_updateShiftCaps(void) {
+static void _OSK_updateShiftCaps() {
 	uint8_t Shift = fn_keys.LShift | fn_keys.RShift;
 	OSK_BTN_HOLD(hbCaps, Caps);
 	OSK_BTN_HOLD(hbFn, FnSel);
@@ -385,7 +385,7 @@ static void _OSK_callback(WM_MSG *pMsg) {
 		break;
 	case WM_PAINT:
 		GUI.PenColor(RGB_GRAY);
-		GUI.FillRect(pWin->ClientRect());
+		GUI.Fill(pWin->ClientRect());
 		break;
 	case WM_NOTIFY_PARENT:
 		switch ((int)pMsg->data) {

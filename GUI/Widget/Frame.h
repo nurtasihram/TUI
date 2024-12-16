@@ -28,7 +28,7 @@ public:
 		uint16_t TitleHeight{ 18 };
 		uint16_t BorderSize{ 2 };
 		uint16_t IBorderSize{ 1 };
-		int16_t Align = GUI_TA_VCENTER;
+		int16_t Align = TEXTALIGN_VCENTER;
 	} static DefaultProps;
 private:
 	Property Props;

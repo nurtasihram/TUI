@@ -92,7 +92,7 @@ void ScrollBar::_OnPaint() {
 	auto r = rClient;
 	r.x0 = Pos.x0_LeftArrow;
 	r.x1 = Pos.x1_LeftArrow;
-	FillRect(r);
+	Fill(r);
 	GUI.PenColor(Props.aBkColor[1]);
 	_DrawTriangle(r.x0 + ArrowOff, r.dy() >> 1, ArrowSize, -1);
 	DrawUp(r);
@@ -100,23 +100,23 @@ void ScrollBar::_OnPaint() {
 	GUI.PenColor(Props.aBkColor[0]);
 	r.x0 = Pos.x1_LeftArrow + 1;
 	r.x1 = Pos.x0_Thumb - 1;
-	FillRect(r);
+	Fill(r);
 	r = rClient;
 	r.x0 = Pos.x1_Thumb + 1;
 	r.x1 = Pos.x0_RightArrow - 1;
-	FillRect(r);
+	Fill(r);
 
 	r = rClient;
 	r.x0 = Pos.x0_Thumb;
 	r.x1 = Pos.x1_Thumb;
 	GUI.PenColor(Props.aColor[0]);
-	FillRect(r);
+	Fill(r);
 	DrawUp(r);
 
 	GUI.PenColor(Props.aColor[0]);
 	r.x0 = Pos.x0_RightArrow;
 	r.x1 = Pos.x1_RightArrow;
-	FillRect(r);
+	Fill(r);
 	GUI.PenColor(Props.aBkColor[1]);
 	_DrawTriangle(r.x1 - ArrowOff, r.dy() >> 1, ArrowSize, 1);
 	DrawUp(r);
@@ -126,7 +126,7 @@ void ScrollBar::_OnPaint() {
 	r.x0 = Pos.x1_RightArrow + 1;
 	r.x1 = Pos.x1;
 	GUI.PenColor(Props.aColor[0]);
-	FillRect(r);
+	Fill(r);
 }
 void ScrollBar::_OnTouch(WM_MSG *pMsg) {
 	auto pState = (PidState *)pMsg->data;

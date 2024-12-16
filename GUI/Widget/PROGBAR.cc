@@ -29,14 +29,14 @@ const char *ProgBar::_GetText(char *pBuffer) const {
 SRect ProgBar::_GetTextRect(const char *pText) const {
 	auto &&size = rect.size();
 	int TextWidth = GUI_GetStringDistX(pText),
-		TextHeight = GUI_GetFontSizeY(),
+		TextHeight = GUI.Font()->YSize,
 		EffectSize = this->EffectSize();
 	Point p0{ Off.x, (size.y - TextHeight) / 2 };
-	switch (Props.Align & GUI_TA_HORIZONTAL) {
-		case GUI_TA_HCENTER:
+	switch (Props.Align & TEXTALIGN_HORIZONTAL) {
+		case TEXTALIGN_HCENTER:
 			p0.x += (size.x - TextWidth) / 2;
 			break;
-		case GUI_TA_RIGHT:
+		case TEXTALIGN_RIGHT:
 			p0.x += size.x - TextWidth - EffectSize - 1;
 			break;
 		default:

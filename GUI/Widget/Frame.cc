@@ -39,11 +39,11 @@ void Frame::_OnPaint() const {
 		GUI.PenColor(Props.aTextColor[Index]);
 		WIDGET__FillStringInRect(Title, r, Pos.rTitleText, rText);
 		GUI.PenColor(Props.FrameColor);
-		GUI.FillRect({ 0, 0, size.x, BorderSize - 1 });
-		GUI.FillRect({ 0, 0, Pos.rClient.x0 - 1, size.y });
-		GUI.FillRect({ Pos.rClient.x1 + 1, 0, size.x, size.y });
-		GUI.FillRect({ 0, Pos.rClient.y1 + 1, size.x, size.y });
-		GUI.FillRect({ 0, y0, size.x, y0 + Props.IBorderSize - 1 });
+		GUI.Fill({ 0, 0, size.x, BorderSize - 1 });
+		GUI.Fill({ 0, 0, Pos.rClient.x0 - 1, size.y });
+		GUI.Fill({ Pos.rClient.x1 + 1, 0, size.x, size.y });
+		GUI.Fill({ 0, Pos.rClient.y1 + 1, size.x, size.y });
+		GUI.Fill({ 0, y0, size.x, y0 + Props.IBorderSize - 1 });
 		if (Props.BorderSize >= 2)
 			DrawUp();
 	});
@@ -210,7 +210,7 @@ int16_t Frame::_CalcTitleHeight() const {
 		return 0;
 	return Props.TitleHeight ?
 		Props.TitleHeight :
-		2 + GUI_GetYSizeOfFont(Props.pFont);
+		2 + Props.pFont->YSize;
 }
 Frame::Positions Frame::_CalcPositions() const {
 	auto &&rect = Rect();
@@ -503,7 +503,7 @@ Frame::Frame(int x0, int y0, int xsize, int ysize,
 			 const char *pTitle, WM_CB *cb) :
 	Widget(x0, y0, xsize, ysize,
 		  _Callback,
-		   pParent, Id, Flags | WC_LATE_CLIP, WIDGET_STATE_FOCUSSABLE | FRAME_CF_TITLEVIS),
+		   pParent, Id, Flags, WIDGET_STATE_FOCUSSABLE | FRAME_CF_TITLEVIS),
 	cb(cb), Flags(ExFlags) {
 	auto &&Pos = _CalcPositions();
 	pClient = new WObj(
@@ -511,7 +511,7 @@ Frame::Frame(int x0, int y0, int xsize, int ysize,
 		_cbClient,
 		this,
 		WC_ANCHOR_RIGHT | WC_ANCHOR_LEFT | WC_ANCHOR_TOP
-		| WC_ANCHOR_BOTTOM | WC_VISIBLE | WC_LATE_CLIP);
+		| WC_ANCHOR_BOTTOM | WC_VISIBLE);
 	Text(pTitle);
 }
 

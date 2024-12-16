@@ -19,35 +19,35 @@ void CheckBox::_OnPaint() {
 	if (!text) return;
 	auto &&rText = ClientRect();
 	rText.x0 += rBox.x1 + 1 + Props.Spacing;
-	GUI_SetTextMode(DRAWMODE_TRANS);
+	GUI.TextMode(DRAWMODE_TRANS);
 	GUI.PenColor(Props.TextColor);
 	GUI.Font(Props.pFont);
 	GUI_DispStringInRect(text, rText, Props.Align);
 	if (!(State & WIDGET_STATE_FOCUS))
 		return;
 	auto xSizeText = GUI_GetStringDistX(text);
-	auto ySizeText = GUI_GetFontSizeY();
+	auto ySizeText = GUI.Font()->YSize;
 	auto rFocus = rText;
-	switch (Props.Align & ~GUI_TA_HORIZONTAL) {
-	case GUI_TA_VCENTER:
+	switch (Props.Align & ~TEXTALIGN_HORIZONTAL) {
+	case TEXTALIGN_VCENTER:
 		rFocus.y0 = (rText.y1 - ySizeText) / 2;
 		break;
-	case GUI_TA_BOTTOM:
+	case TEXTALIGN_BOTTOM:
 		rFocus.y0 = rText.y1 - ySizeText;
 		break;
 	}
-	switch (Props.Align & ~GUI_TA_VCENTER) {
-	case GUI_TA_HCENTER:
+	switch (Props.Align & ~TEXTALIGN_VCENTER) {
+	case TEXTALIGN_HCENTER:
 		rFocus.x0 += (rText.dx() - xSizeText) / 2;
 		break;
-	case GUI_TA_RIGHT:
+	case TEXTALIGN_RIGHT:
 		rFocus.x0 +=  rText.dx() - xSizeText;
 		break;
 	}
 	rFocus.x1 = rFocus.x0 + xSizeText;
 	rFocus.y1 = rFocus.y0 + ySizeText;
 	GUI.PenColor(RGB_BLACK);
-	DrawFocus(rFocus);
+	OutlineFocus(rFocus);
 }
 void CheckBox::_OnTouch(WM_MSG* pMsg) {
 	int Notification = 0;

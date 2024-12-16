@@ -11,7 +11,7 @@ struct Page {
 	uint8_t Status;
 	char *pText;
 	~Page() {
-		GUI_ALLOC_Free(pText);
+		GUI_MEM_Free(pText);
 		pText = nullptr;
 	}
 };
@@ -41,9 +41,9 @@ void    MULTIPAGE_SetAlign      (MultiPage *pObj, unsigned Align);
 int     MULTIPAGE_GetSelection  (MultiPage *pObj);
 WObj *MULTIPAGE_GetWindow     (MultiPage *pObj, unsigned Index);
 int     MULTIPAGE_IsPageEnabled (MultiPage *pObj, unsigned Index);
-unsigned MULTIPAGE_GetDefaultAlign    (void);
+unsigned MULTIPAGE_GetDefaultAlign    ();
 RGBC     MULTIPAGE_GetDefaultBkColor  (unsigned Index);
-CFont*   MULTIPAGE_GetDefaultFont     (void);
+CFont*   MULTIPAGE_GetDefaultFont     ();
 RGBC     MULTIPAGE_GetDefaultTextColor(unsigned Index);
 void     MULTIPAGE_SetDefaultAlign    (unsigned Align);
 void     MULTIPAGE_SetDefaultBkColor  (RGBC Color, unsigned Index);

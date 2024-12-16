@@ -57,7 +57,6 @@
 #define WC_ANCHOR_LEFT      (1 <<  8)
 #define WC_ANCHOR_TOP       (1 <<  9)
 #define WC_CONST_OUTLINE    (1 << 10)
-#define WC_LATE_CLIP        (1 << 11)
 
 #define WC_ANCHOR_MASK (WC_ANCHOR_LEFT | \
 						WC_ANCHOR_RIGHT | \
@@ -70,8 +69,7 @@
 				 WC_ANCHOR_BOTTOM | \
 				 WC_ANCHOR_LEFT | \
 				 WC_ANCHOR_TOP | \
-				 WC_NOACTIVATE | \
-				 WC_LATE_CLIP)
+				 WC_NOACTIVATE)
 
 struct WM_KEY_INFO {
 	int Key, PressedCnt;
@@ -608,8 +606,8 @@ protected:
 
 protected: // Graphics
 	void DrawVLine(int x, int y0, int y1) const;
-	void FillRect(SRect) const;
-	void DrawFocus(SRect, int Dist = 0) const;
+	void Fill(SRect) const;
+	void OutlineFocus(SRect, int Dist = 0) const;
 
 	inline RGBC BkColorProp(RGBC PropColor) const { return PropColor == RGB_INVALID_COLOR ? Parent()->BkColor() : PropColor; }
 

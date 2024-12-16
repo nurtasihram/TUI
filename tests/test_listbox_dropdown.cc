@@ -1,11 +1,12 @@
 #include "Frame.h"
 #include "CheckBox.h"
 #include "ListBox.h"
+#include "Radio.h"
 
 const RGBC ColorsSmilie0[]{
 	/* __ */ RGB_INVALID_COLOR,
-	/**/ RGB_BLACK,
-	/**/ RGB_RED
+	/* XX */ RGB_BLACK,
+	/* oo */ RGB_RED
 };
 CPalette PalSmilie0{ ColorsSmilie0 };
 const BPP2_DAT acSmilie0[]{
@@ -33,8 +34,8 @@ CBitmap bmSmilie0{
 
 const RGBC ColorsSmilie1[]{
 	/* __ */ RGB_INVALID_COLOR,
-	/**/ RGB_BLACK,
-	/**/ RGB_YELLOW
+	/* XX */ RGB_BLACK,
+	/* oo */ RGB_YELLOW
 };
 CPalette PalSmilie1{ ColorsSmilie1 };
 const BPP2_DAT acSmilie1[]{
@@ -95,7 +96,7 @@ static int _OwnerDraw(const WIDGET_ITEM_DRAW_INFO *pDrawItemInfo) {
 			auto ColorIndex =
 				 bMultiSel ? bEnabled ? bSelected ? 2 : 0 : 3 :
 				 bEnabled ? pDrawItemInfo->ItemIndex == Sel ?
-					pDrawItemInfo->pWin->Focussed() ? 2 : 1 : 0 : 3;
+							pDrawItemInfo->pWin->Focussed() ? 2 : 1 : 0 : 3;
 			GUI.BkColor(aBkColor[ColorIndex]);
 			GUI.PenColor(aColor[ColorIndex]);
 			GUI.Clear();
@@ -119,7 +120,7 @@ static int _OwnerDraw(const WIDGET_ITEM_DRAW_INFO *pDrawItemInfo) {
 					pDrawItemInfo->y0 + YSize - 1
 				};
 				GUI.PenColor(RGB_WHITE - aBkColor[ColorIndex]);
-				GUI.DrawFocus(rFocus);
+				GUI.OutlineFocus(rFocus);
 			}
 			break;
 		}
@@ -192,8 +193,8 @@ static void _cbFrame(WM_MSG *pMsg) {
 
 static const WM_CREATESTRUCT aDialogCreate[]{
 /*    Class             , x		, y		, xsize	, ysize	, Caption				 , Id				, Flags	, ExFlags				, Para	*/
-	{ WCLS_FRAME			, 50		, 50		, 220	, 180	, "Owner drawn list box" , 0					, 0		, FRAME_CF_MOVEABLE			 	},
-	{ WCLS_LISTBOX		, 10		, 10		, 100	, 100	, "English\0"
+	{ WCLS_FRAME		, 50	, 50	, 220	, 180	, "Owner drawn list box" , 0				, 0		, FRAME_CF_MOVEABLE			 	},
+	{ WCLS_LISTBOX		, 10	, 10	, 100	, 100	, "English\0"
 														  "Deutsch\0"
 														  "Francis\0"
 														  "Japanese\0"
@@ -202,19 +203,47 @@ static const WM_CREATESTRUCT aDialogCreate[]{
 														  "Greek\0"
 														  "Hebrew\0"
 														  "Dutch\0"
-														  "Other language ...\0" , GUI_ID_MULTIEDIT0, 0		, LISTBOX_CF_AUTOSCROLLBAR_H		},
-	{ WCLS_CHECKBOX		, 120	, 10		, 80		, 15		, "Multi select"			 , GUI_ID_CHECK0												},
-	{ WCLS_CHECKBOX		, 120	, 35		, 80		, 15		, "Owner drawn"			 , GUI_ID_CHECK1												},
-	{ WCLS_BUTTON		, 120	, 65		, 80		, 20		, "OK"					 , GUI_ID_OK													},
-	{ WCLS_BUTTON		, 120	, 90		, 80		, 20		, "Cancel"				 , GUI_ID_CANCEL												},
-	{ WCLS_DROPDOWN		, 10		, 100	, 100	, 20		, "Alfa\0Beta\0"			 , 0															},
+														  "Other language ...\0" , GUI_ID_MULTIEDIT0, 0		, LISTBOX_CF_AUTOSCROLLBAR_H	},
+	{ WCLS_CHECKBOX		, 120	, 10	, 80	, 15	, "Multi select"		 , GUI_ID_CHECK0											},
+	{ WCLS_CHECKBOX		, 120	, 35	, 80	, 15	, "Owner drawn"			 , GUI_ID_CHECK1											},
+	{ WCLS_BUTTON		, 120	, 65	, 80	, 20	, "OK"					 , GUI_ID_OK												},
+	{ WCLS_BUTTON		, 120	, 90	, 80	, 20	, "Cancel"				 , GUI_ID_CANCEL											},
+	{ WCLS_DROPDOWN		, 10	, 100	, 100	, 20	, "Alfa\0Beta\0"		 , 0														},
 	{}
 };
 
+void MainTasfk() {
+	for (;;)
+		WObj::Exec();
+}
+
 void MainTask() {
+	_bMultiSel = false;
+	_bOwnerDrawn = true;
+	auto pDlg = aDialogCreate->CreateDialog(_cbFrame, 0, 0, 0);
+
+	auto pFrame = new Frame(
+		0, 0, 250, 250,
+		WObj::Desktop(), WC_VISIBLE,
+		0, 0, "CheckBox & Radio");
+	pFrame->Moveable(true);
+	auto pCheck0 = new CheckBox(50, 50, 145, 15, pFrame->Client(), 0, 0, "CheckBox 0");
+	pCheck0->NumStates(3);
+	pCheck0->Visible(true);
+	auto pCheck1 = new CheckBox(50, 50 + 15, 145, 15, pFrame->Client(), 0, 0, "CheckBox 1");
+	pCheck1->Visible(true);
+	auto pCheck2 = new CheckBox(50, 50 + 15 * 2, 145, 15, pFrame->Client(), 0, 0, "CheckBox 2");
+	pCheck2->Visible(true);
+	auto pRadios = new Radio(50, 50 + 15 * 3, 145, 15 * 3, pFrame->Client(), 0, 0, 0, 3, 15);
+	pRadios->Text(0, "Radio 0");
+	pRadios->Text(1, "Radio 1");
+	pRadios->Text(2, "Radio 2");
+	pRadios->Visible(true);
+	auto pBtn = new Button(35, 170, 40, 30, pFrame->Client(), 0, 0, "Click");
+	pBtn->Visible(true);
+	pFrame->Visible(true);
+
 	for (;;) {
-		_bMultiSel = false;
-		_bOwnerDrawn = true;
-		aDialogCreate->DialogBox(_cbFrame, 0, 0, 0);
+		WObj::Exec();
 	}
 }

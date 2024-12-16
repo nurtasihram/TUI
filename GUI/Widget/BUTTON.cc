@@ -50,12 +50,12 @@ void Button::_OnPaint() const {
 		r += EffectSize;
 	if (text) {
 		GUI.Font(Props.pFont);
-		GUI_SetTextMode(DRAWMODE_TRANS);
+		GUI.TextMode(DRAWMODE_TRANS);
 		GUI_DispStringInRect(text, r, Props.Align);
 	}
 	if (State & BUTTON_STATE_FOCUS) {
 		GUI.PenColor(RGB_BLACK);
-		GUI.DrawFocus(rClient, 2);
+		GUI.OutlineFocus(rClient, 2);
 	}
 	WObj::SetUserClipRect(nullptr);
 }
@@ -151,10 +151,10 @@ Button::Button(int x0, int y0, int xsize, int ysize,
 	text(pText) {}
 
 Button::~Button() {
-	GUI_ALLOC_Free(apDrawObj[0]);
+	GUI_MEM_Free(apDrawObj[0]);
 	apDrawObj[0] = nullptr;
-	GUI_ALLOC_Free(apDrawObj[1]);
+	GUI_MEM_Free(apDrawObj[1]);
 	apDrawObj[1] = nullptr;
-	GUI_ALLOC_Free(apDrawObj[2]);
+	GUI_MEM_Free(apDrawObj[2]);
 	apDrawObj[2] = nullptr;
 }

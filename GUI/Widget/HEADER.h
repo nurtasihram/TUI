@@ -11,8 +11,8 @@ struct Header : public Widget {
 		~Column() {
 			pDrawObj = nullptr;
 			pText = nullptr;
-			GUI_ALLOC_Free(pDrawObj);
-			GUI_ALLOC_Free(pText);
+			GUI_MEM_Free(pDrawObj);
+			GUI_MEM_Free(pText);
 		}
 	};
 	RGBC BkColor;
@@ -38,12 +38,12 @@ CFont*            HEADER_SetDefaultFont     (CFont* pFont);
 int               HEADER_SetDefaultBorderH  (int Spacing);
 int               HEADER_SetDefaultBorderV  (int Spacing);
 RGBC              HEADER_SetDefaultTextColor(RGBC Color);
-RGBC              HEADER_GetDefaultBkColor  (void);
-CCursor     *HEADER_GetDefaultCursor   (void);
-CFont*            HEADER_GetDefaultFont     (void);
-int               HEADER_GetDefaultBorderH  (void);
-int               HEADER_GetDefaultBorderV  (void);
-RGBC              HEADER_GetDefaultTextColor(void);
+RGBC              HEADER_GetDefaultBkColor  ();
+CCursor     *HEADER_GetDefaultCursor   ();
+CFont*            HEADER_GetDefaultFont     ();
+int               HEADER_GetDefaultBorderH  ();
+int               HEADER_GetDefaultBorderV  ();
+RGBC              HEADER_GetDefaultTextColor();
 void HEADER_AddItem     (Header *pObj, int Width, const char * s, int Align);
 void HEADER_DeleteItem  (Header *pObj, unsigned Index);
 int  HEADER_GetHeight   (Header *pObj);

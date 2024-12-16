@@ -30,19 +30,19 @@ static void _OnPaint(Header* pObj) {
 		if (Col.pDrawObj) {
 			Point Off;
 			auto &&size = Col.pDrawObj->Size();
-			switch (Col.Align & GUI_TA_HORIZONTAL) {
-			case GUI_TA_RIGHT:
+			switch (Col.Align & TEXTALIGN_HORIZONTAL) {
+			case TEXTALIGN_RIGHT:
 				Off.x =  Col.Width - size.x;
 				break;
-			case GUI_TA_HCENTER:
+			case TEXTALIGN_HCENTER:
 				Off.x = (Col.Width - size.x) / 2;
 				break;
 			}
-			switch (Col.Align & GUI_TA_VCENTER) {
-			case GUI_TA_BOTTOM:
+			switch (Col.Align & TEXTALIGN_VCENTER) {
+			case TEXTALIGN_BOTTOM:
 				Off.y =  rect.ysize() - size.y;
 				break;
-			case GUI_TA_VCENTER:
+			case TEXTALIGN_VCENTER:
 				Off.y = (rect.ysize() - size.y) / 2;
 				break;
 			}
@@ -65,7 +65,7 @@ static void _OnPaint(Header* pObj) {
 	rect.x1 = 0xfff;
 	pObj->DrawUp(rect);
 }
-static void _RestoreOldCursor(void) {
+static void _RestoreOldCursor() {
 	if (!_pOldCursor)
 		return;
 	GUI_CURSOR_Select(_pOldCursor);
@@ -228,12 +228,12 @@ CFont* HEADER_SetDefaultFont(CFont* pFont) {
 	_pDefaultFont = pFont;
 	return pOldFont;
 }
-CCursor *HEADER_GetDefaultCursor(void) { return _pDefaultCursor; }
-RGBC          HEADER_GetDefaultBkColor(void) { return _DefaultBkColor; }
-RGBC          HEADER_GetDefaultTextColor(void) { return _DefaultTextColor; }
-int           HEADER_GetDefaultBorderH(void) { return _DefaultBorderH; }
-int           HEADER_GetDefaultBorderV(void) { return _DefaultBorderV; }
-CFont*        HEADER_GetDefaultFont(void) { return _pDefaultFont; }
+CCursor *HEADER_GetDefaultCursor() { return _pDefaultCursor; }
+RGBC          HEADER_GetDefaultBkColor() { return _DefaultBkColor; }
+RGBC          HEADER_GetDefaultTextColor() { return _DefaultTextColor; }
+int           HEADER_GetDefaultBorderH() { return _DefaultBorderH; }
+int           HEADER_GetDefaultBorderV() { return _DefaultBorderV; }
+CFont*        HEADER_GetDefaultFont() { return _pDefaultFont; }
 void HEADER_SetFont(Header *pObj, CFont *pFont) {
 	if (!pObj)
 		return;
@@ -345,7 +345,7 @@ void HEADER__SetDrawObj(Header *pObj, unsigned Index, GUI_DRAW_BASE *pDrawObj) {
 	if (Index >= pObj->Columns.NumItems())
 		return;
 	auto &Col = pObj->Columns[Index];
-	GUI_ALLOC_Free(Col.pDrawObj);
+	GUI_MEM_Free(Col.pDrawObj);
 	Col.pDrawObj = pDrawObj;
 }
 void HEADER_SetBitmapEx(Header *pObj, unsigned Index, CBitmap* pBitmap, int x, int y) {

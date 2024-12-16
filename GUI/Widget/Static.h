@@ -1,18 +1,18 @@
 #pragma once
 #include "WM.h"
 
-#define TEXT_CF_LEFT    GUI_TA_LEFT
-#define TEXT_CF_RIGHT   GUI_TA_RIGHT
-#define TEXT_CF_HCENTER GUI_TA_HCENTER
-#define TEXT_CF_VCENTER GUI_TA_VCENTER
-#define TEXT_CF_TOP     GUI_TA_TOP
-#define TEXT_CF_BOTTOM  GUI_TA_BOTTOM
+#define TEXT_CF_LEFT    TEXTALIGN_LEFT
+#define TEXT_CF_RIGHT   TEXTALIGN_RIGHT
+#define TEXT_CF_HCENTER TEXTALIGN_HCENTER
+#define TEXT_CF_VCENTER TEXTALIGN_VCENTER
+#define TEXT_CF_TOP     TEXTALIGN_TOP
+#define TEXT_CF_BOTTOM  TEXTALIGN_BOTTOM
 
 struct Static : public Widget {
 public:
 	struct Property {
 		CFont *pFont = &GUI_Font13_1;
-		TEXTALIGN Align = GUI_TA_LEFT;
+		TEXTALIGN Align = TEXTALIGN_LEFT;
 		RGBC textColor = RGB_BLACK;
 		RGBC bkColor = RGB_INVALID_COLOR;
 	} static DefaultProps;

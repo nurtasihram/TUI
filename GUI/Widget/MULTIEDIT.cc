@@ -56,7 +56,7 @@ int MultiEdit::_GetNumCharsInPrompt(const char *pText) {
 int MultiEdit::_NumChars2XSize(const char *pText, int NumChars) {
 	int xSize = 0;
 	while (--NumChars)
-		xSize += GUI_GetCharDistX(GUI_UC__GetCharCodeInc(&pText));
+		xSize += GUI.Font()->XDist(GUI_UC__GetCharCodeInc(&pText));
 	return xSize;
 }
 int MultiEdit::_WrapGetNumCharsDisp(const char *pText) {
@@ -77,7 +77,7 @@ int MultiEdit::_WrapGetNumCharsDisp(const char *pText) {
 					x = _NumChars2XSize(pText, NumCharsPrompt);
 					pText += GUI_UC__NumChars2NumBytes(pText, NumCharsPrompt);
 					while (GUI_UC__GetCharCodeInc(&pText) != 0) {
-						x += GUI_GetCharDistX(MULTIEDIT_PASSWORD_CHAR);
+						x += GUI.Font()->XDist(MULTIEDIT_PASSWORD_CHAR);
 						if (r && (x > xSize)) {
 							break;
 						}
@@ -114,12 +114,12 @@ int MultiEdit::_WrapGetNumBytesToNextLine(const char *pText) {
 int MultiEdit::_GetCharDistX(const char *pText) {
 	int r;
 	if ((this->Flags & MULTIEDIT_CF_PASSWORD) && (_GetNumCharsInPrompt(pText) == 0)) {
-		r = GUI_GetCharDistX(MULTIEDIT_PASSWORD_CHAR);
+		r = GUI.Font()->XDist(MULTIEDIT_PASSWORD_CHAR);
 	}
 	else {
 		uint16_t c;
 		c = GUI_UC_GetCharCode(pText);
-		r = GUI_GetCharDistX(c);
+		r = GUI.Font()->XDist(c);
 	}
 	return r;
 }
@@ -135,7 +135,7 @@ void MultiEdit::_DispString(const char *pText, SRect *pRect) {
 		else {
 			NumCharsLeft = NumCharsDisp - NumCharsPrompt;
 		}
-		GUI_DispStringInRect(pText, pRect, GUI_TA_LEFT, NumCharsPrompt);
+		GUI_DispStringInRect(pText, pRect, TEXTALIGN_LEFT, NumCharsPrompt);
 		x = pRect->x0 + _NumChars2XSize(pText, NumCharsPrompt);
 		if (NumCharsLeft) {
 			GUI_DispCharAt(MULTIEDIT_PASSWORD_CHAR, { x, pRect->y0 });
@@ -143,7 +143,7 @@ void MultiEdit::_DispString(const char *pText, SRect *pRect) {
 		}
 	}
 	else {
-		GUI_DispStringInRect(pText, pRect, GUI_TA_LEFT, NumCharsDisp);
+		GUI_DispStringInRect(pText, pRect, TEXTALIGN_LEFT, NumCharsDisp);
 	}
 }
 char *MultiEdit::_GetpLine(unsigned LineNumber) {
@@ -214,7 +214,7 @@ void MultiEdit::_GetCursorXY(int *px, int *py) {
 			}
 		}
 		this->CursorPosX = x;
-		this->CursorPosY = CursorLine * GUI.pAFont->YDist;
+		this->CursorPosY = CursorLine * GUI.Font()->YDist;
 		this->InvalidFlags &= ~INVALID_CURSORXY;
 	}
 	*px = this->CursorPosX;
@@ -390,7 +390,7 @@ void MultiEdit::_SetCursorXY(int x, int y) {
 		return;
 	if (pText) {
 		GUI.Font(this->pFont);
-		auto pLine = _GetpLine(y / GUI.pAFont->YDist);
+		auto pLine = _GetpLine(y / GUI.Font()->YDist);
 		auto WrapChars = _WrapGetNumCharsDisp(pLine);
 		auto Char = GUI_UC__GetCharCode(pLine + GUI_UC__NumChars2NumBytes(pLine, WrapChars));
 		if (this->Flags & MULTIEDIT_CF_PASSWORD) {
@@ -479,7 +479,7 @@ int MultiEdit::_GetCursorSizeX() {
 }
 int MultiEdit::_IncrementBuffer(unsigned AddBytes) {
 	auto NewSize = this->BufferSize + AddBytes;
-	if (auto pNew = (char *)GUI_ALLOC_Realloc(this->pText, NewSize)) {
+	if (auto pNew = (char *)GUI_MEM_Realloc(this->pText, NewSize)) {
 		if (!this->pText)
 			*pNew = 0;
 		this->BufferSize = NewSize;
@@ -561,7 +561,7 @@ void MultiEdit::_OnPaint() {
 	SRect r, rClip;
 	const SRect *prOldClip;
 	GUI.Font(this->pFont);
-	FontSizeY = GUI.pAFont->YDist;
+	FontSizeY = GUI.Font()->YDist;
 	ScrollPosX = this->scrollStateH.v;
 	ScrollPosY = this->scrollStateV.v;
 	EffectSize = this->EffectSize();
@@ -614,7 +614,7 @@ void MultiEdit::_OnPaint() {
 		r.y0 = y + yOff;
 		r.x1 = r.x0 + _GetCursorSizeX() - 1;
 		r.y1 = r.y0 + FontSizeY - 1;
-		GUI.DrawRect({ r.x0, r.y0, r.x0 + 4, r.y1 });
+		GUI.Outline({ r.x0, r.y0, r.x0 + 4, r.y1 });
 	}
 	WObj::SetUserClipRect(prOldClip);
 	this->DrawDown();
@@ -766,7 +766,7 @@ void MultiEdit::_Callback(WM_MSG *pMsg) {
 			pObj->_OnTouch(pMsg);
 			break;
 		case WM_DELETE:
-			GUI_ALLOC_Free(pObj->pText);
+			GUI_MEM_Free(pObj->pText);
 			pObj->pText = nullptr;
 			break;
 		case WM_KEY:
@@ -826,7 +826,7 @@ MultiEdit *MultiEdit::Create(
 	//pObj->BufferSize = 0;
 	//pObj->pText = 0;
 	//if (BufferSize > 0) {
-	//	auto pText = (char *)GUI_ALLOC_AllocZero(BufferSize);
+	//	auto pText = (char *)GUI_MEM_AllocZero(BufferSize);
 	//	if (pText) {
 	//		pObj->BufferSize = BufferSize;
 	//		pObj->pText = pText;
@@ -936,8 +936,8 @@ void MultiEdit::PasswordMode(bool bEnable) {
 //	}
 //}
 //void MULTIEDIT_SetBufferSize(MultiEdit *pObj, int BufferSize) {
-//	auto pText = (char *)GUI_ALLOC_AllocZero(BufferSize);
-//	GUI_ALLOC_Free(pObj->pText);
+//	auto pText = (char *)GUI_MEM_AllocZero(BufferSize);
+//	GUI_MEM_Free(pObj->pText);
 //	pObj->pText = pText;
 //	pObj->BufferSize = BufferSize;
 //	pObj->NumCharsPrompt = 0;

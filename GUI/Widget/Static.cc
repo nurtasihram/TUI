@@ -4,7 +4,7 @@ void Static::_OnPaint() const {
 	GUI.BkColor(BkColorProp(Props.bkColor));
 	GUI.Clear();
 	if (!text) return;
-	GUI_SetTextMode(DRAWMODE_TRANS);
+	GUI.TextMode(DRAWMODE_TRANS);
 	GUI.PenColor(Props.textColor);
 	GUI.Font(Props.pFont);
 	GUI_DispStringInRect(text, ClientRect(), Props.Align);

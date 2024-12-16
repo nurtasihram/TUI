@@ -43,7 +43,7 @@ static int _GetItemWidth(Menu *pObj, unsigned Index) {
 static int _GetItemHeight(Menu *pObj, unsigned Index) {
 	if (pObj->Height && !(pObj->Flags & MENU_CF_VERTICAL))
 		return pObj->Height - (_GetEffectSize(pObj) << 1);
-	int ItemHeight = GUI_GetYDistOfFont(pObj->Props.pFont);
+	int ItemHeight = pObj->Props.pFont->YDist;
 	if (pObj->Flags & MENU_CF_VERTICAL) {
 		auto &item = pObj->ItemArray[Index];
 		if (item.Flags & MENU_IF_SEPARATOR)

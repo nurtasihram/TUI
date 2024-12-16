@@ -27,7 +27,7 @@ public:
 			RGB_WHITE,
 			RGB_LIGHTGRAY
 		};
-		int16_t Align = GUI_TA_HCENTER | GUI_TA_VCENTER;
+		int16_t Align = TEXTALIGN_HCENTER | TEXTALIGN_VCENTER;
 	};
 	static Property DefaultProps;
 private:
@@ -91,7 +91,7 @@ public: // Property - Text
 	/* R */ inline auto Text() const { return text; }
 public: // Property - SelfDraw
 	/* W */ inline void SelfDraw(uint8_t Index, GUI_DRAW_BASE *pDrawObj) {
-		GUI_ALLOC_Free(apDrawObj[Index]);
+		GUI_MEM_Free(apDrawObj[Index]);
 		apDrawObj[Index] = pDrawObj;
 		Invalidate();
 	}

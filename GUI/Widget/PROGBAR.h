@@ -13,7 +13,7 @@ public:
 			RGB_WHITE,
 			RGB_BLACK
 		};
-		TEXTALIGN Align = GUI_TA_HCENTER;
+		TEXTALIGN Align = TEXTALIGN_HCENTER;
 	} static DefaultProps;
 private:
 	TString text;

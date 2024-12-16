@@ -24,9 +24,6 @@
     <ClCompile Include="GUI_X\GUI_X_LCD.cc">
       <Filter>GUI_X_LCD</Filter>
     </ClCompile>
-    <ClCompile Include="GUI_X\GUI_X_LCDA.cc">
-      <Filter>GUI_X_LCD</Filter>
-    </ClCompile>
     <ClCompile Include="GUI\Widget\Button.cc">
       <Filter>GUI\Widget\Controls</Filter>
     </ClCompile>
@@ -94,25 +91,7 @@
     <ClCompile Include="GUI\GUI_Memory.cc">
       <Filter>GUI</Filter>
     </ClCompile>
-    <ClCompile Include="GUI\GUI_OnKey.cc">
-      <Filter>GUI</Filter>
-    </ClCompile>
-    <ClCompile Include="GUI\GUI_UC.cc">
-      <Filter>GUI</Filter>
-    </ClCompile>
-    <ClCompile Include="GUI\GUI_UC_EncodeNone.cc">
-      <Filter>GUI</Filter>
-    </ClCompile>
-    <ClCompile Include="GUI\GUIChar.cc">
-      <Filter>GUI</Filter>
-    </ClCompile>
-    <ClCompile Include="GUI\GUICore.cc">
-      <Filter>GUI</Filter>
-    </ClCompile>
-    <ClCompile Include="GUI\GUI_Cursor.cc">
-      <Filter>GUI</Filter>
-    </ClCompile>
-    <ClCompile Include="GUI\GUILCD.cc">
+    <ClCompile Include="GUI\GUI_Core.cc">
       <Filter>GUI</Filter>
     </ClCompile>
     <ClCompile Include="GUI\Resources\GUI_Font6x8_9.cc">
@@ -212,9 +191,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="GUI\GUI__CharPix.inl">
-      <Filter>GUI</Filter>
-    </None>
     <None Include="GUI\GUI__ID.inl">
       <Filter>GUI</Filter>
     </None>

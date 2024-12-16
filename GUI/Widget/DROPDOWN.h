@@ -23,7 +23,7 @@ public:
 			RGB_WHITE
 		};
 		int16_t TextBorderSize = 2;
-		int16_t Align = GUI_TA_LEFT;
+		int16_t Align = TEXTALIGN_LEFT;
 	} static DefaultProps;
 private:
 	int16_t sel;

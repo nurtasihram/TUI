@@ -46,12 +46,12 @@ void Slider::_OnPaint() const {
 			DrawVLine(x0 + xsize * i / (NumTicks - 1), 1, 3);
 	}
 	GUI.PenColor(Props.Color);
-	FillRect(rSlider);
+	Fill(rSlider);
 	GUI.PenColor(RGB_BLACK);
 	DrawUp(rSlider);
 	if (State & WIDGET_STATE_FOCUS) {
 		GUI.PenColor(RGB_BLACK);
-		DrawFocus(rFocus);
+		OutlineFocus(rFocus);
 	}
 }
 void Slider::_OnTouch(const PidState *pState) {

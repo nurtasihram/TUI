@@ -29,8 +29,8 @@ public:
 		LISTVIEW_ITEM_INFO *pItemInfo;
 		char *pText = nullptr;
 		~Item() {
-			GUI_ALLOC_Free(pText);
-			GUI_ALLOC_Free(pItemInfo);
+			GUI_MEM_Free(pText);
+			GUI_MEM_Free(pItemInfo);
 			pText = nullptr;
 			pItemInfo = nullptr;
 		}

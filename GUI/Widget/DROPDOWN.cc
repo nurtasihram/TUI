@@ -43,7 +43,7 @@ void DropDown::_OnPaint() const {
 	GUI.PenColor(Props.aBkColor[ColorIndex]);
 	/* Draw the text */
 	GUI.BkColor(Props.aBkColor[ColorIndex]);
-	GUI.FillRect(r);
+	GUI.Fill(r);
 	r.x0 += TextBorderSize;
 	r.x1 -= TextBorderSize;
 	GUI.PenColor(Props.aTextColor[ColorIndex]);
@@ -52,7 +52,7 @@ void DropDown::_OnPaint() const {
 	r = ClientRect() / Border;
 	r.x0 = r.x1 + 1 - InnerSize;
 	GUI.PenColor(RGBC_GRAY(0xc0));
-	GUI.FillRect(r);
+	GUI.Fill(r);
 	GUI.PenColor(RGB_BLACK);
 	_DrawTriangleDown((r.x1 + r.x0) / 2, r.y0 + 5, (r.y1 - r.y0 - 8) / 2);
 	DrawUp(r);
@@ -77,7 +77,7 @@ bool DropDown::_OnKey(const WM_KEY_INFO *pKi) {
 void DropDown::_AdjustHeight() {
 	int Height = textHeight;
 	if (!Height)
-		Height = GUI_GetYDistOfFont(Props.pFont);
+		Height = Props.pFont->YDist;
 	Height += EffectSize() + 2 * Props.TextBorderSize;
 	SizeY(Height);
 }
