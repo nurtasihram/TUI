@@ -7,7 +7,7 @@ public:
 		CFont *pFont = &GUI_Font6x8;
 		RGBC aBarColor[2]{
 			RGBC_GRAY(0x55),
-			RGBC_GRAY(0xAA)
+			RGB_DARKBLUE
 		};
 		RGBC aTextColor[2]{
 			RGB_WHITE,

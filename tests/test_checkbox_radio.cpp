@@ -8,6 +8,9 @@ void MainTask() {
 		WObj::Desktop(), WC_VISIBLE,
 		0, 0, "CheckBox & Radio");
 	pFrame->Moveable(true);
+	pFrame->AddCloseButton();
+	pFrame->AddMaxButton();
+	pFrame->AddMinButton();
 
 	auto pCheck0 = new CheckBox(50, 50, 145, 15, pFrame->Client(), 0, 0, "CheckBox 0");
 	pCheck0->NumStates(3);

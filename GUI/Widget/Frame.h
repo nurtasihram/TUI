@@ -8,8 +8,9 @@
 #define FRAME_CF_TITLEVIS   (1<<6)
 #define FRAME_CF_MINIMIZED  (1<<7)
 #define FRAME_CF_MAXIMIZED  (1<<8)
-#define FRAME_BUTTON_RIGHT   (1<<0)
-#define FRAME_BUTTON_LEFT    (1<<1)
+
+#define FRAME_BUTTON_LEFT    (WC_VISIBLE | WC_ANCHOR_LEFT)
+#define FRAME_BUTTON_RIGHT   (WC_VISIBLE | WC_ANCHOR_RIGHT)
 
 class Frame : public Widget {
 public:
@@ -23,9 +24,9 @@ public:
 			/* Lose focused */  RGBC_GRAY(0x80),
 			/* Focused */ RGBC_B(0x80)
 		};
-		RGBC ClientColor{ RGBC_GRAY(0xD4) };
+		RGBC ClientColor{ RGBC_GRAY(0xE4) };
 		RGBC FrameColor{ RGBC_GRAY(0xAA) };
-		uint16_t TitleHeight{ 18 };
+		uint16_t TitleHeight{ 20 };
 		uint16_t BorderSize{ 2 };
 		uint16_t IBorderSize{ 1 };
 		int16_t Align = TEXTALIGN_VCENTER;
@@ -42,8 +43,8 @@ private:
 	WM_DIALOG_STATUS *pDialogStatus = nullptr;
 
 	struct Positions {
-		int16_t TitleHeight;
-		int16_t MenuHeight;
+		uint16_t TitleHeight;
+		uint16_t MenuHeight;
 		SRect rClient;
 		SRect rTitleText;
 	};
@@ -71,11 +72,10 @@ public:
 		wc.x, wc.y, wc.xsize, wc.ysize, wc.pParent, wc.Id, wc.Flags, wc.ExFlags,
 		wc.pCaption, (WM_CB *)wc.Para.ptr) {}
 private:
-	int16_t _CalcTitleHeight() const;
+	uint16_t _CalcTitleHeight() const;
 	Positions _CalcPositions() const;
 
 	void _UpdatePositions();
-	void _UpdateButtons(int Height);
 
 	void _ChangeWindowPosSize(Point &);
 	bool _ForwardMouseOverMsg(WM_MSG *pMsg);
@@ -92,9 +92,9 @@ private:
 
 public:
 	Button *AddButton(uint16_t Flags, int Off, uint16_t Id);
-	Button *AddMaxButton(uint16_t Flags, int Off);
-	Button *AddCloseButton(uint16_t Flags, int Off);
-	Button *AddMinButton(uint16_t Flags, int Off);
+	Button *AddMinButton(uint16_t Flags = FRAME_BUTTON_RIGHT, int Off = 1);
+	Button *AddMaxButton(uint16_t Flags = FRAME_BUTTON_RIGHT, int Off = 1);
+	Button *AddCloseButton(uint16_t Flags = FRAME_BUTTON_RIGHT, int Off = 1);
 
 private:
 	void _InvalidateButton(uint16_t Id);
@@ -117,7 +117,6 @@ public: // Property - Font
 			Props.pFont = pFont;
 			int OldHeight = _CalcTitleHeight();
 			_UpdatePositions();
-			_UpdateButtons(OldHeight);
 			Invalidate();
 		}
 	}

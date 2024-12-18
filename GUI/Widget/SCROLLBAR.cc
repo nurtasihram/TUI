@@ -87,16 +87,16 @@ void ScrollBar::_OnPaint() {
 	auto &&rClient = ClientRect();
 	int ArrowSize = rClient.dy() / 3 - 1,
 		ArrowOff = 3 + ArrowSize + ArrowSize / 3;
-	GUI.PenColor(Props.aColor[0]);
-
+	/* Left Arrow */
 	auto r = rClient;
 	r.x0 = Pos.x0_LeftArrow;
 	r.x1 = Pos.x1_LeftArrow;
+	GUI.PenColor(Props.aColor[0]);
 	Fill(r);
 	GUI.PenColor(Props.aBkColor[1]);
 	_DrawTriangle(r.x0 + ArrowOff, r.dy() >> 1, ArrowSize, -1);
 	DrawUp(r);
-
+	/* Scroll 1 */
 	GUI.PenColor(Props.aBkColor[0]);
 	r.x0 = Pos.x1_LeftArrow + 1;
 	r.x1 = Pos.x0_Thumb - 1;
@@ -105,14 +105,14 @@ void ScrollBar::_OnPaint() {
 	r.x0 = Pos.x1_Thumb + 1;
 	r.x1 = Pos.x0_RightArrow - 1;
 	Fill(r);
-
+	/* Scroll 2 */
 	r = rClient;
 	r.x0 = Pos.x0_Thumb;
 	r.x1 = Pos.x1_Thumb;
 	GUI.PenColor(Props.aColor[0]);
 	Fill(r);
 	DrawUp(r);
-
+	/* Right Arrow */
 	GUI.PenColor(Props.aColor[0]);
 	r.x0 = Pos.x0_RightArrow;
 	r.x1 = Pos.x1_RightArrow;
@@ -120,7 +120,6 @@ void ScrollBar::_OnPaint() {
 	GUI.PenColor(Props.aBkColor[1]);
 	_DrawTriangle(r.x1 - ArrowOff, r.dy() >> 1, ArrowSize, 1);
 	DrawUp(r);
-
 	if (Pos.x1_RightArrow == Pos.x1)
 		return;
 	r.x0 = Pos.x1_RightArrow + 1;

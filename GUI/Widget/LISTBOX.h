@@ -20,7 +20,7 @@ public:
 		RGBC aBkColor[4]{
 			RGB_WHITE,
 			RGB_GRAY,
-			RGB_BLUE,
+			RGB_DARKBLUE,
 			RGBC_GRAY(0xC0),
 		};
 		RGBC aTextColor[4]{

@@ -114,6 +114,7 @@ public:
 	inline SRect&xmove(int step) { x0 += step, x1 += step; return*this; }
 	inline SRect&ymove(int step) { y0 += step, y1 += step; return*this; }
 	inline SRect rot90() const { return { -y1, x0, -y0, x1 }; }
+//	inline SRect operator~() const { return{ ~left_top(), ~right_bottom() }; }
 public:
 	inline SRect operator*(int p) const { return{ x0 - p, y0 - p, x1 + p, y1 + p }; }
 	inline SRect operator/(int p) const { return{ x0 + p, y0 + p, x1 - p, y1 - p }; }
@@ -555,7 +556,7 @@ public:
 	void OutlineFocus(SRect, int Dist = 0);
 	void Outline(SRect);
 	void DrawBitmap(CBitmap &, Point);
-	inline void DrawLineH(int y0, int x0, int x1) { Fill({ x0, y0, x1, y0 }); }
+	inline void DrawLineH(int x0, int y0, int x1) { Fill({x0, y0, x1, y0}); }
 	inline void DrawLineV(int x0, int y0, int y1) { Fill({ x0, y0, x0, y1 }); }
 public:
 	inline void ClipRect() { rClip = LCD_Rect(); }

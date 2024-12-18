@@ -8,6 +8,8 @@ Ayxandar SimDisp::Ayx;
 static inline void LCD_SetPixel(Point p, RGBC Color) {
 	SimDisp::Ayx.Dot({ p.x, p.y }, Color);
 }
+
+#pragma region LCD_SetBitmap
 template<bool HasTrans>
 static void _LCD_BMP_1BPP(
 	int x0, int y0, int x1, int y1,
@@ -88,6 +90,8 @@ void LCD_SetBitmap(const BitmapRect &br) {
 			break;
 	}
 }
+#pragma endregion
+
 void LCD_GetBitmap(BitmapRect &br) {
 	if (!br.pData) {
 		br.BytesPerLine = br.xsize() * 4;

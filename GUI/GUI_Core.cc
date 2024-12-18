@@ -164,6 +164,16 @@ void CursorCtl::Position(Point nPos) {
 }
 #pragma endregion
 
+static PidState _State;
+int GUI_PID_GetState(PidState *pState) {
+	*pState = _State;
+	return pState->Pressed != 0;
+}
+void GUI_PID_StoreState(const PidState *pState) {
+	if (_State != *pState)
+		_State = *pState;
+}
+
 void GUI_Init() {
 	GUI.ClipRect();
 	GUI.Cursor.Select(GUI.Props.pCursor);
@@ -697,12 +707,7 @@ int GUI__DivideRound(int a, int b) {
 #pragma region GUI_DRAW_BASE Classes
 #include <memory>
 
-void GUI_DRAW_BASE::Paint(SRect r) {
-	r += GUI.off;
-	WObj::IVR([&] {
-		Draw(r);
-	});
-}
+void GUI_DRAW_BASE::Paint(SRect r) { Draw(r); }
 
 void GUI_DRAW_BMP::Draw(SRect r) { GUI.DrawBitmap(*pBitmap, r.left_top()); }
 Point GUI_DRAW_BMP::Size() const { return pBitmap->Size; }
@@ -814,13 +819,3 @@ const GUI_UC_ENC_APILIST GUI__API_TableNone = {
 	_Encode           /*  Encode character */
 };
 #pragma endregion
-
-static PidState _State;
-int GUI_PID_GetState(PidState *pState) {
-	*pState = _State;
-	return pState->Pressed != 0;
-}
-void GUI_PID_StoreState(const PidState *pState) {
-	if (_State != *pState)
-		_State = *pState;
-}

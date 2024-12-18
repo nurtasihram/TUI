@@ -25,33 +25,32 @@ void Button::_Released(int Notification) {
 void Button::_OnPaint() const {
 	bool bPressed = State & BUTTON_STATE_PRESSED;
 	auto &&rClient = ClientRect();
-	int EffectSize;
-	if (bPressed) {
+	int EffectSize = 1;
+	if (bPressed)
 		DrawDown();
-		EffectSize = 1;
-	}
 	else {
 		DrawUp();
 		EffectSize = this->EffectSize();
 	}
-	auto &&rInside = rClient / EffectSize;
 	auto ColorIndex = Enable() ? bPressed : 2;
 	GUI.BkColor(Props.aBkColor[ColorIndex]);
 	GUI.PenColor(Props.aTextColor[ColorIndex]);
+	auto &&rInside = rClient / EffectSize;
 	WObj::SetUserClipRect(&rInside);
 	GUI.Clear();
 	if (auto pDraw =
 		apDrawObj[ColorIndex < 2 ?
-		apDrawObj[BUTTON_BI_PRESSED] && bPressed ? BUTTON_BI_PRESSED : BUTTON_BI_UNPRESSED :
-		apDrawObj[BUTTON_BI_DISABLED] ? BUTTON_BI_DISABLED : BUTTON_BI_UNPRESSED])
-		pDraw->Paint(InsideRect());
-	auto r = rInside;
-	if (bPressed)
-		r += EffectSize;
+			apDrawObj[BUTTON_BI_PRESSED] && bPressed ? BUTTON_BI_PRESSED : BUTTON_BI_UNPRESSED :
+			apDrawObj[BUTTON_BI_DISABLED] ? BUTTON_BI_DISABLED : BUTTON_BI_UNPRESSED
+		])
+		pDraw->Paint(InsideRectAbs());
 	if (text) {
 		GUI.Font(Props.pFont);
 		GUI.TextMode(DRAWMODE_TRANS);
-		GUI_DispStringInRect(text, r, Props.Align);
+		GUI_DispStringInRect(
+			text,
+			bPressed ? rInside + Point(EffectSize) : rInside,
+			Props.Align);
 	}
 	if (State & BUTTON_STATE_FOCUS) {
 		GUI.PenColor(RGB_BLACK);

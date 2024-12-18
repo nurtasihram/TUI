@@ -23,17 +23,19 @@ void Frame::_OnPaint() const {
 	auto BorderSize = Props.BorderSize;
 	auto &&Pos = _CalcPositions();
 	auto Index = Flags & FRAME_CF_ACTIVE ? 1 : 0;
-	SRect r, rText;
-	r.x0 = Pos.rClient.x0;
-	r.x1 = Pos.rClient.x1;
-	r.y0 = Pos.rTitleText.y0;
-	r.y1 = Pos.rTitleText.y1;
-	Pos.rTitleText.y0++;
-	Pos.rTitleText.x0++;
-	Pos.rTitleText.x1--;
+	SRect r{
+		Pos.rClient.x0,
+		Pos.rTitleText.y0,
+		Pos.rClient.x1,
+		Pos.rTitleText.y1
+	};
+	++Pos.rTitleText.y0;
+	++Pos.rTitleText.x0;
+	--Pos.rTitleText.x1;
 	GUI.Font(Props.pFont);
+	SRect rText;
 	GUI__CalcTextRect(Title, &Pos.rTitleText, &rText, Props.Align);
-	int y0 = Pos.TitleHeight + BorderSize;
+	auto y0 = Pos.TitleHeight + BorderSize;
 	WObj::IVR([&] {
 		GUI.BkColor(Props.aBarColor[Index]);
 		GUI.PenColor(Props.aTextColor[Index]);
@@ -49,16 +51,15 @@ void Frame::_OnPaint() const {
 	});
 }
 void Frame::_OnChildHasFocus(WM_MSG *pMsg) {
-	auto pInfo = (const WM_NOTIFY_CHILD_HAS_FOCUS_INFO *)pMsg->data;
-	if (!pInfo)
-		return;
-	if (WM__IsAncestorOrSelf(pInfo->pNew, this)) {
-		Active(true);
-		return;
+	if (auto pInfo = (const WM_NOTIFY_CHILD_HAS_FOCUS_INFO *)pMsg->data) {
+		if (WM__IsAncestorOrSelf(pInfo->pNew, this))
+			Active(true);
+		else {
+			Active(false);
+			if (WM__IsAncestor(pInfo->pOld, this))
+				pFocussedChild = pInfo->pOld;
+		}
 	}
-	Active(false);
-	if (WM__IsAncestor(pInfo->pOld, this))
-		pFocussedChild = pInfo->pOld;
 }
 void Frame::_Callback(WM_MSG *pMsg) {
 	auto pObj = (Frame *)pMsg->pWin;
@@ -67,14 +68,11 @@ void Frame::_Callback(WM_MSG *pMsg) {
 			return;
 	switch (pMsg->msgid) {
 	case WM_HANDLE_DIALOG_STATUS:
-	{
-		WM_DIALOG_STATUS *wds = (WM_DIALOG_STATUS *)pMsg->data;
-		if (wds)
+		if (auto wds = (WM_DIALOG_STATUS *)pMsg->data)
 			pObj->pDialogStatus = wds;
 		else
 			pMsg->data = (size_t)pObj->pDialogStatus;
 		return;
-	}
 	case WM_PAINT:
 		pObj->_OnPaint();
 		break;
@@ -118,7 +116,7 @@ void Frame::_Callback(WM_MSG *pMsg) {
 		}
 		return;
 	case WM_SET_FOCUS:
-		if (pMsg->data == 1) {
+		if (pMsg->data) {
 			if (IsWindow(pObj->pFocussedChild))
 				pObj->pFocussedChild->Focus();
 			else
@@ -130,14 +128,11 @@ void Frame::_Callback(WM_MSG *pMsg) {
 			pObj->Active(false);
 		return;
 	case WM_TOUCH_CHILD:
-		if (!(pObj->Flags & FRAME_CF_ACTIVE)) {
-			const WM_MSG *pMsgOrg = (const WM_MSG *)pMsg->data;
-			const PidState *pState = (const PidState *)pMsgOrg->data;
-			if (!pState)
-				break;
-			if (pState->Pressed)
-				pObj->Focus();
-		}
+		if (!(pObj->Flags & FRAME_CF_ACTIVE))
+			if (auto pMsgOrg = (const WM_MSG *)pMsg->data)
+				if (auto pState = (const PidState *)pMsgOrg->data)
+					if (pState->Pressed)
+						pObj->Focus();
 		break;
 	case WM_NOTIFY_CHILD_HAS_FOCUS:
 		pObj->_OnChildHasFocus(pMsg);
@@ -178,17 +173,15 @@ void Frame::_cbClient(WM_MSG *pMsg) {
 		pObj->HandleActive(pMsg);
 		return;
 	case WM_KEY:
-	{
-		const WM_KEY_INFO *ki = (const WM_KEY_INFO *)pMsg->data;
-		if (ki->PressedCnt > 0) {
-			switch (ki->Key) {
-			case GUI_KEY_TAB:
-				pObj->pFocussedChild = pWin->FocusNextChild();
-				return;
+		if (auto ki = (const WM_KEY_INFO *)pMsg->data)
+			if (ki->PressedCnt > 0) {
+				switch (ki->Key) {
+				case GUI_KEY_TAB:
+					pObj->pFocussedChild = pWin->FocusNextChild();
+					return;
+				}
 			}
-		}
 		break;
-	}
 	case WM_GET_BKCOLOR:
 		pMsg->data = pObj->Props.ClientColor;
 		return;
@@ -205,7 +198,7 @@ void Frame::_cbClient(WM_MSG *pMsg) {
 	else
 		DefCallback(pMsg);
 }
-int16_t Frame::_CalcTitleHeight() const {
+uint16_t Frame::_CalcTitleHeight() const {
 	if (!(State & FRAME_CF_TITLEVIS))
 		return 0;
 	return Props.TitleHeight ?
@@ -215,15 +208,15 @@ int16_t Frame::_CalcTitleHeight() const {
 Frame::Positions Frame::_CalcPositions() const {
 	auto &&rect = Rect();
 	auto &&size = Size();
-	auto BorderSize = Props.BorderSize;
-	auto TitleHeight = _CalcTitleHeight();
-	auto IBorderSize = Status & FRAME_CF_TITLEVIS ? Props.IBorderSize : 0;
-	int16_t MenuHeight = pMenu ? pMenu->SizeY() : 0;
-	Positions Pos = {
+	uint16_t BorderSize = Props.BorderSize;
+	uint16_t IBorderSize = Status & FRAME_CF_TITLEVIS ? Props.IBorderSize : 0;
+	uint16_t TitleHeight = _CalcTitleHeight();
+	uint16_t MenuHeight = pMenu ? pMenu->SizeY() : 0;
+	Positions Pos{
 		TitleHeight,
 		MenuHeight, {
 			{ BorderSize, BorderSize + IBorderSize + TitleHeight + MenuHeight },
-			size - BorderSize - 1
+			  size - BorderSize - 1
 		}, {
 			BorderSize,
 			{ size.x - BorderSize - 1, BorderSize + TitleHeight - 1 }
@@ -231,15 +224,14 @@ Frame::Positions Frame::_CalcPositions() const {
 	};
 	for (auto pChild = FirstChild(); pChild; pChild = pChild->NextSibling()) {
 		auto &&r = pChild->Rect();
-		auto &&d = r - rect;
-		if (d.y0 != BorderSize)
+		if (r.y1 > TitleHeight)
 			continue;
 		if (pChild->Styles() & WC_ANCHOR_RIGHT) {
-			if (d.x0 <= Pos.rTitleText.x1)
-				Pos.rTitleText.x1 = d.x0 - 1;
+			if (r.x0 <= Pos.rTitleText.x1)
+				Pos.rTitleText.x1 = r.x0 - 1;
 		}
-		else if (d.x1 >= Pos.rTitleText.x0)
-			Pos.rTitleText.x0 = d.x1 + 1;
+		else if (r.x1 >= Pos.rTitleText.x0)
+			Pos.rTitleText.x0 = r.x1 + 1;
 	}
 	return Pos;
 }
@@ -258,9 +250,8 @@ void Frame::_UpdatePositions() {
 }
 
 void Frame::_InvalidateButton(uint16_t Id) {
-	for (auto pChild = pFirstChild; pChild; pChild = pChild->NextSibling())
-		if (pChild->ID() == Id)
-			pChild->Invalidate();
+	if (auto pButton = DialogItem(Id)) 
+		pButton->Invalidate();
 }
 void Frame::_RestoreMinimized() {
 	if (!(Flags & FRAME_CF_MINIMIZED))
@@ -286,7 +277,7 @@ void Frame::Minimize() {
 	if (Flags & FRAME_CF_MINIMIZED)
 		return;
 	Flags |= FRAME_CF_MINIMIZED;
-	rRestore = rect;
+	rRestore = Rect();
 	pClient->Visible(false);
 	if (pMenu) pMenu->Visible(false);
 	SizeY(_CalcTitleHeight() + EffectSize() * 2 + 2);
@@ -302,35 +293,39 @@ void Frame::Maximize() {
 	auto rParent = pParent->Rect();
 	if (!pParent->Parent())
 		rParent = LCD_Rect();
-	rRestore = rect;
+	rRestore = Rect();
 	Position(rParent.left_top());
 	Size(rParent.size());
 	_UpdatePositions();
 	_InvalidateButton(GUI_ID_MAXIMIZE);
 }
-
 void Frame::Restore() {
 	_RestoreMinimized();
 	_RestoreMaximized();
 }
 
 void Frame::Active(bool bActive) {
-	if (bActive && !(Flags & FRAME_CF_ACTIVE)) {
+	auto Flags = this->Flags;
+	if (bActive)
 		Flags |= FRAME_CF_ACTIVE;
-		Invalidate();
-	}
-	else if (!bActive && (Flags & FRAME_CF_ACTIVE)) {
+	else 
 		Flags &= ~FRAME_CF_ACTIVE;
-		Invalidate();
-	}
+	if (this->Flags == Flags)
+		return;
+	this->Flags = Flags;
+	Invalidate();
 }
 void Frame::BorderSize(int Size) {
-	int OldHeight = _CalcTitleHeight();
-	int OldSize = Props.BorderSize;
-	int Diff = Size - OldSize;
+	if (Props.BorderSize != Size)
+		return;
+	auto OldHeight = _CalcTitleHeight();
+	auto OldSize = Props.BorderSize;
+	auto Diff = Size - OldSize;
 	for (auto pChild = FirstChild(); pChild; pChild = pChild->NextSibling()) {
-		auto &&r = pChild->Rect() - rect.left_top();
-		if (r.y0 == Props.BorderSize && r.y1 - r.y0 + 1 == OldHeight) {
+		auto &&r = pChild->Rect();
+		if (r.y0 > OldHeight)
+			continue;
+		if (r.ysize() == OldHeight) {
 			if (pChild->Styles() & WC_ANCHOR_RIGHT)
 				pChild->Move({ -Diff, Diff });
 			else
@@ -340,45 +335,6 @@ void Frame::BorderSize(int Size) {
 	Props.BorderSize = Size;
 	_UpdatePositions();
 	Invalidate();
-}
-void Frame::_UpdateButtons(int OldHeight) {
-	int TitleHeight = _CalcTitleHeight();
-	int Diff = TitleHeight - OldHeight;
-	if (!Diff)
-		return;
-	int n = 0;
-	WObj *pLeft, *pRight;
-	do {
-		pLeft = pRight = nullptr;
-		WObj *pChild;
-		for (pChild = FirstChild(); pChild; pChild = pChild->NextSibling()) {
-			auto &&r = pChild->Rect() - rect.left_top();
-			if (r.y0 != Props.BorderSize)
-				continue;
-			if (r.y1 - r.y0 + 1 != OldHeight)
-				continue;
-			int xLeft = GUI_XMAX, xRight = GUI_XMIN;
-			if (pChild->Styles() & WC_ANCHOR_RIGHT) {
-				if (r.x1 > xRight) {
-					pRight = pChild;
-					xRight = r.x0;
-				}
-			}
-			else if (r.x0 < xLeft) {
-				pLeft = pChild;
-				xLeft = r.x0;
-			}
-		}
-		if (pLeft) {
-			pLeft->Resize(Diff);
-			pLeft->Move({ n * Diff, 0 });
-		}
-		if (pRight) {
-			pRight->Resize(Diff);
-			pRight->Move({ -(n * Diff), 0 });
-		}
-		++n;
-	} while (pLeft || pRight);
 }
 void Frame::Menu(::Menu *pMenu) {
 	auto IBorderSize = State & FRAME_CF_TITLEVIS ? Props.IBorderSize : 0;
@@ -393,50 +349,63 @@ void Frame::Menu(::Menu *pMenu) {
 	Invalidate();
 }
 
+constexpr uint16_t BUTTON_BORDER_OFFSET = 1;
 Button *Frame::AddButton(uint16_t Flags, int Off, uint16_t Id) {
 	if (auto pButton = DialogItem(Id)) return (Button *)pButton;
 	auto &&Pos = _CalcPositions();
-	int Size = this->TitleHeight();
-	int BorderSize = this->BorderSize();
-	int WinFlags, x;
-	if (Flags & FRAME_BUTTON_RIGHT) {
+	auto Size = TitleHeight() - BUTTON_BORDER_OFFSET * 2;
+	auto x = 0;
+	if (Flags & FRAME_BUTTON_RIGHT)
 		x = Pos.rTitleText.x1 - (Size - 1) - Off;
-		WinFlags = WC_VISIBLE | WC_ANCHOR_RIGHT;
-	}
-	else {
+	else
 		x = Pos.rTitleText.x0 + Off;
-		WinFlags = WC_VISIBLE;
-	}
-	auto pButton = new Button(x, BorderSize, Size, Size, this, Id, WinFlags);
-	pButton->Focussed();
+	auto pButton = new Button(
+		x, BorderSize() + BUTTON_BORDER_OFFSET,
+		Size, Size,
+		this, Id, Flags);
+	pButton->Focussable(false);
+	return pButton;
+}
+Button *Frame::AddMinButton(uint16_t Flags, int Off) {
+	auto pButton = AddButton(Flags, Off, GUI_ID_MINIMIZE);
+	pButton->SelfDraw(0, [](SRect r) {
+		int Size = r.xsize() / 2, Size2 = Size / 2;
+		auto pObj = (Frame *)ActiveWindow()->Parent();
+		if (pObj->Flags & FRAME_CF_MINIMIZED)
+			for (int i = 1; i < Size; ++i)
+				GUI.DrawLineH(r.x0 + i, r.y0 + i + Size2, r.x1 - i);
+		else
+			for (int i = 1; i < Size; ++i)
+				GUI.DrawLineH(r.x0 + i, r.y1 - i - Size2, r.x1 - i);
+	});
 	return pButton;
 }
 Button *Frame::AddMaxButton(uint16_t Flags, int Off) {
 	auto pButton = AddButton(Flags, Off, GUI_ID_MAXIMIZE);
 	pButton->SelfDraw(0, [](SRect r) {
 		static auto _DrawMax = [](SRect r) {
-			//GUI_LCD_DrawHLine(r.x0 + 1, r.y0 + 1, r.x1 - 1);
-			//GUI_LCD_DrawHLine(r.x0 + 1, r.y0 + 2, r.x1 - 1);
-			//GUI_LCD_DrawHLine(r.x0 + 1, r.y1 - 1, r.x1 - 1);
-			//GUI_LCD_DrawVLine(r.x0 + 1, r.y0 + 1, r.y1 - 1);
-			//GUI_LCD_DrawVLine(r.x1 - 1, r.y0 + 1, r.y1 - 1);
+			GUI.DrawLineH(r.x0 + 1, r.y0 + 1, r.x1 - 1);
+			GUI.DrawLineH(r.x0 + 1, r.y0 + 2, r.x1 - 1);
+			GUI.DrawLineH(r.x0 + 1, r.y1 - 1, r.x1 - 1);
+			GUI.DrawLineV(r.x0 + 1, r.y0 + 1, r.y1 - 1);
+			GUI.DrawLineV(r.x1 - 1, r.y0 + 1, r.y1 - 1);
 		};
-		static auto _DrawMaxRestore = [](SRect r) {
-			//int Size = ((r.x1 - r.x0 + 1) << 1) / 3;
-			//GUI_LCD_DrawHLine(r.x1 - Size, r.y0 + 1, r.x1 - 1);
-			//GUI_LCD_DrawHLine(r.x1 - Size, r.y0 + 2, r.x1 - 1);
-			//GUI_LCD_DrawHLine(r.x0 + Size, r.y0 + Size, r.x1 - 1);
-			//GUI_LCD_DrawVLine(r.x1 - Size, r.y0 + 1, r.y1 - Size);
-			//GUI_LCD_DrawVLine(r.x1 - 1, r.y0 + 1, r.y0 + Size);
-			//GUI_LCD_DrawHLine(r.x0 + 1, r.y1 - Size, r.x0 + Size);
-			//GUI_LCD_DrawHLine(r.x0 + 1, r.y1 - Size + 1, r.x0 + Size);
-			//GUI_LCD_DrawHLine(r.x0 + 1, r.y1 - 1, r.x0 + Size);
-			//GUI_LCD_DrawVLine(r.x0 + 1, r.y1 - Size, r.y1 - 1);
-			//GUI_LCD_DrawVLine(r.x0 + Size, r.y1 - Size, r.y1 - 1);
+		static auto _DrawRestore = [](SRect r) {
+			int Size = r.xsize() * 2 / 3;
+			GUI.DrawLineH(r.x1 - Size, r.y0 + 1, r.x1 - 1);
+			GUI.DrawLineH(r.x1 - Size, r.y0 + 2, r.x1 - 1);
+			GUI.DrawLineH(r.x0 + Size, r.y0 + Size, r.x1 - 1);
+			GUI.DrawLineV(r.x1 - Size, r.y0 + 1, r.y1 - Size);
+			GUI.DrawLineV(r.x1 - 1, r.y0 + 1, r.y0 + Size);
+			GUI.DrawLineH(r.x0 + 1, r.y1 - Size, r.x0 + Size);
+			GUI.DrawLineH(r.x0 + 1, r.y1 - Size + 1, r.x0 + Size);
+			GUI.DrawLineH(r.x0 + 1, r.y1 - 1, r.x0 + Size);
+			GUI.DrawLineV(r.x0 + 1, r.y1 - Size, r.y1 - 1);
+			GUI.DrawLineV(r.x0 + Size, r.y1 - Size, r.y1 - 1);
 		};
 		auto pObj = (Frame *)ActiveWindow()->Parent();
 		if (pObj->Flags & FRAME_CF_MAXIMIZED)
-			_DrawMaxRestore(r);
+			_DrawRestore(r);
 		else
 			_DrawMax(r);
 	});
@@ -445,32 +414,11 @@ Button *Frame::AddMaxButton(uint16_t Flags, int Off) {
 Button *Frame::AddCloseButton(uint16_t Flags, int Off) {
 	auto pButton = AddButton(Flags, Off, GUI_ID_CLOSE);
 	pButton->SelfDraw(0, [](SRect r) {
-		int Size = r.x1 - r.x0 - 2;
+		int Size = r.xsize() - 2;
 		for (int i = 2; i < Size; ++i) {
-		//	GUI_LCD_DrawHLine(r.x0 + i, r.y0 + i, r.x0 + i + 1);
-		//	GUI_LCD_DrawHLine(r.x1 - i - 1, r.y0 + i, r.x1 - i);
+			GUI.DrawLineH(r.x0 + i, r.y0 + i, r.x0 + i + 1);
+			GUI.DrawLineH(r.x1 - i - 1, r.y0 + i, r.x1 - i);
 		}
-	});
-	return pButton;
-}
-Button *Frame::AddMinButton(uint16_t Flags, int Off) {
-	auto pButton = AddButton(Flags, Off, GUI_ID_MINIMIZE);
-	pButton->SelfDraw(0, [](SRect r) {
-		static auto _DrawMin = [](SRect r) {
-			int Size = (r.x1 - r.x0 + 1) >> 1;
-			for (int i = 1; i < Size; ++i);
-			//	GUI_LCD_DrawHLine(r.x0 + i, r.y1 - i - (Size >> 1), r.x1 - i);
-		};
-		static auto _DrawRestore = [](SRect r) {
-			int Size = (r.x1 - r.x0 + 1) >> 1;
-			for (int i = 1; i < Size; ++i);
-			//	GUI_LCD_DrawHLine(r.x0 + i, r.y0 + i + (Size >> 1), r.x1 - i);
-		};
-		auto pObj = (Frame *)ActiveWindow()->Parent();
-		if (pObj->Flags & FRAME_CF_MINIMIZED)
-			_DrawRestore(r);
-		else
-			_DrawMin(r);
 	});
 	return pButton;
 }
@@ -485,14 +433,11 @@ void Frame::TitleVis(bool bTitleVis) {
 		return;
 	this->State = State;
 	_UpdatePositions();
-	for (auto pChild = FirstChild(); pChild; pChild = pChild->NextSibling()) {
-		int y0 = pChild->Rect().y0 - rect.y0;
-		if (y0 != Props.BorderSize)
-			continue;
-		if (pChild == pClient)
-			continue;
-		pChild->Visible(bTitleVis);
-	}
+	auto TitleHeight = this->TitleHeight();
+	for (auto pChild = FirstChild(); pChild; pChild = pChild->NextSibling())
+		if (pChild->Rect().y0 <= TitleHeight)
+			if (pChild != pClient)
+				pChild->Visible(bTitleVis);
 	if (this->Flags & FRAME_CF_MINIMIZED)
 		Visible(bTitleVis);
 	Invalidate();
@@ -510,8 +455,7 @@ Frame::Frame(int x0, int y0, int xsize, int ysize,
 		Pos.rClient,
 		_cbClient,
 		this,
-		WC_ANCHOR_RIGHT | WC_ANCHOR_LEFT | WC_ANCHOR_TOP
-		| WC_ANCHOR_BOTTOM | WC_VISIBLE);
+		WC_ANCHOR_MASK | WC_VISIBLE);
 	Text(pTitle);
 }
 

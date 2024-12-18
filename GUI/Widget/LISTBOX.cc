@@ -204,7 +204,7 @@ int ListBox::_GetItemFromPos(int x, int y) {
 
 void ListBox::_OnPaint(WM_MSG *pMsg) {
 	GUI.Font(Props.pFont);
-	auto &&rClip = *(const SRect *)pMsg->data - Rect().left_top();
+	auto rClip = *(const SRect *)pMsg->data;
 	auto &&rInside = InsideRect();
 	rClip &= rInside;
 	SRect rItem;

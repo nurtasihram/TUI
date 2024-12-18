@@ -77,30 +77,26 @@ WObj::operator bool() const {
 	return false;
 }
 
-void WM__AddCriticalHandle(WM_CRITICAL_HANDLE *pCriticalHandle) {
-	pCriticalHandle->pNext = WM__pFirstCriticalHandle;
-	WM__pFirstCriticalHandle = pCriticalHandle;
-}
-void WM__RemoveCriticalHandle(WM_CRITICAL_HANDLE *pCriticalHandle) {
-	if (!WM__pFirstCriticalHandle)
+WObj::CriticalHandles *WObj::CriticalHandles::pFirst = nullptr;
+void WObj::CriticalHandles::Remove() {
+	if (!pFirst)
 		return;
-	WM_CRITICAL_HANDLE *pLast = 0;
-	for (auto pCH = WM__pFirstCriticalHandle; pCH; pCH = pCH->pNext) {
-		if (pCH == pCriticalHandle) {
+	CriticalHandles *pLast = 0;
+	for (auto pCH = pFirst; pCH; pCH = pCH->pNext) {
+		if (pCH == this) {
 			if (pLast)
 				pLast->pNext = pCH->pNext;
 			else if (pCH->pNext)
-				WM__pFirstCriticalHandle = pCH->pNext;
+				pFirst = pCH->pNext;
 			else
-				WM__pFirstCriticalHandle = 0;
+				pFirst = nullptr;
 			break;
 		}
 		pLast = pCH;
 	}
 }
-
-static void _CheckCriticalHandles(WObj *pWin) {
-	for (auto pCH = WM__pFirstCriticalHandle; pCH; pCH = pCH->pNext)
+void WObj::CriticalHandles::Check(WObj *pWin) {
+	for (auto pCH = this; pCH; pCH = pCH->pNext)
 		if (pCH->pWin == pWin)
 			pCH->pWin = nullptr;
 }
@@ -119,7 +115,7 @@ WObj *WObj::pWinActive = nullptr;
 WObj::WObj(int x0, int y0, int width, int height,
 		   WM_CB *cb, WObj *pParent, uint16_t Style) :
 	cb(cb), Status(Style &WC_MASK) {
-	if (!pParent)
+	if (!pParent)	
 		if (nWindows)
 			pParent = pWinDesktop;
 	if (pParent) {
@@ -155,7 +151,7 @@ void WObj::Delete() {
 		pWinFocus = nullptr;
 	if (pWinCapture == this)
 		pWinCapture = nullptr;
-	_CheckCriticalHandles(this);
+	CriticalHandles::pFirst->Check(this);
 	NotifyParent(WM_NOTIFICATION_CHILD_DELETED);
 	for (auto pChild = pFirstChild; pChild; ) {
 		auto pNext = pChild->pNext;
@@ -238,11 +234,12 @@ void WObj::_Paint1() {
 	if (!(Status & WC_VISIBLE))
 		return;
 	++nPaintCallback;
+	auto rInvalidClient = rInvalid - Position();
 	if (WObj::IVR_Init(&rInvalid)) do {
 		WM_MSG msg;
 		msg.pWin = this;
 		msg.msgid = WM_PAINT;
-		msg.data = (size_t)&rInvalid;
+		msg.data = (size_t)&rInvalidClient;
 		GUI.Props = GUI.DefaultProps;
 		SendMessage(&msg);
 	} while (WObj::IVR_Next());
@@ -473,8 +470,8 @@ void WObj::Init() {
 		}
 	}, nullptr, WC_VISIBLE);
 	pWinDesktop->Invalidate();
-	WM__AddCriticalHandle(&WM__CHWinModal);
-	WM__AddCriticalHandle(&WM__CHWinLast);
+	CriticalHandles::Modal.Add();
+	CriticalHandles::Last.Add();
 	pWinDesktop->Select();
 	WM_Activate();
 }
@@ -534,16 +531,15 @@ SRect WObj::InsideRectAbs() const {
 	return rInsideRect;
 }
 SRect WObj::InsideRect() const {
-	auto &&rWin = Rect(),
-		&&rInside = InsideRectAbs();
+	auto &&rInside = InsideRectAbs();
 	if (auto pBarV = DialogItem(GUI_ID_VSCROLL)) {
-		auto &&rScrollbar = pBarV->Rect() - rWin.left_top();
+		auto &&rScrollbar = pBarV->Rect();
 		auto Flags = pBarV->Status;
 		if ((Flags & WC_ANCHOR_RIGHT) && (Flags & WC_VISIBLE))
 			rInside.x1 = rScrollbar.x0 - 1;
 	}
 	if (auto pBarH = DialogItem(GUI_ID_HSCROLL)) {
-		auto &&rScrollbar = pBarH->Rect() - rWin.left_top();
+		auto &&rScrollbar = pBarH->Rect();
 		auto Flags = pBarH->Status;
 		if ((Flags & WC_ANCHOR_BOTTOM) && (Flags & WC_VISIBLE))
 			rInside.y1 = rScrollbar.y0 - 1;
@@ -688,6 +684,23 @@ WObj *WObj::PrevSibling() {
 			return pObj;
 	return nullptr;
 }
+
+static void _NotifyVisChanged(WObj *pWin, SRect *pRect) {
+	for (pWin = pWin->FirstChild(); pWin; pWin = pWin->NextSibling()) {
+		if (!(pWin->Styles() & WC_VISIBLE))
+			continue;
+		if (pWin->RectAbs() && pRect) {
+			pWin->SendMessage(WM_NOTIFY_VIS_CHANGED);
+			_NotifyVisChanged(pWin, pRect);
+		}
+	}
+}
+void WM__NotifyVisChanged(WObj *pWin, SRect *pRect) {
+	auto pParent = pWin->Parent();
+	if (pParent)
+		_NotifyVisChanged(pParent, pRect);
+}
+
 bool WM__IsAncestor(WObj *pChild, WObj *pParent) {
 	if (!pChild)
 		return false;
@@ -701,22 +714,6 @@ bool WM__IsAncestor(WObj *pChild, WObj *pParent) {
 bool WM__IsAncestorOrSelf(WObj *pChild, WObj *pParent) {
 	return pChild == pParent ? true :
 		WM__IsAncestor(pChild, pParent);
-}
-
-static void _NotifyVisChanged(WObj *pWin, SRect *pRect) {
-	for (pWin = pWin->FirstChild(); pWin; pWin = pWin->NextSibling()) {
-		if (!(pWin->Styles() & WC_VISIBLE))
-			continue;
-		if (pWin->Rect() && pRect) {
-			pWin->SendMessage(WM_NOTIFY_VIS_CHANGED);
-			_NotifyVisChanged(pWin, pRect);
-		}
-	}
-}
-void WM__NotifyVisChanged(WObj *pWin, SRect *pRect) {
-	auto pParent = pWin->Parent();
-	if (pParent)
-		_NotifyVisChanged(pParent, pRect);
 }
 
 #pragma region Capture
@@ -748,17 +745,17 @@ void WObj::CaptureMove(const PidState &pid, int MinVisibility) {
 		Move(d);
 		return;
 	}
-	auto &&rect = Rect() + d,
-		&&rParent = Parent()->Rect();
+	auto &&rCapture = RectAbs() + d,
+		&&rParent = Parent()->RectAbs();
 	rParent /= MinVisibility;
-	if (rect && rParent)
+	if (rCapture && rParent)
 		Move(d);
 }
 #pragma endregion
 
 WObj *WObj::ScreenToWin(Point Pos, WObj *pStop, WObj *pWin) {
 	if (!pWin->Visible()) return nullptr;
-	if (pWin->Rect() > Pos) return nullptr;
+	if (pWin->RectAbs() > Pos) return nullptr;
 	for (auto pChild = pWin->pFirstChild;
 		 pChild && pChild != pStop;
 		 pChild = pChild->pNext)
@@ -818,7 +815,7 @@ void WObj::_UpdateChildPositions(SRect d) {
 				rNew.y0 += d.y0;
 				rNew.y1 += d.y0;
 		}
-		pChild->Rect(rNew);
+		pChild->RectAbs(rNew);
 	}
 }
 void WObj::Resize(Point dSize) {
@@ -873,15 +870,15 @@ void WObj::ScrollBarH(bool bEnable) { _SetScrollbar(this, bEnable, GUI_ID_HSCROL
 
 #pragma region Touch
 
-WM_CRITICAL_HANDLE WM__CHWinModal;
-WM_CRITICAL_HANDLE WM__CHWinLast;
+WObj::CriticalHandles WObj::CriticalHandles::Modal;
+WObj::CriticalHandles WObj::CriticalHandles::Last;
 
 bool WObj::_IsInModalArea() {
-	if (!WM__CHWinModal.pWin)
+	if (!CriticalHandles::Modal.pWin)
 		return true;
-	if (WM__CHWinModal.pWin == this)
+	if (CriticalHandles::Modal.pWin == this)
 		return true;
-	return WM__IsAncestor(this, WM__CHWinModal.pWin);
+	return WM__IsAncestor(this, CriticalHandles::Modal.pWin);
 }
 
 void WObj::_SendMessage(WM_MSG *pMsg) {
@@ -920,13 +917,13 @@ void WObj::_SendTouchMessage(WM_MSG *pMsg) {
 
 bool WObj::HandlePID() {
 	WM_MSG msg;
-	WM_CRITICAL_HANDLE CHWin;
+	CriticalHandles CHWin;
 	PidState State, StateNew;
 	GUI_PID_GetState(&StateNew);
 	if (WM_PID__StateLast == StateNew)
 		return false;
 	bool r = false;
-	WM__AddCriticalHandle(&CHWin);
+	CHWin.Add();
 	GUI.Cursor.Position(StateNew);
 	CHWin.pWin = pWinCapture ? pWinCapture : WObj::ScreenToWin(StateNew);
 	if (CHWin.pWin->_IsInModalArea()) {
@@ -944,8 +941,8 @@ bool WObj::HandlePID() {
 		if (WM_PID__StateLast.Pressed | StateNew.Pressed) {    /* Only if pressed or just released */
 			msg.msgid = WM_TOUCH;
 			r = true;
-			if (WM__CHWinLast.pWin != CHWin.pWin)
-				if (WM__CHWinLast.pWin != nullptr) {
+			if (CriticalHandles::Last.pWin != CHWin.pWin)
+				if (CriticalHandles::Last.pWin != nullptr) {
 					if (StateNew.Pressed)
 						msg.data = 0;
 					else {
@@ -954,17 +951,17 @@ bool WObj::HandlePID() {
 						State.Pressed = 0;
 						msg.data = (size_t)&State;
 					}
-					WM__CHWinLast.pWin->_SendTouchMessage(&msg);
-					WM__CHWinLast.pWin = nullptr;
+					CriticalHandles::Last.pWin->_SendTouchMessage(&msg);
+					CriticalHandles::Last.pWin = nullptr;
 				}
 			if (CHWin.pWin) {
 				State = StateNew;
 				if (State.Pressed)
-					WM__CHWinLast.pWin = CHWin.pWin;
+					CriticalHandles::Last.pWin = CHWin.pWin;
 				else {
 					if (bCaptureAutoRelease)
 						CaptureRelease();
-					WM__CHWinLast.pWin = nullptr;
+					CriticalHandles::Last.pWin = nullptr;
 				}
 				msg.data = (size_t)&State;
 				CHWin.pWin->_SendTouchMessage(&msg);
@@ -979,7 +976,7 @@ bool WObj::HandlePID() {
 			}
 	}
 	WM_PID__StateLast = StateNew;
-	WM__RemoveCriticalHandle(&CHWin);
+	CHWin.Remove();
 	return r;
 }
 #pragma endregion
@@ -1031,16 +1028,16 @@ WObj *WM_CREATESTRUCT::Create() const {
 		//	return new Header(*this.x, *this.y, *this.xsize, *this.ysize, *this.pParent, *this.Flags);
 		case WCLS_LISTBOX:
 			return new ListBox(*this);
-			//case WCLS_LISTVIEW:
-			//	return new ListView(*this.x, *this.y, *this.xsize, *this.ysize, *this.pParent, *this.Flags);
-			//case WCLS_MENU:
-			//	return new Menu(*this.x, *this.y, *this.xsize, *this.ysize, *this.pParent, *this.Flags);
-			//case WCLS_MULTIEDIT:
-			//	return new MultiEdit(*this.x, *this.y, *this.xsize, *this.ysize, *this.pParent, *this.Flags);
-			//case WCLS_MULTIPAGE:
-			//	return new MultiPage(*this.x, *this.y, *this.xsize, *this.ysize, *this.pParent, *this.Flags);
-			//case WCLS_PROGBAR:
-			//	return new ProgBar(*this.x, *this.y, *this.xsize, *this.ysize, *this.pParent, *this.Flags);
+		//case WCLS_LISTVIEW:
+		//	return new ListView(*this.x, *this.y, *this.xsize, *this.ysize, *this.pParent, *this.Flags);
+		//case WCLS_MENU:
+		//	return new Menu(*this.x, *this.y, *this.xsize, *this.ysize, *this.pParent, *this.Flags);
+		//case WCLS_MULTIEDIT:
+		//	return new MultiEdit(*this.x, *this.y, *this.xsize, *this.ysize, *this.pParent, *this.Flags);
+		//case WCLS_MULTIPAGE:
+		//	return new MultiPage(*this.x, *this.y, *this.xsize, *this.ysize, *this.pParent, *this.Flags);
+		//case WCLS_PROGBAR:
+		//	return new ProgBar(*this);
 		case WCLS_RADIO:
 			return new Radio(*this);
 		case WCLS_SCROLLBAR:
@@ -1248,24 +1245,24 @@ public:
 		GUI.PenColor(RGB_BLACK);
 		GUI.Outline(r);
 		GUI.PenColor(RGB_WHITE);
-		GUI.DrawLineH(r.y0 + 1, r.x0 + 1, r.x1 - 2);
+		GUI.DrawLineH(r.x0 + 1, r.y0 + 1, r.x1 - 2);
 		GUI.DrawLineV(r.x0 + 1, r.y0 + 1, r.y1 - 2);
 		GUI.PenColor(RGBC_GRAY(0x55));
-		GUI.DrawLineH(r.y1 - 1, r.x0 + 1, r.x1 - 1);
+		GUI.DrawLineH(r.x0 + 1, r.y1 - 1, r.x1 - 1);
 		GUI.DrawLineV(r.x1 - 1, r.y0 + 1, r.y1 - 2);
 	}
 	void DrawDown(const SRect &r) const override {
 		GUI.PenColor(RGBC_GRAY(0x80));
-		GUI.DrawLineH(r.y0, r.x0, r.x1);
+		GUI.DrawLineH(r.x0, r.y0, r.x1);
 		GUI.DrawLineV(r.x0, r.y0 + 1, r.y1);
 		GUI.PenColor(RGB_BLACK);
-		GUI.DrawLineH(r.y0 + 1, r.x0 + 1, r.x1 - 1);
+		GUI.DrawLineH(r.x0 + 1, r.y0 + 1, r.x1 - 1);
 		GUI.DrawLineV(r.x0 + 1, r.y0 + 2, r.y1 - 1);
 		GUI.PenColor(RGB_WHITE);
-		GUI.DrawLineH(r.y1, r.x0 + 1, r.x1);
+		GUI.DrawLineH(r.x0 + 1, r.y1, r.x1);
 		GUI.DrawLineV(r.x1, r.y0 + 1, r.y1);
 		GUI.PenColor(RGBC_GRAY(0xC0));
-		GUI.DrawLineH(r.y1 - 1, r.x0 + 2, r.x1 - 1);
+		GUI.DrawLineH(r.x0 + 2, r.y1 - 1, r.x1 - 1);
 		GUI.DrawLineV(r.x1 - 1, r.y0 + 2, r.y1 - 1);
 	}
 };
@@ -1278,18 +1275,18 @@ public:
 	Effect_D3L1() : Widget::EffectItf(1) {}
 	void DrawUp(const SRect &r) const override {
 		GUI.PenColor(RGBC_GRAY(0xE7));
-		GUI.DrawLineH(r.y0, r.x0, r.x1 - 1);
+		GUI.DrawLineH(r.x0, r.y0, r.x1 - 1);
 		GUI.DrawLineV(r.x0, r.y0 + 1, r.y1 - 1);
 		GUI.PenColor(RGBC_GRAY(0x60));
-		GUI.DrawLineH(r.y1, r.x0, r.x1);
+		GUI.DrawLineH(r.x0, r.y1, r.x1);
 		GUI.DrawLineV(r.x1, r.y0, r.y1 - 1);
 	}
 	void DrawDown(const SRect &r) const override {
 		GUI.PenColor(RGBC_GRAY(0x60));
-		GUI.DrawLineH(r.y0, r.x0, r.x1 - 1);
+		GUI.DrawLineH(r.x0, r.y0, r.x1 - 1);
 		GUI.DrawLineV(r.x0, r.y0 + 1, r.y1 - 1);
 		GUI.PenColor(RGBC_GRAY(0xE7));
-		GUI.DrawLineH(r.y1, r.x0, r.x1);
+		GUI.DrawLineH(r.x0, r.y1, r.x1);
 		GUI.DrawLineV(r.x1, r.y0, r.y1 - 1);
 	}
 };
@@ -1302,30 +1299,30 @@ public:
 	Effect_D3L2() : Widget::EffectItf(2) {}
 	void DrawUp(const SRect &r) const override {
 		GUI.PenColor(RGBC_GRAY(0xD0));
-		GUI.DrawLineH(r.y0, r.x0, r.x1 - 1);
+		GUI.DrawLineH(r.x0, r.y0, r.x1 - 1);
 		GUI.DrawLineV(r.x0, r.y0 + 1, r.y1 - 1);
 		GUI.PenColor(RGBC_GRAY(0xE7));
-		GUI.DrawLineH(r.y0 + 1, r.x0 + 1, r.x1 - 2);
+		GUI.DrawLineH(r.x0 + 1, r.y0 + 1, r.x1 - 2);
 		GUI.DrawLineV(r.x0 + 1, r.y0 + 2, r.y1 - 2);
 		GUI.PenColor(RGBC_GRAY(0x60));
-		GUI.DrawLineH(r.y1, r.x0, r.x1);
+		GUI.DrawLineH(r.x0, r.y1, r.x1);
 		GUI.DrawLineV(r.x1, r.y0, r.y1 - 1);
 		GUI.PenColor(RGBC_GRAY(0x9A));
-		GUI.DrawLineH(r.y1 - 1, r.x0 + 1, r.x1 - 1);
+		GUI.DrawLineH(r.x0 + 1, r.y1 - 1, r.x1 - 1);
 		GUI.DrawLineV(r.x1 - 1, r.y0 + 1, r.y1 - 2);
 	}
 	void DrawDown(const SRect &r) const override {
 		GUI.PenColor(RGBC_GRAY(0x9A));
-		GUI.DrawLineH(r.y0, r.x0, r.x1 - 1);
+		GUI.DrawLineH(r.x0, r.y0, r.x1 - 1);
 		GUI.DrawLineV(r.x0, r.y0 + 1, r.y1 - 1);
 		GUI.PenColor(RGBC_GRAY(0x60));
-		GUI.DrawLineH(r.y0 + 1, r.x0 + 1, r.x1 - 2);
+		GUI.DrawLineH(r.x0 + 1, r.y0 + 1, r.x1 - 2);
 		GUI.DrawLineV(r.x0 + 1, r.y0 + 2, r.y1 - 2);
 		GUI.PenColor(RGBC_GRAY(0xE7));
-		GUI.DrawLineH(r.y1, r.x0, r.x1);
+		GUI.DrawLineH(r.x0, r.y1, r.x1);
 		GUI.DrawLineV(r.x1, r.y0, r.y1 - 1);
 		GUI.PenColor(RGBC_GRAY(0xD0));
-		GUI.DrawLineH(r.y1 - 1, r.x0 + 1, r.x1 - 1);
+		GUI.DrawLineH(r.x0 + 1, r.y1 - 1, r.x1 - 1);
 		GUI.DrawLineV(r.x1 - 1, r.y0 + 1, r.y1 - 2);
 	}
 };

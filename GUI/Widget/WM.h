@@ -194,6 +194,19 @@ private:
 	void _AddToLinList();
 
 public:
+	struct CriticalHandles {
+		static CriticalHandles *pFirst;
+		static CriticalHandles Last;
+		static CriticalHandles Modal;
+		CriticalHandles *pNext = nullptr;
+		WObj *pWin = nullptr;
+	public:
+		inline void Add() { pNext = pFirst, pFirst = pNext; }
+		void Remove();
+		void Check(WObj *pWin);
+	};
+
+public:
 	operator bool() const;
 
 public:
@@ -362,7 +375,7 @@ private:
 	static WObj *pWinDesktop;
 	static RGBC aColorDesktop;
 public: // Property - Desktop
-	/* R */ static inline auto Desktop() { return pWinDesktop; }
+	/* R */ static inline WObj *Desktop() { return pWinDesktop; }
 public: // Property - DesktopColor
 	/* W */ static inline void DesktopColor(RGBC Color) {
 		if (aColorDesktop != Color) {
@@ -370,14 +383,14 @@ public: // Property - DesktopColor
 			pWinDesktop->Invalidate();
 		}
 	}
-	/* R */ static inline auto DesktopColor() { return aColorDesktop; }
+	/* R */ static inline RGBC DesktopColor() { return aColorDesktop; }
 #pragma endregion
 
 #pragma region Active
 private:
 	static WObj *pWinActive;
 public:
-	/* R */ static inline auto ActiveWindow() { return pWinActive; }
+	/* R */ static inline WObj *ActiveWindow() { return pWinActive; }
 #pragma endregion
 
 #pragma region Rect
@@ -420,34 +433,47 @@ public: // Property - Anchor
 	}
 public: // Property - Enable
 	/* W */ void Enable(bool bEnable);
-	/* R */ inline auto Enable() const { return !(Status & WC_DISABLED); }
+	/* R */ inline bool Enable() const { return !(Status & WC_DISABLED); }
 public: // Property - StayOnTop
 	/* W */ void StayOnTop(bool bEnable);
 	/* R */ inline bool StayOnTop() const { return Status & WC_STAYONTOP; }
 public: // Property - Visible
 	/* W */ void Visible(bool bVisible);
 	/* R */ inline bool Visible() const { return Status & WC_VISIBLE; }
-public: // Property - Rect
-	/* W */ inline void Rect(const SRect &r) {
+public: // Property - RectAbs
+	/* W */ inline void RectAbs(const SRect &r) {
 		Position(r.left_top());
 		Size(r.size());
 	}
-	/* R */ inline auto Rect() const { return rect; }
+	/* R */ inline SRect RectAbs() const { return rect; }
+public: // Property - Rect
+	/* W */ inline void Rect(const SRect &r) {
+		auto rAbs = r;
+		if (auto pParent = Parent())
+			rAbs += pParent->Position();
+		RectAbs(r);
+	}
+	/* R */ inline SRect Rect() const {
+		auto r = RectAbs();
+		if (auto pParent = Parent())
+			r -= pParent->Position();
+		return r;
+	}
 public: // Property - Size
 	/* W */ inline void Size(Point s) { Resize(s - rect.size()); }
-	/* R */ inline auto Size() const { return rect.size(); }
+	/* R */ inline Point Size() const { return rect.size(); }
 public: // Property - SizeX
-	/* W */ inline void SizeX(int16_t xSize) { Resize({ xSize - rect.xsize(), 0 }); }
-	/* R */ inline auto SizeX() const { return rect.xsize(); }
+	/* W */ inline void SizeX(uint16_t xSize) { Resize({ xSize - rect.xsize(), 0 }); }
+	/* R */ inline uint16_t SizeX() const { return rect.xsize(); }
 public: // Property - SizeY
-	/* W */ inline void SizeY(int16_t ySize) { Resize({ 0, ySize - rect.ysize() }); }
-	/* R */ inline auto SizeY() const { return rect.ysize(); }
+	/* W */ inline void SizeY(uint16_t ySize) { Resize({ 0, ySize - rect.ysize() }); }
+	/* R */ inline uint16_t SizeY() const { return rect.ysize(); }
 public: // Property - Position
 	/* W */ inline void Position(Point p) { Move(p - rect.left_top()); }
-	/* R */ inline auto Position() const { return rect.left_top(); }
+	/* R */ inline Point Position() const { return rect.left_top(); }
 public: // Property - PositionScreen
 	/* W */ inline void PositionScreen(Point p) { Move(p - rect.left_top()); }
-	/* R */ inline auto PositionScreen() const { return rect.left_top(); }
+	/* R */ inline Point PositionScreen() const { return rect.left_top(); }
 public: // Property - BkColor
 	/* R */ inline RGBC BkColor() const {
 		WM_MSG msg;
@@ -474,17 +500,16 @@ public: // Property - Client
 public: // Property - Parent
 	/* W */ void Parent(WObj *pParent);
 	/* W */ void Parent(WObj *pParent, Point p);
-	/* R */ inline auto Parent() { return pParent; }
-	/* R */ inline auto Parent() const { return pParent; }
+	/* R */ inline WObj *Parent() const { return pParent; }
 public: // Property - FirstChild
-	/* R */ inline auto FirstChild() { return pFirstChild; }
-	/* R */ inline auto FirstChild() const { return pFirstChild; }
+	/* R */ inline WObj *FirstChild() { return pFirstChild; }
+	/* R */ inline const WObj *FirstChild() const { return pFirstChild; }
 public: // Property - FirstSibling
-	/* R */ inline auto FirstSibling() { return pParent ? pParent->pFirstChild : nullptr; }
-	/* R */ inline auto FirstSibling() const { return pParent ? pParent->pFirstChild : nullptr; }
+	/* R */ inline WObj *FirstSibling() { return pParent ? pParent->pFirstChild : nullptr; }
+	/* R */ inline const WObj *FirstSibling() const { return pParent ? pParent->pFirstChild : nullptr; }
 public: // Property - NextSibling
-	/* R */ inline auto NextSibling() { return pNext; }
-	/* R */ inline auto NextSibling() const { return pNext; }
+	/* R */ inline WObj *NextSibling() { return pNext; }
+	/* R */ inline const WObj *NextSibling() const { return pNext; }
 public: // Property - LastSibling
 	/* R */ inline WObj *LastSibling();
 public: // Property - PrevSibling
@@ -518,7 +543,7 @@ public: // Property - Callback
 			Invalidate();
 		}
 	}
-	/* R */ inline auto Callback() const { return cb; }
+	/* R */ inline WM_CB *Callback() const { return cb; }
 #pragma endregion
 
 };
@@ -533,23 +558,7 @@ struct WM_NOTIFY_CHILD_HAS_FOCUS_INFO {
 	WObj *pOld, *pNew;
 };
 
-struct WM_CRITICAL_HANDLE {
-	WM_CRITICAL_HANDLE *pNext;
-	WObj *pWin;
-};
-extern PidState      WM_PID__StateLast;
-extern WM_CRITICAL_HANDLE WM__CHWinModal;
-extern WM_CRITICAL_HANDLE WM__CHWinLast;
-#ifdef WM_C
-#	define GUI_EXTERN
-#else
-#	define GUI_EXTERN extern
-#endif
-GUI_EXTERN WM_CRITICAL_HANDLE *WM__pFirstCriticalHandle;
-#undef GUI_EXTERN
-
-void    WM__AddCriticalHandle(WM_CRITICAL_HANDLE *pCH);
-void    WM__RemoveCriticalHandle(WM_CRITICAL_HANDLE *pCH);
+extern PidState WM_PID__StateLast;
 
 bool    WM__IsAncestor(WObj *pChild, WObj *pParent);
 bool    WM__IsAncestorOrSelf(WObj *pChild, WObj *pParent);
@@ -661,8 +670,6 @@ public: // Property - DefaultEffect
 #pragma region Properties
 public: // Property - StyleEx
 	/* R */ inline auto StyleEx() const { return State; }
-//public: // Property - InsideRect
-//	/* R */ inline auto InsideRect() const { return WObj::InsideRect() / pEffect->EffectSize; }
 public: // Property - Effect
 	/* W */ void Effect(const EffectItf *pEffect);
 	/* R */ inline auto Effect() const { return pEffect; }
@@ -670,6 +677,13 @@ public: // Property - ScrollStateH
 	/* W */ void ScrollStateH(const WM_SCROLL_STATE &s);
 public: // Property - ScrollStateV
 	/* W */ void ScrollStateV(const WM_SCROLL_STATE &s);
+public: // Property - InsideRect
+	/* R */ inline auto InsideRect() const { return WObj::InsideRect() / pEffect->EffectSize; }
+//public: // Property - ClientRect
+//	/* R */ inline SRect ClientRect() const {
+//		auto &&r = WObj::ClientRect();
+//		return State & WIDGET_STATE_VERTICAL ? ~r : r;
+//	}
 public: // Property - Size
 	/* R */ inline Point Size() const { return State & WIDGET_STATE_VERTICAL ? ~WObj::Size() : WObj::Size(); }
 	/* W */ inline void Size(Point Size) {
@@ -679,7 +693,7 @@ public: // Property - Size
 			WObj::Size(Size);
 	}
 public: // Property - SizeX
-	/* R */ inline auto SizeX() const { return State & WIDGET_STATE_VERTICAL ? WObj::SizeY() : WObj::SizeX(); }
+	/* R */ inline uint16_t SizeX() const { return State & WIDGET_STATE_VERTICAL ? WObj::SizeY() : WObj::SizeX(); }
 	/* W */ inline void SizeX(int16_t xSize) {
 		if (State & WIDGET_STATE_VERTICAL)
 			WObj::SizeY(xSize);
@@ -687,7 +701,7 @@ public: // Property - SizeX
 			WObj::SizeX(xSize);
 	}
 public: // Property - SizeY
-	/* R */ inline auto SizeY() const { return State & WIDGET_STATE_VERTICAL ? WObj::SizeX() : WObj::SizeY(); }
+	/* R */ inline uint16_t SizeY() const { return State & WIDGET_STATE_VERTICAL ? WObj::SizeX() : WObj::SizeY(); }
 	/* W */ inline void SizeY(int16_t ySize) {
 		if (State & WIDGET_STATE_VERTICAL)
 			WObj::SizeX(ySize);

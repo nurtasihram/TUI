@@ -1,20 +1,23 @@
-#define GUI_KEY_BACKSPACE         8
-#define GUI_KEY_TAB               9
-#define GUI_KEY_ENTER             13
-#define GUI_KEY_LEFT              16
-#define GUI_KEY_UP                17
-#define GUI_KEY_RIGHT             18
-#define GUI_KEY_DOWN              19
-#define GUI_KEY_HOME              23
-#define GUI_KEY_END               24
-#define GUI_KEY_SHIFT             25
-#define GUI_KEY_CONTROL           26
-#define GUI_KEY_ESCAPE            27
-#define GUI_KEY_INSERT            29
-#define GUI_KEY_DELETE            30
-#define GUI_KEY_SPACE             32
-#define GUI_KEY_F1                40
-#define GUI_KEY_F2                41
+
+enum GUI_KEYS {
+	GUI_KEY_BACKSPACE         = 8,
+	GUI_KEY_TAB               = 9,
+	GUI_KEY_ENTER             = 13,
+	GUI_KEY_LEFT              = 16,
+	GUI_KEY_UP                = 17,
+	GUI_KEY_RIGHT             = 18,
+	GUI_KEY_DOWN              = 19,
+	GUI_KEY_HOME              = 23,
+	GUI_KEY_END               = 24,
+	GUI_KEY_SHIFT             = 25,
+	GUI_KEY_CONTROL           = 26,
+	GUI_KEY_ESCAPE            = 27,
+	GUI_KEY_INSERT            = 29,
+	GUI_KEY_DELETE            = 30,
+	GUI_KEY_SPACE             = 32,
+	GUI_KEY_F1                = 40,
+	GUI_KEY_F2                = 41
+};
 
 #define GUI_ID_OK                1
 #define GUI_ID_CANCEL            2
