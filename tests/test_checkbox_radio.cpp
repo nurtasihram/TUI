@@ -31,6 +31,7 @@ void MainTask() {
 	auto pBtn = new Button(35, 170, 40, 30, pFrame->Client(), 0, 0, "Click");
 	pBtn->Visible(true);
 
+	pFrame->Resizeable(true);
 	pFrame->Visible(true);
 
 	for (;;)

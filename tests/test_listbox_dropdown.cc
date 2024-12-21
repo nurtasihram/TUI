@@ -133,10 +133,9 @@ static int _OwnerDraw(const WIDGET_ITEM_DRAW_INFO *pDrawItemInfo) {
 static bool _bMultiSel = false;
 static bool _bOwnerDrawn = true;
 
-static void _cbFrame(WM_MSG *pMsg) {
-	auto pDlg = pMsg->pWin;
+static void _cbFrame(WObj *pDlg, int msgid, WM_PARAM *pData, WObj *pWinSrc) {
 	auto pListBox = (ListBox *)pDlg->DialogItem(GUI_ID_MULTIEDIT0);
-	switch (pMsg->msgid) {
+	switch (msgid) {
 		case WM_INIT_DIALOG:
 			pListBox->ScrollStepH(6);
 			pListBox->AutoScrollH(true);
@@ -145,7 +144,7 @@ static void _cbFrame(WM_MSG *pMsg) {
 			((CheckBox *)pDlg->DialogItem(GUI_ID_CHECK1))->CheckState(1);
 			break;
 		case WM_KEY:
-			switch (((WM_KEY_INFO *)(pMsg->data))->Key) {
+			switch (((KEY_STATE *)pData)->Key) {
 				case GUI_KEY_ESCAPE:
 					pDlg->DialogEnd(1);
 					break;
@@ -158,12 +157,12 @@ static void _cbFrame(WM_MSG *pMsg) {
 			pListBox->Focus();
 			break;
 		case WM_NOTIFY_PARENT:
-			switch ((int)pMsg->data) {
-				case WM_NOTIFICATION_SEL_CHANGED:
+			switch ((int)*pData) {
+				case WN_SEL_CHANGED:
 					pListBox->InvalidateItem(LISTBOX_ALL_ITEMS);
 					break;
-				case WM_NOTIFICATION_RELEASED:
-					switch (pMsg->pWinSrc->ID()) {
+				case WN_RELEASED:
+					switch (pWinSrc->ID()) {
 						case GUI_ID_OK:
 							pDlg->DialogEnd(0);
 							break;
@@ -187,7 +186,7 @@ static void _cbFrame(WM_MSG *pMsg) {
 			}
 			break;
 		default:
-			WObj::DefCallback(pMsg);
+			WObj::DefCallback(pDlg, msgid, pData, pWinSrc);
 	}
 }
 

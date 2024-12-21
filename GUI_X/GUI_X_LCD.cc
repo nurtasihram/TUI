@@ -103,4 +103,3 @@ void LCD_GetBitmap(BitmapRect &br) {
 void LCD_FillRect(const SRect &r) {
 	SimDisp::Ayx.Fill(GUI.PenColor(), { r.x0, r.y0, r.x1, r.y1 });
 }
-

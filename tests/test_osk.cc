@@ -377,9 +377,9 @@ static void _OSK_onKeyH(uint16_t Id) {
 	GUI_PollKeyMsg();
 }
 void (*_OSK_onKey)(uint16_t Id) = _OSK_onKeyV;
-static void _OSK_callback(WM_MSG *pMsg) {
+static void _OSK_callback(int msgid, WM_MSG *pMsg) {
 	auto pWin = pMsg->pWin;
-	switch (pMsg->msgid) {
+	switch (msgid) {
 	case WM_CREATE:
 		GUI.PenColor(RGB_GRAY);
 		break;

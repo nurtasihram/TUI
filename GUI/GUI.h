@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#include "GUI__ID.inl"
+#include "GUI.inl"
 
 #pragma region Colors
 using RGBC = uint32_t;
@@ -71,6 +71,7 @@ inline AnyType Max(AnyType a, AnyType b) { return a > b ? a : b; }
 template<class AnyType>
 inline AnyType Min(AnyType a, AnyType b) { return a < b ? a : b; }
 
+#pragma region Flat
 struct Point {
 	int16_t x, y;
 	Point(int i = 0) : x(i), y(i) {}
@@ -197,6 +198,7 @@ public:
 	}
 	inline bool operator!=(const SRect &r) const { return !(*this == r); }
 };
+#pragma endregion
 
 #pragma region Image
 struct LogPalette {
@@ -338,14 +340,6 @@ public: // Property - Position
 
 extern CPalette GUI_CursorPal;
 extern CPalette GUI_CursorPalI;
-extern CCursor
-	GUI_CursorArrowS, GUI_CursorArrowSI,
-	GUI_CursorArrowM, GUI_CursorArrowMI,
-	GUI_CursorArrowL, GUI_CursorArrowLI,
-	GUI_CursorCrossS, GUI_CursorCrossSI,
-	GUI_CursorCrossM, GUI_CursorCrossMI,
-	GUI_CursorCrossL, GUI_CursorCrossLI,
-	GUI_CursorHeaderM, GUI_CursorHeaderMI;
 #pragma endregion
 
 #pragma region Draw
@@ -491,16 +485,15 @@ public:
 	bool IsInFont(uint16_t) const override;
 };
 
-extern const FontProp GUI_Font8_ASCII, GUI_Font8_1;
-extern const FontProp GUI_Font13_ASCII, GUI_Font13_1;
-extern const FontMono GUI_Font6x8, GUI_Font6x9;
 #pragma endregion
 
-struct PidState : Point {
+#include "Resources.inl"
+
+struct PID_STATE : Point {
 	int8_t Pressed;
-	PidState(Point p = 0, int8_t Pressed = 0) : Point(p), Pressed(Pressed) {}
-	inline bool operator==(const PidState &pid) const { return (const Point &)*this == pid && Pressed == pid.Pressed; }
-	inline bool operator!=(const PidState &pid) const { return (const Point &)*this != pid || Pressed != pid.Pressed; }
+	PID_STATE(Point p = 0, int8_t Pressed = 0) : Point(p), Pressed(Pressed) {}
+	inline bool operator==(const PID_STATE &pid) const { return (const Point &)*this == pid && Pressed == pid.Pressed; }
+	inline bool operator!=(const PID_STATE &pid) const { return (const Point &)*this != pid || Pressed != pid.Pressed; }
 };
 
 DRAWMODE GUI_LCD_SetDrawMode(DRAWMODE);
@@ -523,7 +516,7 @@ SRect LCD_Rect();
 
 struct GUI_PANEL {
 	struct Property {
-		CFont *pFont = &GUI_Font6x8;
+		CFont *pFont = &GUI_Font13_1;
 		TEXTSTYLES TextStyle = TS_NORMAL;
 		TEXTALIGN TextAlign = TEXTALIGN_LEFT | TEXTALIGN_TOP;
 		DRAWMODE TextMode = DRAWMODE_NORMAL;
@@ -544,7 +537,7 @@ struct GUI_PANEL {
 	const GUI_UC_ENC_APILIST* pUC_API = &GUI__API_TableNone;
 	Point dispPos;
 	/* Variables in WM module */
-	const SRect* pUserClipRect = nullptr;
+	const SRect* prUserClip = nullptr;
 	Point off;
 	CursorCtl Cursor;
 
@@ -654,8 +647,8 @@ bool GUI_PollKeyMsg();
 int  GUI_GetKey();
 void GUI_StoreKey(int c);
 void GUI_ClearKeyBuffer();
-void GUI_PID_StoreState(const PidState* pState);
-int  GUI_PID_GetState(PidState* pState);
+void GUI_PID_StoreState(const PID_STATE* pState);
+int  GUI_PID_GetState(PID_STATE* pState);
 
 enum GUI_WRAPMODE {
 	GUI_WRAPMODE_NONE,

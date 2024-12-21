@@ -2,10 +2,10 @@
 #include "Button.h"
 #include "ProgBar.h"
 
-void _cbDlg(WM_MSG *pMsg) {
+void _cbDlg(int msgid, WM_MSG *pMsg) {
 	auto pDlg = pMsg->pWin;
 	auto pPrg = ((ProgBar *)pDlg->DialogItem(GUI_ID_PROGBAR0));
-	switch (pMsg->msgid) {
+	switch (msgid) {
 		case WM_NOTIFY_PARENT:
 			switch ((int)pMsg->data) {
 				case WM_NOTIFICATION_RELEASED:

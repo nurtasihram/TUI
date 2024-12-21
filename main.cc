@@ -17,7 +17,7 @@ void SimDisp_Start(uint16_t xSize, uint16_t ySize) {
 						   tSimDisp_MouseKey mk) {
 		if (xPos < 0 || yPos < 0)
 			return;
-		static PidState _State;
+		static PID_STATE _State;
 		_State.Pressed = mk.Left;
 		_State.x = xPos;
 		_State.y = yPos;

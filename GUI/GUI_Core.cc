@@ -123,7 +123,9 @@ CCursor *CursorCtl::Select(CCursor *pCursor) {
 		_CursorOn = true;
 		_pCursor = pCursor;
 		brCursor = *pCursor;
-		brClip = pCursor->Rect(Pos - pCursor->Hot);
+		auto &&nPos = Pos - pCursor->Hot;
+		brCursor.move_to(nPos);
+		brClip = pCursor->Rect(nPos);
 		_TempShow();
 	}
 	else
@@ -164,12 +166,12 @@ void CursorCtl::Position(Point nPos) {
 }
 #pragma endregion
 
-static PidState _State;
-int GUI_PID_GetState(PidState *pState) {
+static PID_STATE _State;
+int GUI_PID_GetState(PID_STATE *pState) {
 	*pState = _State;
 	return pState->Pressed != 0;
 }
-void GUI_PID_StoreState(const PidState *pState) {
+void GUI_PID_StoreState(const PID_STATE *pState) {
 	if (_State != *pState)
 		_State = *pState;
 }
@@ -289,13 +291,13 @@ void GUI__DispStringInRect(const char *s, const SRect &rText, int TextAlign, int
 void GUI_DispStringInRect(const char *s, const SRect &rText, int TextAlign, int MaxLen) {
 	if (!s)
 		return;
-	auto pOldClipRect = WObj::SetUserClipRect(&rText);
+	auto pOldClipRect = WObj::UserClip(&rText);
 	if (pOldClipRect) {
 		auto &&r = rText & *pOldClipRect;
-		WObj::SetUserClipRect(&r);
+		WObj::UserClip(&r);
 	}
 	GUI__DispStringInRect(s, rText, TextAlign, MaxLen);
-	WObj::SetUserClipRect(pOldClipRect);
+	WObj::UserClip(pOldClipRect);
 }
 void GUI_DispStringInRect(const char *s, const SRect &rText, int TextAlign) {
 	GUI_DispStringInRect(s, rText, TextAlign, 0x7fff);

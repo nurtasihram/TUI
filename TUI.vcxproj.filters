@@ -4,12 +4,6 @@
     <Filter Include="GUI">
       <UniqueIdentifier>{1e71d23b-ba10-4d64-b0ee-6c766f2b19db}</UniqueIdentifier>
     </Filter>
-    <Filter Include="GUI\Widget">
-      <UniqueIdentifier>{ae0b581c-15b7-4d6b-ae36-0f243ef12aab}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="GUI\Widget\Controls">
-      <UniqueIdentifier>{82419740-5f13-444a-b801-7457bd5b68b4}</UniqueIdentifier>
-    </Filter>
     <Filter Include="GUI_X_LCD">
       <UniqueIdentifier>{206fdd61-b446-4ded-be6c-4021f972e1d1}</UniqueIdentifier>
     </Filter>
@@ -19,63 +13,15 @@
     <Filter Include="GUI\Resources">
       <UniqueIdentifier>{0df0d7fb-2e9c-43ef-9387-4b5eae5e8764}</UniqueIdentifier>
     </Filter>
+    <Filter Include="GUI\Widgets">
+      <UniqueIdentifier>{ae0b581c-15b7-4d6b-ae36-0f243ef12aab}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GUI_X\GUI_X_LCD.cc">
       <Filter>GUI_X_LCD</Filter>
     </ClCompile>
-    <ClCompile Include="GUI\Widget\Button.cc">
-      <Filter>GUI\Widget\Controls</Filter>
-    </ClCompile>
-    <ClCompile Include="GUI\Widget\CheckBox.cc">
-      <Filter>GUI\Widget\Controls</Filter>
-    </ClCompile>
-    <ClCompile Include="GUI\Widget\DropDown.cc">
-      <Filter>GUI\Widget\Controls</Filter>
-    </ClCompile>
-    <ClCompile Include="GUI\Widget\Edit.cc">
-      <Filter>GUI\Widget\Controls</Filter>
-    </ClCompile>
-    <ClCompile Include="GUI\Widget\Header.cc">
-      <Filter>GUI\Widget\Controls</Filter>
-    </ClCompile>
-    <ClCompile Include="GUI\Widget\ListBox.cc">
-      <Filter>GUI\Widget\Controls</Filter>
-    </ClCompile>
-    <ClCompile Include="GUI\Widget\ListView.cc">
-      <Filter>GUI\Widget\Controls</Filter>
-    </ClCompile>
-    <ClCompile Include="GUI\Widget\Menu.cc">
-      <Filter>GUI\Widget\Controls</Filter>
-    </ClCompile>
-    <ClCompile Include="GUI\Widget\MultiEdit.cc">
-      <Filter>GUI\Widget\Controls</Filter>
-    </ClCompile>
-    <ClCompile Include="GUI\Widget\MultiPage.cc">
-      <Filter>GUI\Widget\Controls</Filter>
-    </ClCompile>
-    <ClCompile Include="GUI\Widget\ProgBar.cc">
-      <Filter>GUI\Widget\Controls</Filter>
-    </ClCompile>
-    <ClCompile Include="GUI\Widget\Radio.cc">
-      <Filter>GUI\Widget\Controls</Filter>
-    </ClCompile>
-    <ClCompile Include="GUI\Widget\ScrollBar.cc">
-      <Filter>GUI\Widget\Controls</Filter>
-    </ClCompile>
-    <ClCompile Include="GUI\Widget\Slider.cc">
-      <Filter>GUI\Widget\Controls</Filter>
-    </ClCompile>
-    <ClCompile Include="GUI\Widget\Static.cc">
-      <Filter>GUI\Widget\Controls</Filter>
-    </ClCompile>
     <ClCompile Include="main.cc" />
-    <ClCompile Include="GUI\Widget\WM.cc">
-      <Filter>GUI\Widget</Filter>
-    </ClCompile>
-    <ClCompile Include="GUI\Widget\Frame.cc">
-      <Filter>GUI\Widget\Controls</Filter>
-    </ClCompile>
     <ClCompile Include="tests\test_listbox_dropdown.cc">
       <Filter>tests</Filter>
     </ClCompile>
@@ -94,13 +40,43 @@
     <ClCompile Include="GUI\GUI_Core.cc">
       <Filter>GUI</Filter>
     </ClCompile>
-    <ClCompile Include="GUI\Resources\GUI_Font6x8_9.cc">
-      <Filter>GUI\Resources</Filter>
+    <ClCompile Include="GUI\Widgets\Button.cc">
+      <Filter>GUI\Widgets</Filter>
     </ClCompile>
-    <ClCompile Include="GUI\Resources\GUI_Font8_1_2.cc">
-      <Filter>GUI\Resources</Filter>
+    <ClCompile Include="GUI\Widgets\CheckBox.cc">
+      <Filter>GUI\Widgets</Filter>
     </ClCompile>
-    <ClCompile Include="GUI\Resources\GUI_Font8_ASCII.cc">
+    <ClCompile Include="GUI\Widgets\DropDown.cc">
+      <Filter>GUI\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Widgets\Frame.cc">
+      <Filter>GUI\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Widgets\ListBox.cc">
+      <Filter>GUI\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Widgets\Menu.cc">
+      <Filter>GUI\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Widgets\ProgBar.cc">
+      <Filter>GUI\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Widgets\Radio.cc">
+      <Filter>GUI\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Widgets\ScrollBar.cc">
+      <Filter>GUI\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Widgets\Slider.cc">
+      <Filter>GUI\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Widgets\Static.cc">
+      <Filter>GUI\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\WM.cc">
+      <Filter>GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Resources\GUI_CursorArrowM.cc">
       <Filter>GUI\Resources</Filter>
     </ClCompile>
     <ClCompile Include="GUI\Resources\GUI_Font13_1.cc">
@@ -109,90 +85,60 @@
     <ClCompile Include="GUI\Resources\GUI_Font13_ASCII.cc">
       <Filter>GUI\Resources</Filter>
     </ClCompile>
-    <ClCompile Include="GUI\Resources\GUI_CursorArrowL.cc">
-      <Filter>GUI\Resources</Filter>
-    </ClCompile>
-    <ClCompile Include="GUI\Resources\GUI_CursorArrowM.cc">
-      <Filter>GUI\Resources</Filter>
-    </ClCompile>
-    <ClCompile Include="GUI\Resources\GUI_CursorArrowS.cc">
-      <Filter>GUI\Resources</Filter>
-    </ClCompile>
-    <ClCompile Include="GUI\Resources\GUI_CursorCrossL.cc">
-      <Filter>GUI\Resources</Filter>
-    </ClCompile>
-    <ClCompile Include="GUI\Resources\GUI_CursorCrossM.cc">
-      <Filter>GUI\Resources</Filter>
-    </ClCompile>
-    <ClCompile Include="GUI\Resources\GUI_CursorCrossS.cc">
-      <Filter>GUI\Resources</Filter>
-    </ClCompile>
-    <ClCompile Include="GUI\Resources\GUI_CursorHeaderM.cc">
-      <Filter>GUI\Resources</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="GUI\Widget\Button.h">
-      <Filter>GUI\Widget\Controls</Filter>
-    </ClInclude>
-    <ClInclude Include="GUI\Widget\CheckBox.h">
-      <Filter>GUI\Widget\Controls</Filter>
-    </ClInclude>
-    <ClInclude Include="GUI\Widget\DropDown.h">
-      <Filter>GUI\Widget\Controls</Filter>
-    </ClInclude>
-    <ClInclude Include="GUI\Widget\Edit.h">
-      <Filter>GUI\Widget\Controls</Filter>
-    </ClInclude>
-    <ClInclude Include="GUI\Widget\Header.h">
-      <Filter>GUI\Widget\Controls</Filter>
-    </ClInclude>
-    <ClInclude Include="GUI\Widget\ListBox.h">
-      <Filter>GUI\Widget\Controls</Filter>
-    </ClInclude>
-    <ClInclude Include="GUI\Widget\ListView.h">
-      <Filter>GUI\Widget\Controls</Filter>
-    </ClInclude>
-    <ClInclude Include="GUI\Widget\Menu.h">
-      <Filter>GUI\Widget\Controls</Filter>
-    </ClInclude>
-    <ClInclude Include="GUI\Widget\MultiEdit.h">
-      <Filter>GUI\Widget\Controls</Filter>
-    </ClInclude>
-    <ClInclude Include="GUI\Widget\MultiPage.h">
-      <Filter>GUI\Widget\Controls</Filter>
-    </ClInclude>
-    <ClInclude Include="GUI\Widget\ProgBar.h">
-      <Filter>GUI\Widget\Controls</Filter>
-    </ClInclude>
-    <ClInclude Include="GUI\Widget\Radio.h">
-      <Filter>GUI\Widget\Controls</Filter>
-    </ClInclude>
-    <ClInclude Include="GUI\Widget\ScrollBar.h">
-      <Filter>GUI\Widget\Controls</Filter>
-    </ClInclude>
-    <ClInclude Include="GUI\Widget\Slider.h">
-      <Filter>GUI\Widget\Controls</Filter>
-    </ClInclude>
-    <ClInclude Include="GUI\Widget\Static.h">
-      <Filter>GUI\Widget\Controls</Filter>
-    </ClInclude>
-    <ClInclude Include="GUI\Widget\WM.h">
-      <Filter>GUI\Widget</Filter>
-    </ClInclude>
-    <ClInclude Include="GUI\Widget\Frame.h">
-      <Filter>GUI\Widget\Controls</Filter>
-    </ClInclude>
     <ClInclude Include="GUI\GUI.h">
       <Filter>GUI</Filter>
     </ClInclude>
     <ClInclude Include="GUI\GUI_Array.h">
       <Filter>GUI</Filter>
     </ClInclude>
+    <ClInclude Include="GUI\Widgets\Button.h">
+      <Filter>GUI\Widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\Widgets\CheckBox.h">
+      <Filter>GUI\Widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\Widgets\DropDown.h">
+      <Filter>GUI\Widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\Widgets\Frame.h">
+      <Filter>GUI\Widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\Widgets\ListBox.h">
+      <Filter>GUI\Widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\Widgets\Menu.h">
+      <Filter>GUI\Widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\Widgets\ProgBar.h">
+      <Filter>GUI\Widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\Widgets\Radio.h">
+      <Filter>GUI\Widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\Widgets\ScrollBar.h">
+      <Filter>GUI\Widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\Widgets\Slider.h">
+      <Filter>GUI\Widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\Widgets\Static.h">
+      <Filter>GUI\Widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\WM.h">
+      <Filter>GUI</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="GUI\GUI__ID.inl">
+    <None Include="GUI\GUI.inl">
       <Filter>GUI</Filter>
+    </None>
+    <None Include="GUI\WM.inl">
+      <Filter>GUI</Filter>
+    </None>
+    <None Include="GUI\Resources\Resources.inl">
+      <Filter>GUI\Resources</Filter>
     </None>
   </ItemGroup>
 </Project>
