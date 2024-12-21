@@ -66,8 +66,8 @@ void ScrollBar::_InvalidatePartner() {
 }
 void ScrollBar::_DrawTriangle(int x, int y, int Size, int Inc) const {
 	if (State & WIDGET_STATE_VERTICAL)
-		for (; Size >= 0; Size--, y += Inc)
-			GUI.DrawLineH(x, y - Size, y + Size);
+		for (; Size >= 0; Size--, x += Inc)
+			GUI.DrawLineH(y - Size, x, y + Size);
 	else
 		for (; Size >= 0; Size--, x += Inc)
 			GUI.DrawLineV(x, y - Size, y + Size);
@@ -96,7 +96,7 @@ void ScrollBar::_OnPaint() {
 	GUI.PenColor(Props.aBkColor[1]);
 	_DrawTriangle(r.x0 + ArrowOff, r.dy() >> 1, ArrowSize, -1);
 	DrawUp(r);
-	/* Scroll 1 */
+	/* Thumb Overlap */
 	GUI.PenColor(Props.aBkColor[0]);
 	r.x0 = Pos.x1_LeftArrow + 1;
 	r.x1 = Pos.x0_Thumb - 1;
@@ -105,7 +105,7 @@ void ScrollBar::_OnPaint() {
 	r.x0 = Pos.x1_Thumb + 1;
 	r.x1 = Pos.x0_RightArrow - 1;
 	Fill(r);
-	/* Scroll 2 */
+	/* Thumb */
 	r = rClient;
 	r.x0 = Pos.x0_Thumb;
 	r.x1 = Pos.x1_Thumb;
@@ -120,6 +120,7 @@ void ScrollBar::_OnPaint() {
 	GUI.PenColor(Props.aBkColor[1]);
 	_DrawTriangle(r.x1 - ArrowOff, r.dy() >> 1, ArrowSize, 1);
 	DrawUp(r);
+	/* Overlap Area */
 	if (Pos.x1_RightArrow == Pos.x1)
 		return;
 	r.x0 = Pos.x1_RightArrow + 1;

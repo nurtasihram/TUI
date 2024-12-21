@@ -1,4 +1,3 @@
-#define WM_C
 #include "WM.h"
 
 uint8_t WM_IsActive;
@@ -1130,7 +1129,7 @@ bool Widget::HandleActive(WM_MSG *pMsg) {
 			pMsg->data = bool(State & WIDGET_STATE_FOCUSSABLE);
 			return false;
 		case WM_GET_INSIDE_RECT:
-			*(SRect *)pMsg->data = ClientRect() / pEffect->EffectSize;
+			*(SRect *)pMsg->data = WObj::ClientRect() / pEffect->EffectSize;
 			return false;
 	}
 	return true;

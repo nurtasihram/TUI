@@ -218,9 +218,9 @@ void MainTasfk() {
 }
 
 void MainTask() {
-	_bMultiSel = false;
-	_bOwnerDrawn = true;
 	for (;;) {
+		_bMultiSel = false;
+		_bOwnerDrawn = true;
 		aDialogCreate->DialogBox(_cbFrame, 0, 0, 0);
 	}
 }
