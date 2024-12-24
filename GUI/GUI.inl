@@ -1,3 +1,11 @@
+#pragma once
+
+enum TEXTSTYLES {
+	TS_NORMAL = 0,
+	TS_UNDERLINE,
+	TS_STRIKETHRU,
+	TS_OVERLINE
+};
 
 enum GUI_KEYS {
 	GUI_KEY_BACKSPACE         = 8,
@@ -19,110 +27,105 @@ enum GUI_KEYS {
 	GUI_KEY_F2                = 41
 };
 
-#define GUI_ID_OK                1
-#define GUI_ID_CANCEL            2
-#define GUI_ID_YES               3
-#define GUI_ID_NO                4
-#define GUI_ID_CLOSE             5
-#define GUI_ID_HELP              6
-#define GUI_ID_MAXIMIZE          7
-#define GUI_ID_MINIMIZE          8
-#define GUI_ID_VSCROLL  0xFE
-#define GUI_ID_HSCROLL  0xFF
-#define GUI_ID_EDIT0    0x100
-#define GUI_ID_EDIT1    0x101
-#define GUI_ID_EDIT2    0x102
-#define GUI_ID_EDIT3    0x103
-#define GUI_ID_EDIT4    0x104
-#define GUI_ID_EDIT5    0x105
-#define GUI_ID_EDIT6    0x106
-#define GUI_ID_EDIT7    0x107
-#define GUI_ID_EDIT8    0x108
-#define GUI_ID_EDIT9    0x109
-#define GUI_ID_LISTBOX0 0x110
-#define GUI_ID_LISTBOX1 0x111
-#define GUI_ID_LISTBOX2 0x112
-#define GUI_ID_LISTBOX3 0x113
-#define GUI_ID_LISTBOX4 0x114
-#define GUI_ID_LISTBOX5 0x115
-#define GUI_ID_LISTBOX6 0x116
-#define GUI_ID_LISTBOX7 0x117
-#define GUI_ID_LISTBOX8 0x118
-#define GUI_ID_LISTBOX9 0x119
-#define GUI_ID_CHECK0   0x120
-#define GUI_ID_CHECK1   0x121
-#define GUI_ID_CHECK2   0x122
-#define GUI_ID_CHECK3   0x123
-#define GUI_ID_CHECK4   0x124
-#define GUI_ID_CHECK5   0x125
-#define GUI_ID_CHECK6   0x126
-#define GUI_ID_CHECK7   0x127
-#define GUI_ID_CHECK8   0x128
-#define GUI_ID_SLIDER0  0x130
-#define GUI_ID_SLIDER1  0x131
-#define GUI_ID_SLIDER2  0x132
-#define GUI_ID_SLIDER3  0x133
-#define GUI_ID_SLIDER4  0x134
-#define GUI_ID_SLIDER5  0x135
-#define GUI_ID_SLIDER6  0x136
-#define GUI_ID_SLIDER7  0x137
-#define GUI_ID_SLIDER8  0x138
-#define GUI_ID_SLIDER9  0x139
-#define GUI_ID_SCROLLBAR0 0x140
-#define GUI_ID_SCROLLBAR1 0x141
-#define GUI_ID_SCROLLBAR2 0x142
-#define GUI_ID_SCROLLBAR3 0x142
-#define GUI_ID_RADIO0 0x150
-#define GUI_ID_RADIO1 0x151
-#define GUI_ID_RADIO2 0x152
-#define GUI_ID_RADIO3 0x153
-#define GUI_ID_RADIO4 0x154
-#define GUI_ID_RADIO5 0x155
-#define GUI_ID_RADIO6 0x156
-#define GUI_ID_RADIO7 0x157
-#define GUI_ID_TEXT0  0x160
-#define GUI_ID_TEXT1  0x161
-#define GUI_ID_TEXT2  0x162
-#define GUI_ID_TEXT3  0x163
-#define GUI_ID_TEXT4  0x164
-#define GUI_ID_TEXT5  0x165
-#define GUI_ID_TEXT6  0x166
-#define GUI_ID_TEXT7  0x167
-#define GUI_ID_TEXT8  0x168
-#define GUI_ID_TEXT9  0x169
-#define GUI_ID_BUTTON0 0x170
-#define GUI_ID_BUTTON1 0x171
-#define GUI_ID_BUTTON2 0x172
-#define GUI_ID_BUTTON3 0x173
-#define GUI_ID_BUTTON4 0x174
-#define GUI_ID_BUTTON5 0x175
-#define GUI_ID_BUTTON6 0x176
-#define GUI_ID_BUTTON7 0x177
-#define GUI_ID_BUTTON8 0x178
-#define GUI_ID_BUTTON9 0x179
-#define GUI_ID_DROPDOWN0  0x180
-#define GUI_ID_DROPDOWN1  0x181
-#define GUI_ID_DROPDOWN2  0x182
-#define GUI_ID_DROPDOWN3  0x183
-#define GUI_ID_MULTIEDIT0 0x190
-#define GUI_ID_MULTIEDIT1 0x191
-#define GUI_ID_MULTIEDIT2 0x192
-#define GUI_ID_MULTIEDIT3 0x193
-#define GUI_ID_LISTVIEW0  0x200
-#define GUI_ID_LISTVIEW1  0x201
-#define GUI_ID_LISTVIEW2  0x202
-#define GUI_ID_LISTVIEW3  0x203
-#define GUI_ID_PROGBAR0   0x210
-#define GUI_ID_PROGBAR1   0x211
-#define GUI_ID_PROGBAR2   0x212
-#define GUI_ID_PROGBAR3   0x213
-#define GUI_ID_USER     0x800
-
-enum TEXTSTYLES {
-	TS_NORMAL,
-	TS_UNDERLINE,
-	TS_STRIKETHRU,
-	TS_OVERLINE
+enum GUI_ID : int {
+	GUI_ID_OK                = 1,
+	GUI_ID_CANCEL            = 2,
+	GUI_ID_YES               = 3,
+	GUI_ID_NO                = 4,
+	GUI_ID_CLOSE             = 5,
+	GUI_ID_HELP              = 6,
+	GUI_ID_MAXIMIZE          = 7,
+	GUI_ID_MINIMIZE          = 8,
+	GUI_ID_VSCROLL  = 0xFE,
+	GUI_ID_HSCROLL  = 0xFF,
+	GUI_ID_EDIT0    = 0x100,
+	GUI_ID_EDIT1    = 0x101,
+	GUI_ID_EDIT2    = 0x102,
+	GUI_ID_EDIT3    = 0x103,
+	GUI_ID_EDIT4    = 0x104,
+	GUI_ID_EDIT5    = 0x105,
+	GUI_ID_EDIT6    = 0x106,
+	GUI_ID_EDIT7    = 0x107,
+	GUI_ID_EDIT8    = 0x108,
+	GUI_ID_EDIT9    = 0x109,
+	GUI_ID_LISTBOX0 = 0x110,
+	GUI_ID_LISTBOX1 = 0x111,
+	GUI_ID_LISTBOX2 = 0x112,
+	GUI_ID_LISTBOX3 = 0x113,
+	GUI_ID_LISTBOX4 = 0x114,
+	GUI_ID_LISTBOX5 = 0x115,
+	GUI_ID_LISTBOX6 = 0x116,
+	GUI_ID_LISTBOX7 = 0x117,
+	GUI_ID_LISTBOX8 = 0x118,
+	GUI_ID_LISTBOX9 = 0x119,
+	GUI_ID_CHECK0   = 0x120,
+	GUI_ID_CHECK1   = 0x121,
+	GUI_ID_CHECK2   = 0x122,
+	GUI_ID_CHECK3   = 0x123,
+	GUI_ID_CHECK4   = 0x124,
+	GUI_ID_CHECK5   = 0x125,
+	GUI_ID_CHECK6   = 0x126,
+	GUI_ID_CHECK7   = 0x127,
+	GUI_ID_CHECK8   = 0x128,
+	GUI_ID_SLIDER0  = 0x130,
+	GUI_ID_SLIDER1  = 0x131,
+	GUI_ID_SLIDER2  = 0x132,
+	GUI_ID_SLIDER3  = 0x133,
+	GUI_ID_SLIDER4  = 0x134,
+	GUI_ID_SLIDER5  = 0x135,
+	GUI_ID_SLIDER6  = 0x136,
+	GUI_ID_SLIDER7  = 0x137,
+	GUI_ID_SLIDER8  = 0x138,
+	GUI_ID_SLIDER9  = 0x139,
+	GUI_ID_SCROLLBAR0 = 0x140,
+	GUI_ID_SCROLLBAR1 = 0x141,
+	GUI_ID_SCROLLBAR2 = 0x142,
+	GUI_ID_SCROLLBAR3 = 0x142,
+	GUI_ID_RADIO0 = 0x150,
+	GUI_ID_RADIO1 = 0x151,
+	GUI_ID_RADIO2 = 0x152,
+	GUI_ID_RADIO3 = 0x153,
+	GUI_ID_RADIO4 = 0x154,
+	GUI_ID_RADIO5 = 0x155,
+	GUI_ID_RADIO6 = 0x156,
+	GUI_ID_RADIO7 = 0x157,
+	GUI_ID_TEXT0  = 0x160,
+	GUI_ID_TEXT1  = 0x161,
+	GUI_ID_TEXT2  = 0x162,
+	GUI_ID_TEXT3  = 0x163,
+	GUI_ID_TEXT4  = 0x164,
+	GUI_ID_TEXT5  = 0x165,
+	GUI_ID_TEXT6  = 0x166,
+	GUI_ID_TEXT7  = 0x167,
+	GUI_ID_TEXT8  = 0x168,
+	GUI_ID_TEXT9  = 0x169,
+	GUI_ID_BUTTON0 = 0x170,
+	GUI_ID_BUTTON1 = 0x171,
+	GUI_ID_BUTTON2 = 0x172,
+	GUI_ID_BUTTON3 = 0x173,
+	GUI_ID_BUTTON4 = 0x174,
+	GUI_ID_BUTTON5 = 0x175,
+	GUI_ID_BUTTON6 = 0x176,
+	GUI_ID_BUTTON7 = 0x177,
+	GUI_ID_BUTTON8 = 0x178,
+	GUI_ID_BUTTON9 = 0x179,
+	GUI_ID_DROPDOWN0  = 0x180,
+	GUI_ID_DROPDOWN1  = 0x181,
+	GUI_ID_DROPDOWN2  = 0x182,
+	GUI_ID_DROPDOWN3  = 0x183,
+	GUI_ID_MULTIEDIT0 = 0x190,
+	GUI_ID_MULTIEDIT1 = 0x191,
+	GUI_ID_MULTIEDIT2 = 0x192,
+	GUI_ID_MULTIEDIT3 = 0x193,
+	GUI_ID_LISTVIEW0  = 0x200,
+	GUI_ID_LISTVIEW1  = 0x201,
+	GUI_ID_LISTVIEW2  = 0x202,
+	GUI_ID_LISTVIEW3  = 0x203,
+	GUI_ID_PROGBAR0   = 0x210,
+	GUI_ID_PROGBAR1   = 0x211,
+	GUI_ID_PROGBAR2   = 0x212,
+	GUI_ID_PROGBAR3   = 0x213,
+	GUI_ID_USER     = 0x800
 };
 
 enum BPP1_DAT : uint8_t {
@@ -641,3 +644,68 @@ enum BPP2_DAT : uint8_t {
 	oodddddd = 0xFE,
 	dddddddd = 0xFF
 };
+
+#pragma region Colors
+using RGBC = uint32_t;
+constexpr RGBC RGBC_B(uint8_t b) { return b; }
+constexpr RGBC RGBC_G(uint8_t g) { return g << 0x08; }
+constexpr RGBC RGBC_R(uint8_t r) { return r << 0x10; }
+constexpr RGBC RGBC_C(uint8_t r, uint8_t g, uint8_t b) { return RGBC_R(r) | RGBC_G(g) | RGBC_B(b); }
+constexpr RGBC RGBC_GRAY(uint8_t l) { return RGBC_C(l, l, l); }
+enum Color : RGBC {
+	RGB_BLACK              = RGBC_GRAY(0x00),
+	RGB_DARKGRAY           = RGBC_GRAY(0x40),
+	RGB_GRAY               = RGBC_GRAY(0x80),
+	RGB_LIGHTGRAY          = RGBC_GRAY(0xD3),
+	RGB_WHITE              = RGBC_GRAY(0xFF),
+
+	RGB_RED                = RGBC_R(0xFF),
+	RGB_GREEN              = RGBC_G(0xFF),
+	RGB_BLUE               = RGBC_B(0xFF),
+
+	RGB_DARKRED            = RGBC_R(0x80),
+	RGB_DARKGREEN          = RGBC_G(0x80),
+	RGB_DARKBLUE           = RGBC_B(0x80),
+
+	RGB_LIGHTBLUE          = RGBC_C(0x80, 0x80, 0xFF),
+	RGB_LIGHTGREEN         = RGBC_C(0x80, 0xFF, 0x80),
+	RGB_LIGHTRED           = RGBC_C(0xFF, 0x80, 0x80),
+
+	RGB_BROWN              = RGBC_C(0xA5, 0x2A, 0x2A),
+
+	RGB_YELLOW             = RGBC_C(0xFF, 0xFF, 0x00),
+	RGB_LIGHTYELLOW        = RGBC_C(0xFF, 0xFF, 0x80),
+	RGB_DARKYELLOW         = RGBC_C(0x80, 0x80, 0x00),
+
+	RGB_MAGENTA            = RGBC_C(0xFF, 0x00, 0xFF),
+	RGB_LIGHTMAGENTA       = RGBC_C(0xFF, 0x80, 0xFF),
+	RGB_DARKMAGENTA        = RGBC_C(0x80, 0x00, 0x80),
+
+	RGB_CYAN               = RGBC_C(0x00, 0xFF, 0xFF),
+	RGB_LIGHTCYAN          = RGBC_C(0x80, 0xFF, 0xFF),
+	RGB_DARKCYAN           = RGBC_C(0x00, 0x80, 0x80),
+
+	RGB_INVALID_COLOR      = 0xFF000000,
+};
+#pragma endregion
+
+using	  DRAWMODE = uint8_t;
+constexpr DRAWMODE
+		  DRAWMODE_NORMAL (0 << 1),
+		  DRAWMODE_TRANS  (1 << 1);
+using		ALIGN = uint8_t;
+constexpr   ALIGN
+			ALIGN_LEFT		(1 << 0),
+			ALIGN_RIGHT		(2 << 0),
+			ALIGN_HCENTER	(3 << 0),
+			ALIGN_TOP		(1 << 2),
+			ALIGN_BOTTOM	(2 << 2),
+			ALIGN_VCENTER	(3 << 2);
+using	  TEXTALIGN = uint8_t;
+constexpr TEXTALIGN TEXTALIGN_LEFT		(0 << 0),
+					TEXTALIGN_RIGHT		(1 << 0),
+					TEXTALIGN_HCENTER	(2 << 0),
+					TEXTALIGN_HORIZONTAL(3 << 0),
+					TEXTALIGN_TOP		(0 << 2),
+					TEXTALIGN_BOTTOM	(1 << 2),
+					TEXTALIGN_VCENTER	(3 << 2);

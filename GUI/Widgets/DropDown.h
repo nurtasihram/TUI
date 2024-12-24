@@ -1,9 +1,11 @@
 #pragma once
 #include "ListBox.h"
 
-#define DROPDOWN_CI_UNSEL    0
-#define DROPDOWN_CI_SEL      1
-#define DROPDOWN_CI_SELFOCUS 2
+enum DROPDOWN_CI {
+	DROPDOWN_CI_UNSEL = 0,
+	DROPDOWN_CI_SEL,
+	DROPDOWN_CI_SELFOCUS
+};
 
 #define DROPDOWN_CF_AUTOSCROLLBAR   LISTBOX_CF_AUTOSCROLLBAR_V
 #define DROPDOWN_CF_UP              (1 << 2)
@@ -22,21 +24,22 @@ public:
 			RGB_WHITE,
 			RGB_WHITE
 		};
-		int16_t TextBorderSize = 2;
-		int16_t Align = TEXTALIGN_LEFT;
+		int16_t TextBorderSize{ 2 };
+		TEXTALIGN Align{ TEXTALIGN_LEFT };
 	} static DefaultProps;
 private:
-	int16_t sel;
-	int16_t ySizeEx; /* Drop down size */
-	int16_t textHeight;
 	GUI_Array<TString> Handles;
-	SCROLL_STATE ScrollState;
 	Property Props;
 	ListBox *pListbox = nullptr;
+	SCROLL_STATE ScrollState;
+	uint16_t ItemSpacing = 0;
 	uint8_t Flags = 0;
 	uint8_t ScrollbarWidth = 0;
-	uint16_t ItemSpacing = 0;
+	int16_t sel = 0;
+	int16_t ySizeEx = 0;
+	int16_t textHeight = 0;
 	bool bPressed = false;
+
 private:
 	void _SelectByKey(int Key);
 	void _AdjustHeight();
@@ -45,10 +48,16 @@ private:
 	bool _OnTouch(const PID_STATE *pState);
 	bool _OnKey(const KEY_STATE *pKi);
 
-	static void _Callback(WObj *pWin, int msgid, WM_PARAM *pData, WObj *pWinSrc);
+	static WM_RESULT _Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc);
+
 public:
 	DropDown(int x0, int y0, int xsize, int ysize,
-			 WObj *pParent, uint16_t Id, uint16_t Flags, uint8_t ExFlags);
+			 WObj *pParent, uint16_t Id,
+			 WM_CF Flags, uint8_t ExFlags);
+	DropDown(const WM_CREATESTRUCT &wc) :
+		DropDown(wc.x, wc.y, wc.xsize, wc.ysize,
+				 wc.pParent, wc.Id,
+				 wc.Flags, (uint8_t)wc.ExFlags) {}
 protected:
 	~DropDown();
 
@@ -71,7 +80,7 @@ public:
 #pragma region Properties
 public: // Property - TextAlign
 	/* R */ inline auto TextAlign() const { return Props.Align; }
-	/* W */ inline void TextAlign(int Align) {
+	/* W */ inline void TextAlign(TEXTALIGN Align) {
 		if (Props.Align != Align) {
 			Props.Align = Align;
 			Invalidate();
@@ -94,8 +103,8 @@ public: // Property - Spacing
 public: // Property - ScrollBarWidth
 	/* R */ inline auto ScrollBarWidth() const { return ScrollbarWidth; }
 	/* W */ inline void ScrollBarWidth(uint8_t Width) {
-		if (this->ScrollbarWidth != Width) {
-			this->ScrollbarWidth = Width;
+		if (ScrollbarWidth != Width) {
+			ScrollbarWidth = Width;
 			if (pListbox)
 				pListbox->ScrollBarWidth(Width);
 		}
@@ -103,12 +112,13 @@ public: // Property - ScrollBarWidth
 public: // Property - AutoScroll
 	/* R */ inline bool AutoScroll() const { return Flags & DROPDOWN_CF_AUTOSCROLLBAR; }
 	/* W */ void AutoScroll(bool bEnable);
-public:
-	/* R */ inline auto TextHeight() const {}
-	void TextHeight(int16_t TextHeight) {
+public: // Property - TextHeight
+	/* R */ inline auto TextHeight() const { return textHeight; }
+	/* W */ inline void TextHeight(int16_t TextHeight) {
 		if (textHeight != TextHeight) {
-			this->textHeight = TextHeight;
-			_AdjustHeight(); textHeight = TextHeight;
+			textHeight = TextHeight;
+			_AdjustHeight();
+			textHeight = TextHeight;
 			Invalidate();
 		}
 	}

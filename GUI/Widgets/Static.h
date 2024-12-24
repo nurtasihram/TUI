@@ -8,13 +8,13 @@
 #define TEXT_CF_TOP     TEXTALIGN_TOP
 #define TEXT_CF_BOTTOM  TEXTALIGN_BOTTOM
 
-struct Static : public Widget {
+class Static : public Widget {
 public:
 	struct Property {
 		CFont *pFont{ &GUI_Font13_1 };
-		TEXTALIGN Align = TEXTALIGN_LEFT;
-		RGBC textColor = RGB_BLACK;
-		RGBC bkColor = RGB_INVALID_COLOR;
+		RGBC Color{ RGB_BLACK };
+		RGBC BkColor{ RGB_INVALID_COLOR };
+		TEXTALIGN Align{ TEXTALIGN_LEFT };
 	} static DefaultProps;
 private:
 	Property Props;
@@ -22,55 +22,57 @@ private:
 private:
 	void _OnPaint() const;
 
-	static void _Callback(WObj *pWin, int msgid, WM_PARAM *pData, WObj *pWinSrc);
+	static WM_RESULT _Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc);
 public:
 	Static(int x0, int y0, int xsize, int ysize,
-		   WObj *pParent, uint16_t Id, uint16_t Flags, uint16_t ExFlags,
+		   WObj *pParent, uint16_t Id,
+		   WM_CF Flags, uint16_t ExFlags,
 		   const char *pText);
-	Static(const WM_CREATESTRUCT &wc) : Static(
-		wc.x, wc.y, wc.xsize, wc.ysize,
-		wc.pParent, wc.Id, wc.Flags, wc.ExFlags,
-		wc.pCaption) {}
+	Static(const WM_CREATESTRUCT &wc) :
+		Static(wc.x, wc.y, wc.xsize, wc.ysize,
+			   wc.pParent, wc.Id,
+			   wc.Flags, wc.ExFlags,
+			   wc.pCaption) {}
 
 #pragma region Properties
 public: // Property - Font
+	/* R */ inline auto Font() const { return Props.pFont; }
 	/* W */ inline void Font(CFont *pFont) {
 		if (Props.pFont != pFont && pFont) {
 			Props.pFont = pFont;
 			Invalidate();
 		}
 	}
-	/* R */ inline auto Font() const { return Props.pFont; }
 public: // Property - BkColor
+	/* R */ inline auto BkColor() const { return Props.BkColor; }
 	/* W */ inline void BkColor(RGBC Color) {
-		if (Props.bkColor != Color) {
-			Props.bkColor = Color;
+		if (Props.BkColor != Color) {
+			Props.BkColor = Color;
 			Invalidate();
 		}
 	}
-	/* R */ inline auto BkColor() const { return Props.bkColor; }
 public: // Property - TextColor
+	/* R */ inline auto TextColor() const { return Props.Color; }
 	/* W */ inline void TextColor(RGBC Color) {
-		if (Props.textColor != Color) {
-			Props.textColor = Color;
+		if (Props.Color != Color) {
+			Props.Color = Color;
 			Invalidate();
 		}
 	}
-	/* R */ inline auto TextColor() const { return Props.textColor; }
 public: // Property - TextAlign
-	/* W */ inline void TextAling(TEXTALIGN Align) {
+	/* R */ inline auto TextAlign() const { return Props.Align; }
+	/* W */ inline void TextAlign(TEXTALIGN Align) {
 		if (Props.Align != Align) {
 			Props.Align = Align;
 			Invalidate();
 		}
 	}
-	/* R */ inline auto TextAlign() const { return Props.Align; }
 public: // Property - Text
+	/* R */ inline const char *Text() const { return text; }
 	/* W */ inline void Text(const char *pText) {
 		text = pText;
 		Invalidate();
 	}
-	/* R */ inline const char *Text() const { return text; }
 #pragma endregion
 
 };

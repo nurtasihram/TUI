@@ -5,9 +5,10 @@
 void MainTask() {
 	auto pFrame = new Frame(
 		0, 0, 250, 250,
-		WObj::Desktop(), WC_VISIBLE,
-		0, 0, "CheckBox & Radio");
-	pFrame->Moveable(true);
+		WObj::Desktop(), 0, 0,
+		FRAME_CF_MOVEABLE,
+		"CheckBox & Radio");
+	pFrame->Moveable(true);	
 	pFrame->AddCloseButton();
 	pFrame->AddMaxButton();
 	pFrame->AddMinButton();
@@ -31,7 +32,6 @@ void MainTask() {
 	auto pBtn = new Button(35, 170, 40, 30, pFrame->Client(), 0, 0, "Click");
 	pBtn->Visible(true);
 
-	pFrame->Resizeable(true);
 	pFrame->Visible(true);
 
 	for (;;)

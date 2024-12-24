@@ -377,9 +377,9 @@ static void _OSK_onKeyH(uint16_t Id) {
 	GUI_PollKeyMsg();
 }
 void (*_OSK_onKey)(uint16_t Id) = _OSK_onKeyV;
-static void _OSK_callback(int msgid, WM_MSG *pMsg) {
+static void _OSK_callback(int MsgId, WM_MSG *pMsg) {
 	auto pWin = pMsg->pWin;
-	switch (msgid) {
+	switch (MsgId) {
 	case WM_CREATE:
 		GUI.PenColor(RGB_GRAY);
 		break;
@@ -390,7 +390,7 @@ static void _OSK_callback(int msgid, WM_MSG *pMsg) {
 	case WM_NOTIFY_PARENT:
 		switch ((int)pMsg->data) {
 		case WM_NOTIFICATION_RELEASED:
-			_OSK_onKey((int)pMsg->pWinSrc->ID());
+			_OSK_onKey((int)pMsg->pSrc->ID());
 			break;
 		}
 		break;

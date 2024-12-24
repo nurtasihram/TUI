@@ -62,7 +62,7 @@ CBitmap bmSmilie1{
 };
 
 static int _GetItemSizeX(ListBox *pWin, int ItemIndex) {
-	return GUI_GetStringDistX(pWin->ItemText(ItemIndex)) 
+	return GUI.XDist(pWin->ItemText(ItemIndex)) 
 		+ bmSmilie0.Size.x + 16;
 }
 static int _GetItemSizeY(ListBox *pWin, int ItemIndex) {
@@ -86,8 +86,8 @@ static int _OwnerDraw(const WIDGET_ITEM_DRAW_INFO *pDrawItemInfo) {
 			return _GetItemSizeY(pWin, Index);
 		case WIDGET_ITEM_DRAW:
 		{
-			RGBC aColor[4]{ RGB_BLACK, RGB_WHITE, RGB_WHITE, RGB_GRAY };
-			RGBC aBkColor[4]{ RGB_WHITE, RGB_GRAY, RGB_BLUE, RGBC_GRAY(0xC0) };
+			auto aColor = ListBox::DefaultProps.aTextColor;
+			auto aBkColor = ListBox::DefaultProps.aBkColor;
 			auto bEnabled = pWin->ItemEnabled(pDrawItemInfo->ItemIndex);
 			auto bSelected = pWin->ItemSel(Index);
 			auto bMultiSel = pWin->MultiSel();
@@ -133,9 +133,9 @@ static int _OwnerDraw(const WIDGET_ITEM_DRAW_INFO *pDrawItemInfo) {
 static bool _bMultiSel = false;
 static bool _bOwnerDrawn = true;
 
-static void _cbFrame(WObj *pDlg, int msgid, WM_PARAM *pData, WObj *pWinSrc) {
+static WM_RESULT _cbFrame(WObj *pDlg, int MsgId, WM_PARAM Param, WObj *pSrc) {
 	auto pListBox = (ListBox *)pDlg->DialogItem(GUI_ID_MULTIEDIT0);
-	switch (msgid) {
+	switch (MsgId) {
 		case WM_INIT_DIALOG:
 			pListBox->ScrollStepH(6);
 			pListBox->AutoScrollH(true);
@@ -144,7 +144,7 @@ static void _cbFrame(WObj *pDlg, int msgid, WM_PARAM *pData, WObj *pWinSrc) {
 			((CheckBox *)pDlg->DialogItem(GUI_ID_CHECK1))->CheckState(1);
 			break;
 		case WM_KEY:
-			switch (((KEY_STATE *)pData)->Key) {
+			switch (((KEY_STATE *)Param)->Key) {
 				case GUI_KEY_ESCAPE:
 					pDlg->DialogEnd(1);
 					break;
@@ -154,15 +154,15 @@ static void _cbFrame(WObj *pDlg, int msgid, WM_PARAM *pData, WObj *pWinSrc) {
 			}
 			break;
 		case WM_TOUCH_CHILD:
-			pListBox->Focus();
+			//pListBox->Focus();
 			break;
 		case WM_NOTIFY_PARENT:
-			switch ((int)*pData) {
+			switch ((int)Param) {
 				case WN_SEL_CHANGED:
 					pListBox->InvalidateItem(LISTBOX_ALL_ITEMS);
 					break;
 				case WN_RELEASED:
-					switch (pWinSrc->ID()) {
+					switch (pSrc->ID()) {
 						case GUI_ID_OK:
 							pDlg->DialogEnd(0);
 							break;
@@ -175,7 +175,7 @@ static void _cbFrame(WObj *pDlg, int msgid, WM_PARAM *pData, WObj *pWinSrc) {
 							pListBox->InvalidateItem(LISTBOX_ALL_ITEMS);
 							break;
 						case GUI_ID_CHECK1:
-							if (_bOwnerDrawn = !_bOwnerDrawn)
+							if ((_bOwnerDrawn = !_bOwnerDrawn))
 								pListBox->OwnerDraw(_OwnerDraw);
 							else
 								pListBox->OwnerDraw(nullptr);
@@ -186,13 +186,14 @@ static void _cbFrame(WObj *pDlg, int msgid, WM_PARAM *pData, WObj *pWinSrc) {
 			}
 			break;
 		default:
-			WObj::DefCallback(pDlg, msgid, pData, pWinSrc);
+			return WObj::DefCallback(pDlg, MsgId, Param, pSrc);
 	}
+	return 0;
 }
 
 static const WM_CREATESTRUCT aDialogCreate[]{
 /*    Class             , x		, y		, xsize	, ysize	, Caption				 , Id				, Flags	, ExFlags				, Para	*/
-	{ WCLS_FRAME		, 50	, 50	, 220	, 180	, "Owner drawn list box" , 0				, 0		, FRAME_CF_MOVEABLE			 	},
+	{ WCLS_FRAME		, 50	, 50	, 220	, 165	, "Owner drawn list box" , 0				, 0		, FRAME_CF_MOVEABLE			 	},
 	{ WCLS_LISTBOX		, 10	, 10	, 100	, 100	, "English\0"
 														  "Deutsch\0"
 														  "Francis\0"
@@ -207,19 +208,14 @@ static const WM_CREATESTRUCT aDialogCreate[]{
 	{ WCLS_CHECKBOX		, 120	, 35	, 80	, 15	, "Owner drawn"			 , GUI_ID_CHECK1											},
 	{ WCLS_BUTTON		, 120	, 65	, 80	, 20	, "OK"					 , GUI_ID_OK												},
 	{ WCLS_BUTTON		, 120	, 90	, 80	, 20	, "Cancel"				 , GUI_ID_CANCEL											},
-	{ WCLS_DROPDOWN		, 10	, 100	, 100	, 20	, "Alfa\0Beta\0"		 , 0														},
+	{ WCLS_DROPDOWN		, 10	, 110	, 100	, 20	, "Alfa\0Beta\0"		 , 0														},
 	{}
 };
-
-void MainTasfk() {
-	for (;;)
-		WObj::Exec();
-}
 
 void MainTask() {
 	for (;;) {
 		_bMultiSel = false;
 		_bOwnerDrawn = true;
-		aDialogCreate->DialogBox(_cbFrame, 0, 0, 0);
+		aDialogCreate->DialogBox(_cbFrame);
 	}
 }

@@ -22,7 +22,7 @@ static const BPP2_DAT GUI_Pixels_ArrowM[]{
 	________,____XXoo,ooooXX__,
 	________,______XX,XXXX____
 };
-CCursor GUI_CursorArrowM{
+CCursor GUI_CursorArrow{
 	{
 		/* Size */ { 12, 20 },
 		/* BytesPerLine */ 3,
@@ -31,7 +31,7 @@ CCursor GUI_CursorArrowM{
 		/* Transparent */ true
 	}
 };
-CCursor GUI_CursorArrowMI{
+CCursor GUI_CursorArrowI{
 	{
 		/* Size */ { 12, 20 },
 		/* BytesPerLine */ 3,

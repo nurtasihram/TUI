@@ -3,32 +3,36 @@
 #include "WM.h"
 
 #define LISTBOX_ALL_ITEMS  -1
-#define LISTBOX_CI_UNSEL    0
-#define LISTBOX_CI_SEL      1
-#define LISTBOX_CI_SELFOCUS 2
 
-#define LISTBOX_NOTIFICATION_LOST_FOCUS (WN_WIDGET + 0)
+enum LISTBOX_CI {
+	LISTBOX_CI_UNSEL = 0,
+	LISTBOX_CI_SEL,
+	LISTBOX_CI_SELFOCUS
+};
+
 #define LISTBOX_CF_AUTOSCROLLBAR_H   (1<<0)
 #define LISTBOX_CF_AUTOSCROLLBAR_V   (1<<1)
 #define LISTBOX_CF_MULTISEL          (1<<2)
 
-struct ListBox : public Widget {
+#define LISTBOX_NOTIFICATION_LOST_FOCUS (WN_WIDGET + 0)
+
+class ListBox : public Widget {
 public:
 	struct Property {
 		CFont *pFont{ &GUI_Font13_1 };
-		uint16_t ScrollStepH = 10;
 		RGBC aBkColor[4]{
-			RGB_WHITE,
-			RGB_GRAY,
-			RGB_DARKBLUE,
-			RGBC_GRAY(0xC0),
+			/* Unselect */ RGB_WHITE,
+			/* Selected */ RGB_GRAY,
+			/* Select focused */ RGB_DARKBLUE,
+			/* Disabled */ RGBC_GRAY(0xC0)
 		};
 		RGBC aTextColor[4]{
-			RGB_BLACK,
-			RGB_WHITE,
-			RGB_WHITE,
-			RGB_GRAY
+			/* Unselect */ RGB_BLACK,
+			/* Selected */ RGB_WHITE,
+			/* Select focused */ RGB_WHITE,
+			/* Disabled */ RGB_GRAY
 		};
+		uint16_t ScrollStepH{ 10 };
 	} static DefaultProps;
 	struct Item {
 		TString Text;
@@ -36,6 +40,7 @@ public:
 		uint8_t Status = 0;
 		Item(const char *pText) : Text(pText) {}
 	};
+
 private:
 	Property Props;
 	GUI_Array<Item> ItemArray;
@@ -45,17 +50,7 @@ private:
 	uint8_t Flags = 0, ScrollbarWidth = 0;
 	int16_t sel = 0;
 	uint16_t ItemSpacing = 0;
-public:
-	ListBox(int x0, int y0, int xsize, int ysize,
-			WObj *pParent, uint16_t Id, uint16_t Flags, uint8_t ExFlags,
-			int NumItems);
-	ListBox(int x0, int y0, int xsize, int ysize,
-			WObj *pParent, uint16_t Id, uint16_t Flags, uint8_t ExFlags,
-			const char *pItems);
-	ListBox(const WM_CREATESTRUCT &wc) : ListBox(
-		wc.x, wc.y, wc.xsize, wc.ysize, 
-		wc.pParent, wc.Id, wc.Flags, (uint8_t)wc.ExFlags,
-		wc.pCaption) {}
+
 private:
 	int _CallOwnerDraw(int Cmd, uint16_t ItemIndex);
 	int _GetYSize();
@@ -79,11 +74,26 @@ private:
 	int _GetItemFromPos(int x, int y);
 
 private:
-	void _OnPaint(WM_PARAM *pData);
-	void _OnTouch(const PID_STATE *);
-	void _OnMouseOver(const PID_STATE *);
+	void _OnPaint(SRect rClip);
+	void _OnTouch(const PID_STATE *pState);
+	void _OnMouseOver(const PID_STATE *pState);
 	
-	static void _Callback(WObj *pWin, int msgid, WM_PARAM *pData, WObj *pWinSrc);
+	static WM_RESULT _Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc);
+
+public:
+	ListBox(int x0, int y0, int xsize, int ysize,
+			WObj *pParent, uint16_t Id,
+			WM_CF Flags, uint8_t ExFlags,
+			int NumItems);
+	ListBox(int x0, int y0, int xsize, int ysize,
+			WObj *pParent, uint16_t Id,
+			WM_CF Flags, uint8_t ExFlags,
+			const char *pItems);
+	ListBox(const WM_CREATESTRUCT &wc) :
+		ListBox(wc.x, wc.y, wc.xsize, wc.ysize,
+				wc.pParent, wc.Id,
+				wc.Flags, (uint8_t)wc.ExFlags,
+				wc.pCaption) {}
 
 public:
 	bool AddKey(int Key);
@@ -106,23 +116,44 @@ public:
 	static int OwnerDrawProc(const WIDGET_ITEM_DRAW_INFO *pDrawItemInfo);
 
 #pragma region Properties
-public: // Property - NumItems
-	/* R */ inline auto NumItems() const { return ItemArray.NumItems(); }
-public: // Property - Sel
-	/* R */ inline auto Sel() const { return sel; }
-	/* W */ void Sel(int NewSel);
-public: // Property - MultiSel
-	/* R */ inline bool MultiSel() const { return Flags & LISTBOX_CF_MULTISEL; }
-	/* W */ inline void MultiSel(bool bEnabled) {
-		auto Flags = this->Flags;
-		if (bEnabled)
-			Flags |= LISTBOX_CF_MULTISEL;
-		else 
-			Flags &= ~LISTBOX_CF_MULTISEL;
-		if (this->Flags == Flags)
-			return;
-		this->Flags = Flags;
-		_InvalidateInsideArea();
+public: // Property - Font
+	/* R */ inline auto Font() const { return Props.pFont; }
+	/* W */ inline void Font(CFont *pFont) {
+		if (Props.pFont != pFont && pFont) {
+			Props.pFont = pFont;
+			_InvalidateInsideArea();
+		}
+	}
+public: // Property - BkColor
+	/* R */ inline auto BkColor(LISTBOX_CI Index) const { return Props.aBkColor[Index]; }
+	/* W */ inline void BkColor(LISTBOX_CI Index, RGBC Color) {
+		if (Props.aBkColor[Index] != Color) {
+			Props.aBkColor[Index] = Color;
+			_InvalidateInsideArea();
+		}
+	}
+public: // Property - TextColor
+	/* R */ inline auto TextColor(LISTBOX_CI Index) const { return Props.aTextColor[Index]; }
+	/* W */ inline void TextColor(LISTBOX_CI Index, RGBC Color) {
+		if (Props.aTextColor[Index] != Color) {
+			Props.aTextColor[Index] = Color;
+			_InvalidateInsideArea();
+		}
+	}
+public: // Property - OwnerDraw
+	/* R */ inline void OwnerDraw(WIDGET_DRAW_ITEM_FUNC *pfDrawItem) {
+		if (this->pfDrawItem != pfDrawItem) {
+			this->pfDrawItem = pfDrawItem;
+			InvalidateItem(LISTBOX_ALL_ITEMS);
+		}
+	}
+public: // Property - Spacing
+	/* R */ inline auto Spacing() const { return ItemSpacing; }
+	/* W */ inline void Spacing(uint16_t Value) {
+		if (ItemSpacing != Value) {
+			ItemSpacing = Value;
+			InvalidateItem(LISTBOX_ALL_ITEMS);
+		}
 	}
 public: // Property - ScrollStepH
 	/* R */ inline int ScrollStepH() const { return Props.ScrollStepH; }
@@ -139,51 +170,6 @@ public: // Property - ScrollBarWidth
 			Invalidate();
 		}
 	}
-public: // Property - Spacing
-	/* R */ inline auto Spacing() const { return ItemSpacing; }
-	/* W */ inline void Spacing(uint16_t Value) {
-		if (ItemSpacing != Value) {
-			ItemSpacing = Value;
-			InvalidateItem(LISTBOX_ALL_ITEMS);
-		}
-	}
-public: // Property - Owner
-	/* R */ inline auto Owner() const { return pOwner; }
-	/* W */ inline void Owner(WObj *pOwner) {
-		this->pOwner = pOwner;
-		_InvalidateInsideArea();
-	}
-public: // Property - Font
-	/* R */ inline auto Font() const { return Props.pFont; }
-	/* W */ inline void Font(CFont *pFont) {
-		if (Props.pFont != pFont && pFont) {
-			Props.pFont = pFont;
-			_InvalidateInsideArea();
-		}
-	}
-public: // Property - BkColor
-	/* R */ inline auto BkColor(uint8_t Index) const { return Props.aBkColor[Index]; }
-	/* W */ inline void BkColor(uint8_t Index, RGBC Color) {
-		if (Props.aBkColor[Index] != Color) {
-			Props.aBkColor[Index] = Color;
-			_InvalidateInsideArea();
-		}
-	}
-public: // Property - TextColor
-	/* R */ inline auto TextColor(uint16_t Index) const { return Props.aTextColor[Index]; }
-	/* W */ inline void TextColor(uint16_t Index, RGBC Color) {
-		if (Props.aTextColor[Index] != Color) {
-			Props.aTextColor[Index] = Color;
-			_InvalidateInsideArea();
-		}
-	}
-public: // Property - OwnerDraw
-	/* R */ inline void OwnerDraw(WIDGET_DRAW_ITEM_FUNC *pfDrawItem) {
-		if (this->pfDrawItem != pfDrawItem) {
-			this->pfDrawItem = pfDrawItem;
-			InvalidateItem(LISTBOX_ALL_ITEMS);
-		}
-	}
 public: // Property - ItemSel
 	/* R */ bool ItemSel(uint16_t Index) const;
 	/* W */ void ItemSel(uint16_t Index, bool bSel);
@@ -193,6 +179,30 @@ public: // Property - ItemEnabled
 public: // Property - ItemText
 	/* R */ inline const char *ItemText(uint16_t Index) const { return Index < ItemArray.NumItems() ? (const char *)ItemArray[Index].Text : nullptr; }
 	/* W */ void ItemText(uint16_t Index, const char *s);
+public: // Property - NumItems
+	/* R */ inline auto NumItems() const { return ItemArray.NumItems(); }
+public: // Property - Sel
+	/* R */ inline auto Sel() const { return sel; }
+	/* W */ void Sel(int NewSel);
+public: // Property - MultiSel
+	/* R */ inline bool MultiSel() const { return Flags & LISTBOX_CF_MULTISEL; }
+	/* W */ inline void MultiSel(bool bEnabled) {
+		auto Flags = this->Flags;
+		if (bEnabled)
+			Flags |= LISTBOX_CF_MULTISEL;
+		else
+			Flags &= ~LISTBOX_CF_MULTISEL;
+		if (this->Flags == Flags)
+			return;
+		this->Flags = Flags;
+		_InvalidateInsideArea();
+	}
+public: // Property - Owner
+	/* R */ inline auto Owner() const { return pOwner; }
+	/* W */ inline void Owner(WObj *pOwner) {
+		this->pOwner = pOwner;
+		_InvalidateInsideArea();
+	}
 #pragma endregion
 
 };

@@ -9,13 +9,16 @@ extern const FontMono GUI_Font6x8, GUI_Font6x9;
 /* Cursors */
 
 extern CCursor
-	  GUI_CursorArrowM, GUI_CursorArrowMI
+	  GUI_CursorArrow,   GUI_CursorArrowI,
+	  GUI_CursorHeader, GUI_CursorMove,
+	  GUI_CursorResizeH,  GUI_CursorResizeV,
+	  GUI_CursorResizeDD, GUI_CursorResizeDU
 #if 0 // StandBy
 	, GUI_CursorArrowS, GUI_CursorArrowSI
 	, GUI_CursorArrowL, GUI_CursorArrowLI
 	, GUI_CursorCrossS, GUI_CursorCrossSI
 	  GUI_CursorCrossM, GUI_CursorCrossMI
 	, GUI_CursorCrossL, GUI_CursorCrossLI
-	, GUI_CursorHeaderM, GUI_CursorHeaderMI
+	, GUI_CursorMove, GUI_CursorMoveMI
 #endif
 ;

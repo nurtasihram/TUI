@@ -4,16 +4,16 @@ Button::Property Button::DefaultProps;
 
 #pragma region Callbacks
 void Button::_Pressed() {
-	if (!(State & BUTTON_STATE_PRESSED)) {
-		State |= BUTTON_STATE_PRESSED;
+	if (!(StatusEx & BUTTON_STATE_PRESSED)) {
+		StatusEx |= BUTTON_STATE_PRESSED;
 		Invalidate();
 	}
 	if (Status & WC_VISIBLE)
 		NotifyParent(WN_CLICKED);
 }
 void Button::_Released(int Notification) {
-	if (State & BUTTON_STATE_PRESSED) {
-		State &= ~BUTTON_STATE_PRESSED;
+	if (StatusEx & BUTTON_STATE_PRESSED) {
+		StatusEx &= ~BUTTON_STATE_PRESSED;
 		Invalidate();
 	}
 	if (Status & WC_VISIBLE)
@@ -23,7 +23,7 @@ void Button::_Released(int Notification) {
 }
 
 void Button::_OnPaint() const {
-	bool bPressed = State & BUTTON_STATE_PRESSED;
+	bool bPressed = StatusEx & BUTTON_STATE_PRESSED;
 	auto &&rClient = ClientRect();
 	int EffectSize = 1;
 	if (bPressed)
@@ -43,17 +43,18 @@ void Button::_OnPaint() const {
 			apDrawObj[BUTTON_BI_PRESSED] && bPressed ? BUTTON_BI_PRESSED : BUTTON_BI_UNPRESSED :
 			apDrawObj[BUTTON_BI_DISABLED] ? BUTTON_BI_DISABLED : BUTTON_BI_UNPRESSED
 		])
-		pDraw->Paint(InsideRectAbs());
+		pDraw->Draw(InsideRectAbs());
 	if (text) {
 		GUI.Font(Props.pFont);
-		GUI.TextMode(DRAWMODE_TRANS);
-		GUI_DispStringInRect(
+		GUI.TextAlign(Props.Align);
+		GUI.DispString(
 			text,
-			bPressed ? rInside + Point(EffectSize) : rInside,
-			Props.Align);
+			bPressed ? rInside + Point(EffectSize) : rInside);
 	}
-	if (State & BUTTON_STATE_FOCUS) {
+	if (Focussed()) {
 		GUI.PenColor(RGB_BLACK);
+		if (bPressed)
+			rClient += EffectSize;
 		GUI.OutlineFocus(rClient, 2);
 	}
 	WObj::UserClip(nullptr);
@@ -61,22 +62,22 @@ void Button::_OnPaint() const {
 void Button::_OnTouch(const PID_STATE *pState) {
 	if (pState) {
 		if (pState->Pressed) {
-			if (!(State & BUTTON_STATE_PRESSED))
+			if (!(StatusEx & BUTTON_STATE_PRESSED))
 				_Pressed();
 		}
-		else if (State & BUTTON_STATE_PRESSED)
+		else if (StatusEx & BUTTON_STATE_PRESSED)
 			_Released(WN_RELEASED);
 	}
 	else
 		_Released(WN_MOVED_OUT);
 }
 void Button::_OnPidStateChange(const PID_CHANGED_STATE *pState) {
-	if ((pState->StatePrev == 0) && (pState->State == 1)) {
-		if (!(State & BUTTON_STATE_PRESSED))
+	if ((pState->StatePrev == 0) && (pState->Pressed == 1)) {
+		if (!(StatusEx & BUTTON_STATE_PRESSED))
 			_Pressed();
 	}
-	else if ((pState->StatePrev == 1) && (pState->State == 0)) {
-		if (State & BUTTON_STATE_PRESSED)
+	else if ((pState->StatePrev == 1) && (pState->Pressed == 0)) {
+		if (StatusEx & BUTTON_STATE_PRESSED)
 			_Released(WN_RELEASED);
 	}
 }
@@ -94,59 +95,63 @@ bool Button::_OnKey(const KEY_STATE *pKi) {
 	return false;
 }
 
-void Button::_Callback(WObj *pWin, int msgid, WM_PARAM *pData, WObj *pWinSrc) {
+WM_RESULT Button::_Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc) {
 	auto pObj = (Button *)pWin;
-	if (!pObj->HandleActive(msgid, pData))
-		return;
-	switch (msgid) {
+	if (!pObj->HandleActive(MsgId, Param))
+		return Param;
+	switch (MsgId) {
 	case WM_PID_STATE_CHANGED:
-		pObj->_OnPidStateChange((const PID_CHANGED_STATE *)*pData);
-		return;
+		pObj->_OnPidStateChange(Param);
+		return 0;
 	case WM_TOUCH:
-		pObj->_OnTouch((const PID_STATE *)*pData);
-		return;
+		pObj->_OnTouch(Param);
+		return 0;
 	case WM_PAINT:
 		pObj->_OnPaint();
-		return;
+		return 0;
 	case WM_DELETE:
 		pObj->~Button();
-		break;
+		return 0;
 	case WM_KEY:
-		if (!pObj->_OnKey((const KEY_STATE *)*pData))
+		if (!pObj->_OnKey(Param))
 			break;
+		return 0;
 	}
-	DefCallback(pObj, msgid, pData, pWinSrc);
+	return DefCallback(pObj, MsgId, Param, pSrc);
 }
 #pragma endregion
 
 void Button::Pressed(bool bPressed) {
-	auto State = this->State;
+	auto StatusEx = this->StatusEx;
 	if (bPressed)
-		State |= BUTTON_STATE_PRESSED;
+		StatusEx |= BUTTON_STATE_PRESSED;
 	else
-		State &= ~BUTTON_STATE_PRESSED;
-	if (this->State == State)
+		StatusEx &= ~BUTTON_STATE_PRESSED;
+	if (this->StatusEx == StatusEx)
 		return;
-	this->State = State;
+	this->StatusEx = StatusEx;
 	Invalidate();
 }
 void Button::Focussable(bool bFocussable) {
-	auto State = this->State;
+	auto StatusEx = this->StatusEx;
 	if (bFocussable)
-		State |= WIDGET_STATE_FOCUSSABLE;
+		StatusEx |= WC_FOCUSSABLE;
 	else
-		State &= ~WIDGET_STATE_FOCUSSABLE;
-	if (this->State == State)
+		StatusEx &= ~WC_FOCUSSABLE;
+	if (this->StatusEx == StatusEx)
 		return;
-	this->State = State;
+	this->StatusEx = StatusEx;
 	Invalidate();
 }
 
 Button::Button(int x0, int y0, int xsize, int ysize,
-			   WObj *pParent, uint16_t Id, uint16_t Flags,
+			   WObj *pParent, uint16_t Id,
+			   WM_CF Flags,
 			   const char *pText) :
 	Widget(x0, y0, xsize, ysize,
-		   _Callback, pParent, Id, Flags, WIDGET_STATE_FOCUSSABLE),
+		   _Callback,
+		   pParent, Id,
+		   Flags | WC_FOCUSSABLE),
 	text(pText) {}
 
 Button::~Button() {

@@ -1,31 +1,30 @@
 #pragma once
 #include "WM.h"
 
+enum PROGBAR_CI {
+	PROGBAR_CI_INACTIV = 0,
+	PROGBAR_CI_ACTIV
+};
+
 struct ProgBar : public Widget {
 public:
 	struct Property {
-		CFont *pFont { &GUI_Font13_1 };
-		RGBC aBarColor[2]{
-			RGBC_GRAY(0x55),
-			RGB_DARKBLUE
+		CFont *pFont{ &GUI_Font13_1 };
+		RGBC aBkColor[2]{
+			/* Inactive */ RGB_DARKBLUE,
+			/* Active */ RGBC_GRAY(0x55)
 		};
 		RGBC aTextColor[2]{
-			RGB_WHITE,
-			RGB_BLACK
+			/* Inactive */ RGB_WHITE,
+			/* Active */ RGB_BLACK
 		};
-		TEXTALIGN Align = TEXTALIGN_HCENTER;
+		TEXTALIGN Align{ TEXTALIGN_HCENTER };
 	} static DefaultProps;
 private:
+	Property Props;
 	TString text;
 	Point Off;
-	int16_t Min = 0, Max = 100, v = 0;
-	Property Props;
-public:
-	ProgBar(int x0, int y0, int xsize, int ysize,
-			WObj *pParent, uint16_t Id = 0, uint16_t Flags = 0, uint16_t ExFlags = 0,
-			int16_t Min = 0, int16_t Max = 0, int16_t v = 0, const char *s = nullptr);
-protected:
-	~ProgBar() = default;
+	int16_t Min, Max, v;
 
 private:
 	int _Value2X(int v) const;
@@ -34,7 +33,21 @@ private:
 	SRect _GetTextRect(const char *pText) const;
 
 	void _OnPaint() const;
-	static void _Callback(WObj *pWin, int msgid, WM_PARAM *pData, WObj *pWinSrc);
+
+	static WM_RESULT _Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc);
+
+public:
+	ProgBar(int x0, int y0, int xsize, int ysize,
+			WObj *pParent, uint16_t Id,
+			WM_CF Flags,
+			int16_t Min = 0, int16_t Max = 100, int16_t v = 0, const char *s = nullptr);
+	ProgBar(const WM_CREATESTRUCT &wc) :
+		ProgBar(wc.x, wc.y, wc.xsize, wc.ysize,
+				wc.pParent, wc.Id,
+				wc.Flags,
+				wc.Para.i16_4[0], wc.Para.i16_4[1], wc.Para.i16_4[2], wc.pCaption) {}
+protected:
+	~ProgBar() = default;
 
 #pragma region Properties
 public: // Property - Font
@@ -45,17 +58,17 @@ public: // Property - Font
 			Invalidate();
 		}
 	}
-public: // Property - BarColor
-	/* R */ inline auto BarColor(uint8_t Index) const { return Props.aBarColor[Index]; }
-	/* W */ inline void BarColor(uint8_t Index, RGBC Color) {
-		if (Props.aBarColor[Index] != Color) {
-			Props.aBarColor[Index] = Color;
+public: // Property - BkColor
+	/* R */ inline auto BkColor(PROGBAR_CI Index) const { return Props.aBkColor[Index]; }
+	/* W */ inline void BkColor(PROGBAR_CI Index, RGBC Color) {
+		if (Props.aBkColor[Index] != Color) {
+			Props.aBkColor[Index] = Color;
 			Invalidate();
 		}
 	}
 public: // Property - TextColor
-	/* R */ inline auto TextColor(uint8_t Index) const { return Props.aTextColor[Index]; }
-	/* W */ inline void TextColor(uint8_t Index, RGBC Color) {
+	/* R */ inline auto TextColor(PROGBAR_CI Index) const { return Props.aTextColor[Index]; }
+	/* W */ inline void TextColor(PROGBAR_CI Index, RGBC Color) {
 		if (Props.aTextColor[Index] != Color) {
 			Props.aTextColor[Index] = Color;
 			Invalidate();

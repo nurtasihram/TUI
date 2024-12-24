@@ -2,15 +2,25 @@
 #include "Button.h"
 #include "Menu.h"
 
-#define FRAME_CF_ACTIVE     (1<<3)
-#define FRAME_CF_MOVEABLE   (1<<4)
-#define FRAME_CF_RESIZEABLE (1<<5)
-#define FRAME_CF_TITLEVIS   (1<<6)
-#define FRAME_CF_MINIMIZED  (1<<7)
-#define FRAME_CF_MAXIMIZED  (1<<8)
+enum FRAME_CF_ : uint16_t {
+	FRAME_CF_ACTIVE     = 1 << 3,
+	FRAME_CF_MOVEABLE   = 1 << 4,
+	FRAME_CF_RESIZEABLE = 1 << 5,
+	FRAME_CF_TITLEVIS   = 1 << 6,
+	FRAME_CF_MINIMIZED  = 1 << 7,
+	FRAME_CF_MAXIMIZED  = 1 << 8,
+};
+using FRAME_CF = uint16_t;
 
-#define FRAME_BUTTON_LEFT    (WC_VISIBLE | WC_ANCHOR_LEFT)
-#define FRAME_BUTTON_RIGHT   (WC_VISIBLE | WC_ANCHOR_RIGHT)
+using	  FRAME_BUTTON_CF = WM_CF;
+constexpr FRAME_BUTTON_CF 
+		  FRAME_BUTTON_LEFT = WC_VISIBLE | WC_ANCHOR_LEFT,
+		  FRAME_BUTTON_RIGHT = WC_VISIBLE | WC_ANCHOR_RIGHT;
+
+enum FRAME_CI {
+	FRAME_CI_LOSEFOCUS = 0,
+	FRAME_CI_FOCUSED
+};
 
 class Frame : public Widget {
 public:
@@ -29,47 +39,40 @@ public:
 		uint16_t TitleHeight{ 20 };
 		uint16_t BorderSize{ 2 };
 		uint16_t IBorderSize{ 1 };
-		int16_t Align = TEXTALIGN_VCENTER;
+		TEXTALIGN Align{ TEXTALIGN_VCENTER };
 	} static DefaultProps;
 private:
 	Property Props;
 	WM_CB *cb = nullptr;
-	WObj *pClient = nullptr;
 	Menu *pMenu = nullptr;
 	TString Title;
 	SRect rRestore;
-	uint16_t Flags = 0;
+	WObj *pClient = nullptr;
 	WObj *pFocussedChild = nullptr;
 	DIALOG_STATE *pDialogStatus = nullptr;
-
+	uint16_t Flags = 0;
 	struct Positions {
 		uint16_t TitleHeight;
 		uint16_t MenuHeight;
 		SRect rClient;
 		SRect rTitleText;
 	};
-
 public:
 	Frame(int x0, int y0, int xsize, int ysize,
-		  WObj *pParent, uint16_t Id, uint16_t Flags, uint16_t ExFlags,
+		  WObj *pParent, uint16_t Id,
+		  WM_CF Flags, FRAME_CF ExFlags,
 		  const char *pTitle, WM_CB *cb = nullptr);
-	Frame(Point pos, Point size,
-		  WObj *pParent, uint16_t Id, uint16_t Flags, uint16_t ExFlags,
+	Frame(int x0, int y0, int xsize, int ysize,
+		  WM_CF Flags, FRAME_CF ExFlags,
 		  const char *pTitle, WM_CB *cb = nullptr) :
-		Frame(pos.x, pos.y, size.x, size.y,
-			  pParent, Flags, ExFlags, Id, pTitle, cb) {}
-	Frame(SRect r,
-		  WObj *pParent, uint16_t Id, uint16_t Flags, uint16_t ExFlags,
-		  const char *pTitle, WM_CB *cb = nullptr) :
-		Frame(r.left_top(), r.size(),
-			  pParent, Flags, ExFlags, Id, pTitle, cb) {}
-	Frame(int x0, int y0,
-		  int xsize, int ysize,
-		  uint16_t Id, uint16_t Flags, uint16_t ExFlags,
-		  const char *pTitle, WM_CB *cb) :
-		Frame(x0, y0, xsize, ysize, nullptr, Flags, ExFlags, Id, pTitle, cb) {}
+		Frame(x0, y0, xsize, ysize,
+			  nullptr, 0,
+			  Flags, ExFlags,
+			  pTitle, cb) {}
 	Frame(const WM_CREATESTRUCT &wc) : Frame(
-		wc.x, wc.y, wc.xsize, wc.ysize, wc.pParent, wc.Id, wc.Flags, wc.ExFlags,
+		wc.x, wc.y, wc.xsize, wc.ysize,
+		wc.pParent, wc.Id,
+		wc.Flags, wc.ExFlags,
 		wc.pCaption, (WM_CB *)wc.Para.ptr) {}
 private:
 	uint16_t _CalcTitleHeight() const;
@@ -77,24 +80,25 @@ private:
 
 	void _UpdatePositions();
 
-	void _ChangeWindowPosSize(Point &);
-	bool _ForwardMouseOverMsg(int msgid, WM_PARAM *pData);
-	void _SetCapture(Point Pos, int Mode);
-	int _CheckReactBorder(Point Pos);
+	void _ChangeWindowPosSize(Point);
+	bool _ForwardMouseOverMsg(int MsgId, const PID_STATE *pState);
+	void _SetCapture(Point Pos, uint8_t Mode);
+	uint8_t _CheckReactBorder(Point Pos);
 
-	void _OnTouch(WM_PARAM *pData);
-	int _OnTouchResize(int msgid, WM_PARAM *pData);
+	void _OnTouch(const PID_STATE *pState);
+	bool _OnTouchResize(const PID_STATE *pState);
 	void _OnPaint() const;
-	void _OnChildHasFocus(WM_PARAM *pData);
-	bool _OnResizeable(int msgid, WM_PARAM *pData);
-	static void _Callback(WObj *pWin, int msgid, WM_PARAM *pData, WObj *pWinSrc);
-	static void _cbClient(WObj *pWin, int msgid, WM_PARAM *pData, WObj *pWinSrc);
+	void _OnChildHasFocus(const FOCUSED_STATE *pInfo);
+	bool _HandleResize(int MsgId, const PID_STATE *pState);
+
+	static WM_RESULT _Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc);
+	static WM_RESULT _cbClient(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc);
 
 public:
-	Button *AddButton(uint16_t Flags, int Off, uint16_t Id);
-	Button *AddMinButton(uint16_t Flags = FRAME_BUTTON_RIGHT, int Off = 1);
-	Button *AddMaxButton(uint16_t Flags = FRAME_BUTTON_RIGHT, int Off = 1);
-	Button *AddCloseButton(uint16_t Flags = FRAME_BUTTON_RIGHT, int Off = 1);
+	Button *AddButton(FRAME_BUTTON_CF Flags, int Off, uint16_t Id);
+	Button *AddMinButton(FRAME_BUTTON_CF Flags = FRAME_BUTTON_RIGHT, int Off = 1);
+	Button *AddMaxButton(FRAME_BUTTON_CF Flags = FRAME_BUTTON_RIGHT, int Off = 1);
+	Button *AddCloseButton(FRAME_BUTTON_CF Flags = FRAME_BUTTON_RIGHT, int Off = 1);
 
 private:
 	void _InvalidateButton(uint16_t Id);
@@ -112,104 +116,88 @@ public: // Action - Maximize
 
 #pragma region Properties
 public: // Property - Font
+	/* R */ inline auto Font() const { return Props.pFont; }
 	/* W */ inline void Font(CFont *pFont) {
 		if (Props.pFont != pFont) {
 			Props.pFont = pFont;
-			int OldHeight = _CalcTitleHeight();
 			_UpdatePositions();
 			Invalidate();
 		}
 	}
-	/* R */ auto Font() const { return Props.pFont; }
 public: // Property - BarColor
-	/* W */ inline void BarColor(unsigned Index, RGBC Color) {
-		if (Index < GUI_COUNTOF(Props.aBarColor))
-			if (Props.aBarColor[Index] != Color) {
-				Props.aBarColor[Index] = Color;
-				Invalidate();
-			}
-	}
-	/* R */ inline RGBC BarColor(unsigned Index) const {
-		if (Index < GUI_COUNTOF(Props.aBarColor))
-			return Props.aBarColor[Index];
-		return RGB_INVALID_COLOR;
+	/* R */ inline RGBC BarColor(FRAME_CI Index) const { return Props.aBarColor[Index]; }
+	/* W */ inline void BarColor(FRAME_CI Index, RGBC Color) {\
+		if (Props.aBarColor[Index] != Color) {
+			Props.aBarColor[Index] = Color;
+			Invalidate();
+		}
 	}
 public: // Property - TextColor
-	/* W */ inline void TextColor(RGBC Color) {
-		for (auto i = 0; i < GUI_COUNTOF(Props.aTextColor); ++i)
-			Props.aTextColor[i] = Color;
-		Invalidate();
-	}
-	/* W */ void TextColor(unsigned Index, RGBC Color) {
-		if (Index < GUI_COUNTOF(Props.aTextColor))
-			if (Props.aTextColor[Index] != Color) {
-				Props.aTextColor[Index] = Color;
-				Invalidate();
-			}
-	}
-	/* R */ inline RGBC TextColor(unsigned Index) const {
-		if (Index < GUI_COUNTOF(Props.aTextColor))
-			return Props.aTextColor[Index];
-		return RGB_INVALID_COLOR;
+	/* R */ inline RGBC TextColor(FRAME_CI Index) const { return Props.aTextColor[Index]; }
+	/* W */ inline void TextColor(FRAME_CI Index, RGBC Color) {
+		if (Props.aTextColor[Index] != Color) {
+			Props.aTextColor[Index] = Color;
+			Invalidate();
+		}
 	}
 public: // Property - ClientColor
+	/* R */ inline RGBC ClientColor() const { return Props.ClientColor; }
 	/* W */ inline void ClientColor(RGBC Color) {
 		if (Props.ClientColor != Color) {
 			Props.ClientColor = Color;
 			pClient->Invalidate();
 		}
 	}
-	/* R */ inline RGBC ClientColor() const { return Props.ClientColor; }
 public: // Property - Moveable
+	/* R */ inline bool Moveable() const { return Flags & FRAME_CF_MOVEABLE; }
 	/* W */ inline void Moveable(bool bMoveable) {
 		if (bMoveable)
 			Flags |= FRAME_CF_MOVEABLE;
 		else
 			Flags &= ~FRAME_CF_MOVEABLE;
 	}
-	/* R */ inline bool Moveable() const { return Flags & FRAME_CF_MOVEABLE; }
 public: // Property - Resizeable
+	/* R */ inline bool Resizeable() const { return Flags & FRAME_CF_RESIZEABLE; }
 	/* W */ inline void Resizeable(bool bResizeable) {
 		if (bResizeable)
-			State |= FRAME_CF_RESIZEABLE;
+			Flags |= FRAME_CF_RESIZEABLE;
 		else
-			State &= ~FRAME_CF_RESIZEABLE;
+			Flags &= ~FRAME_CF_RESIZEABLE;
 	}
-	/* R */ inline bool Resizeable() const { return State & FRAME_CF_RESIZEABLE; }
 public: // Property - Active
-	/* W */ void Active(bool bActive);
 	/* R */ inline bool Active() const { return Flags & FRAME_CF_ACTIVE; }
+	/* W */ void Active(bool bActive);
 public: // Property - TitleVis
+	/* R */ inline bool TitleVis() const { return Flags & FRAME_CF_TITLEVIS; }
 	/* W */ void TitleVis(bool bTitleVis);
-	/* R */ inline bool TitleVis() const { return State & FRAME_CF_TITLEVIS; }
 public: // Property - TitleHeight
-	/* W */ void TitleHeight(int Height);
 	/* R */ inline auto TitleHeight() const {
 		return Props.TitleHeight ?
 			Props.TitleHeight :
 			_CalcPositions().TitleHeight;
 	}
+	/* W */ void TitleHeight(int Height);
 public: // Property - BorderSize
-	/* W */ void BorderSize(int Size);
 	/* R */ inline auto BorderSize() const { return Props.BorderSize; }
+	/* W */ void BorderSize(int Size);
 public: // Property - Text
+	/* R */ inline const char *Text() const { return Title; }
 	/* W */ inline void Text(const char *s) {
-		if (GUI__SetText(&Title, s))
-			Invalidate();
+		GUI__SetText(&Title, s);
+		Invalidate();
 	}
-	/* R */ inline auto Text() const { return Title; }
 public: // Property - TextAlign
-	/* W */ inline void TextAlign(int Align) {
+	/* R */ inline auto TextAlign() const { return Props.Align; }
+	/* W */ inline void TextAlign(TEXTALIGN Align) {
 		if (Props.Align != Align) {
 			Props.Align = Align;
 			Invalidate();
 		}
 	}
-	/* R */ inline auto TextAlign() const { return Props.Align; }
 public: // Property - Menu
-	/* W */ void Menu(::Menu *pMenu);
 	/* R */ inline auto Menu() { return pMenu; }
 	/* R */ inline auto Menu() const { return pMenu; }
+	/* W */ void Menu(::Menu *pMenu);
 #pragma endregion
 
 };

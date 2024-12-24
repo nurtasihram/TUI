@@ -47,7 +47,7 @@ public:
 	}
 	void Add(const AnyType &i) {
 		pElems = (AnyType *)GUI_MEM_Realloc(pElems, ++nItems * sizeof(AnyType));
-		GUI__memcpy(pElems + nItems, &i, sizeof(AnyType));
+		GUI__memcpy(pElems + nItems - 1, &i, sizeof(AnyType));
 	}
 	void Insert(const AnyType &i, unsigned Index) {
 		if (Index >= nItems) Index = nItems - 1;

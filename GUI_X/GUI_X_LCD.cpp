@@ -91,15 +91,22 @@ void LCD_SetBitmap(const BitmapRect &br) {
 	}
 }
 #pragma endregion
-
 void LCD_GetBitmap(BitmapRect &br) {
-	if (!br.pData) {
-		br.BytesPerLine = br.xsize() * 4;
-		br.pData = GUI_MEM_AllocZero(br.ysize() * br.BytesPerLine);
-	}
-	br.BitsPerPixel = 24;
 	SimDisp::Ayx.GetRect({ br.x0, br.y0, br.x1, br.y1 }, (uint32_t *)br.pData, br.BytesPerLine);
 }
 void LCD_FillRect(const SRect &r) {
 	SimDisp::Ayx.Fill(GUI.PenColor(), { r.x0, r.y0, r.x1, r.y1 });
+}
+BitmapRect LCD_AllocBitmap(const SRect &r) {
+	BitmapRect br = r;
+	br.BytesPerLine = br.xsize() * 4;
+	br.BitsPerPixel = 24;
+	br.pData = GUI_MEM_AllocZero(br.ysize() * br.BytesPerLine);
+	return br;
+}
+void LCD_FreeBitmap(BitmapRect &br) {
+	if (br.pData) {
+		GUI_MEM_Free(br.pData);
+		br.pData = nullptr;
+	}
 }

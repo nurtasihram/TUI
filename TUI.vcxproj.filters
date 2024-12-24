@@ -18,11 +18,11 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="GUI_X\GUI_X_LCD.cc">
+    <ClCompile Include="GUI_X\GUI_X_LCD.cpp">
       <Filter>GUI_X_LCD</Filter>
     </ClCompile>
     <ClCompile Include="main.cc" />
-    <ClCompile Include="tests\test_listbox_dropdown.cc">
+    <ClCompile Include="tests\test_listbox_dropdown.cpp">
       <Filter>tests</Filter>
     </ClCompile>
     <ClCompile Include="tests\test_osk.cc">
@@ -31,59 +31,80 @@
     <ClCompile Include="tests\test_checkbox_radio.cpp">
       <Filter>tests</Filter>
     </ClCompile>
-    <ClCompile Include="tests\test_progbar.cpp">
+    <ClCompile Include="tests\test_slider_progbar.cpp">
       <Filter>tests</Filter>
     </ClCompile>
-    <ClCompile Include="GUI\GUI_Memory.cc">
+    <ClCompile Include="GUI\GUI_Memory.cpp">
       <Filter>GUI</Filter>
     </ClCompile>
-    <ClCompile Include="GUI\GUI_Core.cc">
+    <ClCompile Include="GUI\GUI.cpp">
       <Filter>GUI</Filter>
     </ClCompile>
-    <ClCompile Include="GUI\Widgets\Button.cc">
+    <ClCompile Include="GUI\Widgets\Button.cpp">
       <Filter>GUI\Widgets</Filter>
     </ClCompile>
-    <ClCompile Include="GUI\Widgets\CheckBox.cc">
+    <ClCompile Include="GUI\Widgets\CheckBox.cpp">
       <Filter>GUI\Widgets</Filter>
     </ClCompile>
-    <ClCompile Include="GUI\Widgets\DropDown.cc">
+    <ClCompile Include="GUI\Widgets\DropDown.cpp">
       <Filter>GUI\Widgets</Filter>
     </ClCompile>
-    <ClCompile Include="GUI\Widgets\Frame.cc">
+    <ClCompile Include="GUI\Widgets\Frame.cpp">
       <Filter>GUI\Widgets</Filter>
     </ClCompile>
-    <ClCompile Include="GUI\Widgets\ListBox.cc">
+    <ClCompile Include="GUI\Widgets\ListBox.cpp">
       <Filter>GUI\Widgets</Filter>
     </ClCompile>
-    <ClCompile Include="GUI\Widgets\Menu.cc">
+    <ClCompile Include="GUI\Widgets\Menu.cpp">
       <Filter>GUI\Widgets</Filter>
     </ClCompile>
-    <ClCompile Include="GUI\Widgets\ProgBar.cc">
+    <ClCompile Include="GUI\Widgets\ProgBar.cpp">
       <Filter>GUI\Widgets</Filter>
     </ClCompile>
-    <ClCompile Include="GUI\Widgets\Radio.cc">
+    <ClCompile Include="GUI\Widgets\Radio.cpp">
       <Filter>GUI\Widgets</Filter>
     </ClCompile>
-    <ClCompile Include="GUI\Widgets\ScrollBar.cc">
+    <ClCompile Include="GUI\Widgets\ScrollBar.cpp">
       <Filter>GUI\Widgets</Filter>
     </ClCompile>
-    <ClCompile Include="GUI\Widgets\Slider.cc">
+    <ClCompile Include="GUI\Widgets\Slider.cpp">
       <Filter>GUI\Widgets</Filter>
     </ClCompile>
-    <ClCompile Include="GUI\Widgets\Static.cc">
+    <ClCompile Include="GUI\Widgets\Static.cpp">
       <Filter>GUI\Widgets</Filter>
     </ClCompile>
-    <ClCompile Include="GUI\WM.cc">
+    <ClCompile Include="GUI\WM.cpp">
       <Filter>GUI</Filter>
     </ClCompile>
-    <ClCompile Include="GUI\Resources\GUI_CursorArrowM.cc">
+    <ClCompile Include="GUI\Resources\GUI_CursorArrowM.cpp">
       <Filter>GUI\Resources</Filter>
     </ClCompile>
-    <ClCompile Include="GUI\Resources\GUI_Font13_1.cc">
+    <ClCompile Include="GUI\Resources\GUI_Font13_1.cpp">
       <Filter>GUI\Resources</Filter>
     </ClCompile>
-    <ClCompile Include="GUI\Resources\GUI_Font13_ASCII.cc">
+    <ClCompile Include="GUI\Resources\GUI_Font13_ASCII.cpp">
       <Filter>GUI\Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="tests\test_frame.cpp">
+      <Filter>tests</Filter>
+    </ClCompile>
+    <ClCompile Include="tests\test_menu.cpp">
+      <Filter>tests</Filter>
+    </ClCompile>
+    <ClCompile Include="tests\test_static.cpp">
+      <Filter>tests</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Resources\GUI_CursorResize.cpp">
+      <Filter>GUI\Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="tests\test_ctl_edit.cpp">
+      <Filter>tests</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Widgets\ListView.cpp">
+      <Filter>GUI\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Widgets\Header.cpp">
+      <Filter>GUI\Widgets</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -129,6 +150,13 @@
     <ClInclude Include="GUI\WM.h">
       <Filter>GUI</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="GUI\Widgets\ListView.h">
+      <Filter>GUI\Widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\Widgets\Header.h">
+      <Filter>GUI\Widgets</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="GUI\GUI.inl">
@@ -140,5 +168,8 @@
     <None Include="GUI\Resources\Resources.inl">
       <Filter>GUI\Resources</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="TUI.rc" />
   </ItemGroup>
 </Project>

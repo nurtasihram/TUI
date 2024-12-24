@@ -5,29 +5,11 @@
 #include "GUI.h"
 
 #pragma region String Basics
-int GUI__strlen(const char *s) {
-	if (!s) return 0;
-	int len = 0;
-	while (*s++ != '\0')
-		++len;
-	return len;
-}
 void GUI__strcpy(char *s, const char *c) {
 	strcpy(s, c);
 }
 void GUI__memcpy(void *sDest, const void *pSrc, size_t Len) {
 	memcpy(sDest, pSrc, Len);
-}
-uint16_t GUI__countStrings(const char *pStrings) {
-	uint16_t cnt = 0;
-	if (pStrings)
-		for (; *pStrings; ++cnt)
-			while (*pStrings++);
-	return cnt;
-}
-const char *GUI__nextString(const char *pStrings) {
-	while (*pStrings++);
-	return pStrings;
 }
 #pragma endregion
 

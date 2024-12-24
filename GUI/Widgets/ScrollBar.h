@@ -1,22 +1,23 @@
 #pragma once
 #include "WM.h"
 
-#define SCROLLBAR_STATE_PRESSED   WIDGET_STATE_USER0
+#define SCROLLBAR_STATE_PRESSED   WC_USER(0)
 
-#define SCROLLBAR_CF_VERTICAL     WIDGET_CF_VERTICAL
-#define SCROLLBAR_CF_FOCUSSABLE   WIDGET_STATE_FOCUSSABLE
+#define SCROLLBAR_CF_VERTICAL     WC_EX_VERTICAL
+#define SCROLLBAR_CF_FOCUSSABLE   WC_FOCUSSABLE
 
-struct ScrollBar : public Widget {
+enum SCROLLBAR_CI {
+	SCROLLBAR_CI_
+};
+
+class ScrollBar : public Widget {
 public:
 	struct Property {
-		RGBC aBkColor[2] = {
-			0x808080,
+		RGBC aBkColor[2]{
+			RGBC_GRAY(0x80),
 			RGB_BLACK
 		};
-		RGBC aColor[2] = {
-			0xc0c0c0,
-			RGB_BLACK
-		};
+		RGBC aColor{ RGBC_GRAY(0xC0) };
 	} static DefaultProps;
 	static const int16_t DefaultWidth = 12;
 private:
@@ -24,12 +25,12 @@ private:
 	SCROLL_STATE state{ 100, 0, 10 };
 private:
 	struct Positions {
-		int16_t x0_LeftArrow = 0;
-		int16_t x1_LeftArrow = 0;
-		int16_t x0_RightArrow = 0;
-		int16_t x1_RightArrow = 0;
-		int16_t x0_Thumb = 0;
-		int16_t x1_Thumb = 0;
+		int16_t x0_LeftArrow = 0,
+				x1_LeftArrow = 0;
+		int16_t x0_RightArrow = 0,
+				x1_RightArrow = 0;
+		int16_t x0_Thumb = 0,
+				x1_Thumb = 0;
 		int16_t ThumbSize = 0;
 		int16_t xSizeMoveable = 0;
 		int16_t x1 = 0;
@@ -41,20 +42,22 @@ private:
 	void _InvalidatePartner();
 	void _ScrollbarPressed();
 	void _ScrollbarReleased();
-	void _OnTouch(WM_PARAM *pData);
-	void _OnKey(WM_PARAM *pData);
+	void _OnTouch(const PID_STATE *pState);
+	void _OnKey(const KEY_STATE *pKeyInfo);
 	void _OnPaint();
 	
-	static void _Callback(WObj *pWin, int msgid, WM_PARAM *pData, WObj *pWinSrc);
+	static WM_RESULT _Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc);
 
 protected:
 	SRect _AutoSize(WObj *pParent, uint16_t ExFlags) const;
 public:
-	ScrollBar(
-		int x0, int y0, int xsize, int ysize,
-		WObj *pParent, uint16_t Id, uint16_t Flags, uint16_t ExFlags);
+	ScrollBar(int x0, int y0, int xsize, int ysize,
+			  WObj *pParent, uint16_t Id,
+			  WM_CF Flags, uint16_t ExFlags);
 	ScrollBar(WObj *pParent, int SpecialFlags);
-	ScrollBar(const WM_CREATESTRUCT &wc) : ScrollBar(wc.x, wc.y, wc.xsize, wc.ysize, wc.pParent, wc.Flags, wc.ExFlags, wc.Id) {}
+	ScrollBar(const WM_CREATESTRUCT &wc) :
+		ScrollBar(wc.x, wc.y, wc.xsize, wc.ysize,
+				  wc.pParent, wc.Id, wc.Flags, wc.ExFlags) {}
 public:
 	inline void Dec() { AddValue(-1); }
 	inline void Inc() { AddValue(1); }

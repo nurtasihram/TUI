@@ -4,10 +4,10 @@
 #include "WM.inl"
 
 struct KEY_STATE {
-	int Key, PressedCnt;
+	uint16_t Key, PressedCnt;
 };
 struct SCROLL_STATE {
-	int NumItems = 0, v = 0, PageSize = 0;
+	int16_t NumItems = 0, v = 0, PageSize = 0;
 	inline void Bound() {
 		int Max = NumItems - PageSize;
 		if (Max < 0) Max = 0;
@@ -41,14 +41,26 @@ struct SCROLL_STATE {
 struct DIALOG_STATE {
 	int Done = 0, ReturnValue = 0;
 };
-struct PID_CHANGED_STATE {
-	int x, y;
-	uint8_t State, StatePrev;
+struct PID_CHANGED_STATE : PID_STATE {
+	uint8_t StatePrev;
 };
 
 class WObj;
-using WM_PARAM = uint64_t;
-typedef void WM_CB(WObj *pWin, int msgid, WM_PARAM *pData, WObj *pWinSrc);
+struct WM_PARAM {
+	uint64_t Data = 0;
+	WM_PARAM() {}
+	WM_PARAM(int Data) : Data(Data) {}
+	template<class AnyType>
+	WM_PARAM(const AnyType &t) : Data(*(const uint64_t *)&t)
+	{ static_assert(sizeof(t) <= 8); }
+	template<class AnyType>
+	inline operator AnyType() const {
+		static_assert(sizeof(AnyType) <= 8);
+		return *(const AnyType *)&Data;
+	}
+};
+using WM_RESULT = WM_PARAM;
+using WM_CB = WM_RESULT(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc);
 
 struct WM_CREATESTRUCT {
 	uint16_t Class = 0;
@@ -56,7 +68,9 @@ struct WM_CREATESTRUCT {
 	int16_t xsize = 0, ysize = 0;
 	const char *pCaption = nullptr;
 	WObj *pParent = nullptr;
-	uint16_t Id = 0, Flags = 0, ExFlags = 0;
+	uint16_t Id = 0;
+	WM_CF Flags = WC_HIDE;
+	uint16_t ExFlags = 0;
 	union Param {
 		int64_t i64;
 		uint64_t u64;
@@ -77,7 +91,7 @@ struct WM_CREATESTRUCT {
 		uint16_t Class,
 		int16_t x, int16_t y, int16_t xsize, int16_t ysize,
 		const char *pCaption,
-		int16_t Id, uint16_t Flags = 0, uint16_t ExFlags = 0,
+		int16_t Id, WM_CF Flags = WC_HIDE, uint16_t ExFlags = 0,
 		void *pPara = nullptr) :
 		Class(Class),
 		x(x), y(y), xsize(xsize), ysize(ysize),
@@ -88,7 +102,7 @@ struct WM_CREATESTRUCT {
 		uint16_t Class,
 		int16_t x, int16_t y, int16_t xsize, int16_t ysize,
 		const char *pCaption,
-		int16_t Id, uint16_t Flags, uint16_t ExFlags,
+		int16_t Id, WM_CF Flags, uint16_t ExFlags,
 		Param Para) :
 		Class(Class),
 		x(x), y(y), xsize(xsize), ysize(ysize),
@@ -96,42 +110,29 @@ struct WM_CREATESTRUCT {
 		Id(Id), Flags(Flags), ExFlags(ExFlags),
 		Para(Para.u64) {}
 public:
-	int DialogBox(WM_CB *cb, WObj *pParent, int x0, int y0) const;
+	int DialogBox(WM_CB *cb = nullptr, Point Pos = 0, WObj *pParent = nullptr) const;
 	class WObj *Create() const;
-	class WObj *CreateDialog(WM_CB *cb, WObj *pParent, int x0, int y0) const;
+	class WObj *CreateDialog(WM_CB *cb = nullptr, Point Pos = 0, WObj *pParent = nullptr) const;
 };
 
 class WObj {
-protected:
 	SRect rect, rInvalid;
-	WM_CB* cb = nullptr;
+	WM_CB *cb = nullptr;
 	WObj *pParent = nullptr, *pFirstChild = nullptr;
-	WM_STYLE Status = 0;
+	WObj *pNext = nullptr, *pNextLin = nullptr;
+protected:
+	WM_CF Status = WC_HIDE;
+	WC_EX StatusEx = 0;
+	uint16_t Id = 0;
 
 private:
 	static uint16_t nWindows;
-
-	WObj *pNext = nullptr;
 	void _InsertWindowIntoList(WObj *pParent);
 	void _RemoveWindowFromList();
 
 	static WObj *pWinFirst;
-	WObj *pNextLin = nullptr;
 	void _RemoveFromLinList();
 	void _AddToLinList();
-
-public:
-	struct CriticalHandles {
-		static CriticalHandles *pFirst;
-		static CriticalHandles Last;
-		static CriticalHandles Modal;
-		CriticalHandles *pNext = nullptr;
-		WObj *pWin = nullptr;
-	public:
-		inline void Add() { pNext = pFirst, pFirst = pNext; }
-		void Remove();
-		void Check(WObj *pWin);
-	};
 
 public:
 	operator bool() const;
@@ -139,22 +140,33 @@ public:
 public:
 	WObj(int x0, int y0, int xSize, int ySize,
 		 WM_CB *cb,
-		 WObj *pParent = nullptr, WM_STYLE Style = 0);
-	inline WObj(Point pos, Point size,
-				WM_CB *cb,
-				WObj *pParent = nullptr, WM_STYLE Style = 0) :
-		WObj(pos.x, pos.y, size.x, size.y, cb, pParent, Style) {}
-	inline WObj(SRect r,
-				WM_CB *cb,
-				WObj *pParent = nullptr, WM_STYLE Style = 0) :
-		WObj(r.left_top(), r.size(), cb, pParent, Style) {}
-
+		 WObj *pParent = nullptr, uint16_t Id = 0,
+		 WM_CF Style = WC_HIDE, uint16_t ExStyle = 0);
+	WObj(Point pos, Point size,
+		 WM_CB *cb,
+		 WObj *pParent = nullptr, uint16_t Id = 0,
+		 WM_CF Style = WC_HIDE, uint16_t ExStyle = 0) :
+		WObj(pos.x, pos.y, size.x, size.y,
+			 cb,
+			 pParent, Id,
+			 Style, ExStyle) {}
+	WObj(SRect r,
+		 WM_CB *cb,
+		 WObj *pParent = nullptr, uint16_t Id = 0,
+		 WM_CF Style = WC_HIDE, uint16_t ExStyle = 0) :
+		WObj(r.left_top(), r.size(),
+			 cb,
+			 pParent, Id,
+			 Style, ExStyle) {}
 protected:
 	~WObj() {}
 
 public:
-	void Delete();
+	void Destroy();
 	void Select();
+
+	inline void *operator new(size_t size) { return GUI_MEM_Alloc(size); }
+	inline void operator delete(void *pObj) { GUI_MEM_Free(pObj); }
 
 #pragma region Invalidate & Validate
 private:
@@ -213,34 +225,45 @@ public:
 #pragma endregion
 
 public:
-	inline void SendMessage(int msgid) {
-		if (!cb) return;
-		WM_PARAM data;
-		cb(this, msgid, &data, nullptr);
-	}
-	inline void SendMessage(int msgid, WM_PARAM *pData, WObj *pWinSrc = nullptr) {
+	inline WM_RESULT SendMessage(int MsgId, WM_PARAM Param = 0, WObj *pSrc = nullptr) {
 		if (cb)
-			cb(this, msgid, pData, pWinSrc);
+			return cb(this, MsgId, Param, pSrc);
+		return 0;
 	}
-	inline void SendToParent(int msgid, WM_PARAM *pData) {
+	inline WM_RESULT SendToParent(int MsgId, WM_PARAM Param) {
 		if (pParent)
-			pParent->SendMessage(msgid, pData, this);
+			return pParent->SendMessage(MsgId, Param, this);
+		return 0;
 	}
-	inline void NotifyParent(int Notification) {
-		WM_PARAM data;
-		data = Notification;
-		SendToParent(WM_NOTIFY_PARENT, &data);
-	}
+	inline void NotifyParent(int Notification) { SendToParent(WM_NOTIFY_PARENT, Notification); }
+
+	WM_RESULT _SendMessage(int MsgId, WM_PARAM Param = 0, WObj *pSrc = nullptr);
+
 private:
-	void _SendTouchMessage(int msgid, WM_PARAM *pData);
-	void _SendMessage(int msgid, WM_PARAM *pData, WObj *pWinSrc = nullptr);
-	void _SendMessageIfEnabled(int msgid, WM_PARAM *pData, WObj *pWinSrc = nullptr);
+	void _SendMessageIfEnabled(int MsgId, WM_PARAM Param, WObj *pSrc = nullptr);
+	void _SendTouchMessage(int MsgId, PID_STATE *pState);
 	bool _IsInModalArea();
+	static PID_STATE _StateLast;
+	struct CriticalHandles {
+		static CriticalHandles *pFirst, Last, Modal;
+		WObj *pWin = nullptr;
+		CriticalHandles *pNext = nullptr;
+	public:
+		CriticalHandles() {}
+		CriticalHandles(WObj *pWin) : pWin(pWin), pNext(pFirst) { pFirst = pNext; }
+		~CriticalHandles() { Remove(); }
+	public:
+		inline void Add() { pNext = pFirst, pFirst = pNext; }
+		void Remove();
+		void Check(WObj *pWin);
+	};
+
 public:
 	static bool HandlePID();
+	static inline PID_STATE PrevPidState() { return _StateLast; }
 
 	static bool OnKey(int Key, int Pressed);
-	static void DefCallback(WObj *pWin, int msgid, WM_PARAM *pData, WObj *pWinSrc);
+	static WM_RESULT DefCallback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc);
 
 	static void Init();
 
@@ -275,22 +298,21 @@ public:
 	/* S */ inline bool Focussed() const { return this == pWinFocus; }
 	/* S */ inline WObj *FocussedChild() { return pWinFocus ? pWinFocus->IsChildOf(this) ? pWinFocus : nullptr : nullptr; }
 	/* A */ WObj *FocusNextChild();
-	/* S */ inline bool Focussable() const {
-		WM_PARAM data;
-		const_cast<WObj *>(this)->SendMessage(WM_GET_ACCEPT_FOCUS, &data);
-		return (bool)data;
-	}
+	/* S */ inline bool Focussable() const { return const_cast<WObj *>(this)->SendMessage(WM_GET_ACCEPT_FOCUS); }
 #pragma endregion
 
 #pragma region Capture
 private:
 	static WObj *pWinCapture;
 	static bool bCaptureAutoRelease;
-	static Point CapturePoint;
+	static Point capturePoint;
+	static CCursor *pCursorCapture;
 public:
 	/* A */ void Capture(bool bAutoRelease);
 	/* A */ static void CaptureRelease();
-	/* A */ void CaptureMove(const PID_STATE &pid, int MinVisibility);
+	/* A */ void CaptureMove(Point Pos, int MinVisibility = 0);
+	/* W */ static inline void CapturePoint(Point Pos) { capturePoint = Pos; }
+	/* R */ static inline Point CapturePoint() { return capturePoint; }
 	/* S */ inline bool Captured() const { return pWinCapture == this; }
 #pragma endregion
 
@@ -300,6 +322,8 @@ private:
 	static RGBC aColorDesktop;
 public: // Property - Desktop
 	/* R */ static inline WObj *Desktop() { return pWinDesktop; }
+public: // Property - DesktopCallback
+	static WM_RESULT DesktopCallback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc);
 public: // Property - DesktopColor
 	/* W */ static inline void DesktopColor(RGBC Color) {
 		if (aColorDesktop != Color) {
@@ -327,19 +351,13 @@ public:
 #pragma endregion
 
 	inline bool IsChildOf(WObj *pParent) { return this->pParent == pParent; }
+	bool IsAncestor(const WObj *pParent) const;
+	bool IsAncestorOrSelf(const WObj *pParent) const { return this == pParent ? true : IsAncestor(pParent); }
 
 #pragma region Dialog
 public: // Property - DialogStatusPtr
-	/* R */ inline DIALOG_STATE *DialogStatusPtr() {
-		WM_PARAM data = 0;
-		SendMessage(WM_HANDLE_DIALOG_STATUS, &data);
-		return (DIALOG_STATE *)data;
-	}
-	/* W */ inline void DialogStatusPtr(DIALOG_STATE *pDialogStatus) {
-		WM_PARAM data;
-		data = (WM_PARAM)pDialogStatus;
-		SendMessage(WM_HANDLE_DIALOG_STATUS, &data);
-	}
+	/* R */ inline DIALOG_STATE *DialogStatusPtr() { return SendMessage(WM_HANDLE_DIALOG_STATUS); }
+	/* W */ inline void DialogStatusPtr(DIALOG_STATE *pDialogStatus) { SendMessage(WM_HANDLE_DIALOG_STATUS, pDialogStatus); }
 public:
 	int DialogExec();
 	void DialogEnd(int);
@@ -348,79 +366,67 @@ public:
 #pragma region Properties
 public: // Property - Styles
 	/* R */ inline auto Styles() const { return Status; }
+public: // Property - StyleEx
+	/* R */ inline auto StyleEx() const { return StatusEx; }
 public: // Property - Anchor
-	/* W */ inline void Anchor(uint16_t AnchorFlags) {
+	/* W */ inline void Anchor(WM_CF AnchorFlags) {
 		Status &= ~WC_ANCHOR_MASK;
 		Status |= AnchorFlags;
 	}
 public: // Property - Enable
-	/* W */ void Enable(bool bEnable);
 	/* R */ inline bool Enable() const { return !(Status & WC_DISABLED); }
+	/* W */ void Enable(bool bEnable);
 public: // Property - StayOnTop
-	/* W */ void StayOnTop(bool bEnable);
 	/* R */ inline bool StayOnTop() const { return Status & WC_STAYONTOP; }
+	/* W */ void StayOnTop(bool bEnable);
 public: // Property - Visible
-	/* W */ void Visible(bool bVisible);
 	/* R */ inline bool Visible() const { return Status & WC_VISIBLE; }
+	/* W */ void Visible(bool bVisible);
 public: // Property - RectAbs
-	/* W */ inline void RectAbs(const SRect &r) {
-		Position(r.left_top());
-		Size(r.size());
-	}
 	/* R */ inline SRect RectAbs() const { return rect; }
+	/* W */ void RectAbs(const SRect &r);
 public: // Property - Rect
-	/* W */ inline void Rect(const SRect &r) {
-		auto rAbs = r;
-		if (auto pParent = Parent())
-			rAbs += pParent->Position();
-		RectAbs(r);
-	}
 	/* R */ inline SRect Rect() const {
 		auto r = RectAbs();
 		if (auto pParent = Parent())
 			r -= pParent->Position();
 		return r;
 	}
-public: // Property - Size
-	/* W */ inline void Size(Point s) { Resize(s - rect.size()); }
-	/* R */ inline Point Size() const { return rect.size(); }
-public: // Property - SizeX
-	/* W */ inline void SizeX(uint16_t xSize) { Resize({ xSize - rect.xsize(), 0 }); }
-	/* R */ inline uint16_t SizeX() const { return rect.xsize(); }
-public: // Property - SizeY
-	/* W */ inline void SizeY(uint16_t ySize) { Resize({ 0, ySize - rect.ysize() }); }
-	/* R */ inline uint16_t SizeY() const { return rect.ysize(); }
-public: // Property - Position
-	/* W */ inline void Position(Point p) { Move(p - rect.left_top()); }
-	/* R */ inline Point Position() const { return rect.left_top(); }
-public: // Property - PositionScreen
-	/* W */ inline void PositionScreen(Point p) { Move(p - rect.left_top()); }
-	/* R */ inline Point PositionScreen() const { return rect.left_top(); }
-public: // Property - BkColor
-	/* R */ inline RGBC BkColor() const {
-		WM_PARAM data;
-		const_cast<WObj *>(this)->SendMessage(WM_GET_BKCOLOR, &data);
-		return (RGBC)data;
+	/* W */ inline void Rect(const SRect &r) {
+		if (auto pParent = Parent())
+			RectAbs(r + pParent->Position());
+		else
+			RectAbs(r);
 	}
+public: // Property - Size
+	/* R */ inline Point Size() const { return rect.size(); }
+	/* W */ inline void Size(Point s) { Resize(s - rect.size()); }
+public: // Property - SizeX
+	/* R */ inline uint16_t SizeX() const { return rect.xsize(); }
+	/* W */ inline void SizeX(uint16_t xSize) { Resize({ xSize - rect.xsize(), 0 }); }
+public: // Property - SizeY
+	/* R */ inline uint16_t SizeY() const { return rect.ysize(); }
+	/* W */ inline void SizeY(uint16_t ySize) { Resize({ 0, ySize - rect.ysize() }); }
+public: // Property - Position
+	/* R */ inline Point Position() const { return rect.left_top(); }
+	/* W */ inline void Position(Point p) { Move(p - rect.left_top()); }
+public: // Property - BkColor
+	/* R */ inline RGBC BkColor() const { return const_cast<WObj *>(this)->SendMessage(WM_GET_BKCOLOR); }
 public: // Property - InvalidRect
 	/* R */ inline SRect InvalidRect() const { return rInvalid; }
 public: // Property - InsideRect
 	/* R */ SRect InsideRect() const;
 public: // Property - InsideRectAbs
-		/* R */ SRect InsideRectAbs() const;
+	/* R */ inline SRect InsideRectAbs() const { return const_cast<WObj *>(this)->SendMessage(WM_GET_INSIDE_RECT); }
 public: // Property - ClientRect
 	/* R */ inline SRect ClientRect() const { return{ 0, rect.d() }; }
 public: // Property - Client
-	/* R */ inline WObj *Client() {
-		WM_PARAM data;
-		SendMessage(WM_GET_CLIENT_WINDOW, &data);
-		return (WObj *)data;
-	}
+	/* R */ inline WObj *Client() { return SendMessage(WM_GET_CLIENT_WINDOW); }
 	/* R */ inline const WObj *Client() const { return const_cast<WObj *>(this)->Client(); }
 public: // Property - Parent
+	/* R */ inline WObj *Parent() const { return pParent; }
 	/* W */ void Parent(WObj *pParent);
 	/* W */ void Parent(WObj *pParent, Point p);
-	/* R */ inline WObj *Parent() const { return pParent; }
 public: // Property - FirstChild
 	/* R */ inline WObj *FirstChild() { return pFirstChild; }
 	/* R */ inline const WObj *FirstChild() const { return pFirstChild; }
@@ -435,61 +441,40 @@ public: // Property - LastSibling
 public: // Property - PrevSibling
 	/* R */ WObj *PrevSibling();
 public: // Property - ID
-	/* W */ inline void ID(int id) {
-		WM_PARAM data;
-		data = id;
-		this->SendMessage(WM_SET_ID , &data);
-	}
-	/* R */ inline int ID() const {
-		WM_PARAM data;
-		const_cast<WObj *>(this)->SendMessage(WM_GET_ID, &data);
-		return (int)data;
-	}
+	/* R */ inline uint16_t ID() const { return const_cast<WObj *>(this)->SendMessage(WM_GET_ID); }
+	/* W */ inline void ID(uint16_t id) { this->SendMessage(WM_SET_ID, id); }
 public: // Property - DialogItem
 	/* R */ WObj *DialogItem(uint16_t Id);
 	/* R */ inline const WObj *DialogItem(uint16_t Id) const { return const_cast<WObj *>(this)->DialogItem(Id); }
 public: // Property - ScrollBarH
+	/* R */ class ScrollBar *ScrollBarH() { return (class ScrollBar *)DialogItem(GUI_ID_HSCROLL); }
 	/* W */ void ScrollBarH(bool bEnable);
-	/* R */ struct ScrollBar *ScrollBarH() { return (struct ScrollBar *)DialogItem(GUI_ID_HSCROLL); }
 public: // Property - ScrollBarV
-	/* W */ void ScrollBarV(bool bEnable);
-	/* R */ struct ScrollBar *ScrollBarV() { return (struct ScrollBar *)DialogItem(GUI_ID_VSCROLL); }\
+	/* R */ class ScrollBar *ScrollBarV() { return (class ScrollBar *)DialogItem(GUI_ID_VSCROLL); }\
+		/* W */ void ScrollBarV(bool bEnable);
 public: // Property - Callback
+	/* R */ inline WM_CB *Callback() const { return cb; }
 	/* W */ inline void Callback(WM_CB cb) {
 		if (this->cb != cb) {
 			this->cb = cb;
 			Invalidate();
 		}
 	}
-	/* R */ inline WM_CB *Callback() const { return cb; }
 #pragma endregion
 
 };
 static inline bool IsWindow(const WObj *pObj) { return pObj ? *pObj : false; }
+#define WM_UNATTACHED ((WObj *)-1)
 
 struct FOCUSED_STATE {
 	WObj *pOld, *pNew;
 };
 
-extern PID_STATE WM_PID__StateLast;
-
-bool    WM__IsAncestor(WObj *pChild, WObj *pParent);
-bool    WM__IsAncestorOrSelf(WObj *pChild, WObj *pParent);
-void    WM_PID__GetPrevState(PID_STATE *pPrevState);
-
 #pragma region Widget
-#define WIDGET_STATE_FOCUS              (1<<0)
-#define WIDGET_STATE_VERTICAL           (1<<1)
-#define WIDGET_STATE_FOCUSSABLE         (1<<2)
-#define WIDGET_STATE_USER0              (1<<3)
-#define WIDGET_STATE_USER1              (1<<4)
-#define WIDGET_STATE_USER2              (1<<5)
-#define WIDGET_CF_VERTICAL      WIDGET_STATE_VERTICAL
-
-#define WIDGET_ITEM_DRAW                0
-#define WIDGET_ITEM_GET_XSIZE           1
-#define WIDGET_ITEM_GET_YSIZE           2
-#define WM_WIDGET_SET_EFFECT    WM_WIDGET + 0
+#define WIDGET_ITEM_DRAW       0
+#define WIDGET_ITEM_GET_XSIZE  1
+#define WIDGET_ITEM_GET_YSIZE  2
+#define WM_WIDGET_SET_EFFECT   WM_WIDGET + 0
 
 struct WIDGET_ITEM_DRAW_INFO {
 	WObj *pWin;
@@ -502,27 +487,34 @@ typedef int WIDGET_DRAW_ITEM_FUNC(const WIDGET_ITEM_DRAW_INFO *pDrawItemInfo);
 
 class Widget : public WObj {
 protected:
-	uint16_t Id, State;
-protected:
 	Widget(int x0, int y0, int width, int height,
 		   WM_CB *cb,
-		   WObj *pParent, uint16_t Id = 0, WM_STYLE Style = 0, uint16_t State = 0) :
-		WObj(x0, y0, width, height, cb, pParent, Style),
-		Id(Id), State(State),
+		   WObj *pParent, uint16_t Id = 0,
+		   WM_CF Style = WC_HIDE, uint16_t StyleEx = 0) :
+		WObj(x0, y0, width, height,
+			 cb,
+			 pParent, Id,
+			 Style, StyleEx),
 		pEffect(Widget::pEffectDefault) {}
 	Widget(Point pos, Point size,
 		   WM_CB *cb,
-		   WObj *pParent, uint16_t Id = 0, WM_STYLE Style = 0, uint16_t State = 0) :
+		   WObj *pParent, uint16_t Id = 0,
+		   WM_CF Style = WC_HIDE, uint16_t StyleEx = 0) :
 		Widget(pos.x, pos.y, size.x, size.y,
-			   cb, pParent, Id, Style, State) {}
+			   cb,
+			   pParent, Id,
+			   Style, StyleEx) {}
 	Widget(SRect r,
 		   WM_CB *cb,
-		   WObj *pParent, uint16_t Id = 0, WM_STYLE Style = 0, uint16_t State = 0) :
+		   WObj *pParent, uint16_t Id = 0,
+		   WM_CF Style = WC_HIDE, uint16_t StyleEx = 0) :
 		Widget(r.left_top(), r.size(),
-			   cb, pParent, Id, Style, State) {}
+			   cb,
+			   pParent, Id,
+			   Style, StyleEx) {}
 
 protected:
-	bool HandleActive(int msgid, WM_PARAM *);
+	bool HandleActive(int MsgId, WM_PARAM &Param);
 
 protected: // Graphics
 	void DrawVLine(int x, int y0, int y1) const;
@@ -565,25 +557,23 @@ public: // Property - DefaultEffect
 #pragma endregion
 
 	inline void OrState(uint16_t nState) {
-		if (State != (State & nState)) {
-			State |= nState;
+		if (StatusEx != (StatusEx & nState)) {
+			StatusEx |= nState;
 			Invalidate();
 		}
 	}
 	inline void AndState(uint16_t Mask) {
-		auto StateNew = State & ~Mask;
-		if (State != StateNew) {
-			State = StateNew;
+		auto StateNew = StatusEx & ~Mask;
+		if (StatusEx != StateNew) {
+			StatusEx = StateNew;
 			Invalidate();
 		}
 	}
 
 #pragma region Properties
-public: // Property - StyleEx
-	/* R */ inline auto StyleEx() const { return State; }
 public: // Property - Effect
-	/* W */ void Effect(const EffectItf *pEffect);
 	/* R */ inline auto Effect() const { return pEffect; }
+	/* W */ inline void Effect(const EffectItf *pEffect) { SendMessage(WM_WIDGET_SET_EFFECT, pEffect); }
 public: // Property - ScrollStateH
 	/* W */ void ScrollStateH(const SCROLL_STATE &s);
 public: // Property - ScrollStateV
@@ -593,28 +583,20 @@ public: // Property - InsideRect
 public: // Property - ClientRect
 	/* R */ inline SRect ClientRect() const {
 		auto &&r = WObj::ClientRect();
-		return State & WIDGET_STATE_VERTICAL ? ~r : r;
-	}
-public: // Property - Size
-	/* R */ inline Point Size() const { return State & WIDGET_STATE_VERTICAL ? ~WObj::Size() : WObj::Size(); }
-	/* W */ inline void Size(Point Size) {
-		if (State & WIDGET_STATE_VERTICAL)
-			WObj::Size(~Size);
-		else
-			WObj::Size(Size);
+		return StatusEx & WC_EX_VERTICAL ? ~r : r;
 	}
 public: // Property - SizeX
-	/* R */ inline uint16_t SizeX() const { return State & WIDGET_STATE_VERTICAL ? WObj::SizeY() : WObj::SizeX(); }
+	/* R */ inline uint16_t SizeX() const { return StatusEx & WC_EX_VERTICAL ? WObj::SizeY() : WObj::SizeX(); }
 	/* W */ inline void SizeX(int16_t xSize) {
-		if (State & WIDGET_STATE_VERTICAL)
+		if (StatusEx & WC_EX_VERTICAL)
 			WObj::SizeY(xSize);
 		else
 			WObj::SizeX(xSize);
 	}
 public: // Property - SizeY
-	/* R */ inline uint16_t SizeY() const { return State & WIDGET_STATE_VERTICAL ? WObj::SizeX() : WObj::SizeY(); }
+	/* R */ inline uint16_t SizeY() const { return StatusEx & WC_EX_VERTICAL ? WObj::SizeX() : WObj::SizeY(); }
 	/* W */ inline void SizeY(int16_t ySize) {
-		if (State & WIDGET_STATE_VERTICAL)
+		if (StatusEx & WC_EX_VERTICAL)
 			WObj::SizeX(ySize);
 		else
 			WObj::SizeY(ySize);
@@ -623,10 +605,8 @@ public: // Property - SizeY
 
 };
 
-void WIDGET__FillStringInRect(const char *pText, const SRect &rFill, const SRect &rTextMax, const SRect &rTextAct);
-
 enum WIDGET_CLASSES : uint16_t {
-	WCLS_EOF,
+	WCLS_EOF = 0,
 	WCLS_BUTTON,
 	WCLS_CHECKBOX,
 	WCLS_DROPDOWN,

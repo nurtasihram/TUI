@@ -17,11 +17,9 @@ void SimDisp_Start(uint16_t xSize, uint16_t ySize) {
 						   tSimDisp_MouseKey mk) {
 		if (xPos < 0 || yPos < 0)
 			return;
-		static PID_STATE _State;
-		_State.Pressed = mk.Left;
-		_State.x = xPos;
-		_State.y = yPos;
-		GUI_PID_StoreState(&_State);
+		GUI.PID_STATE.Pressed = mk.Left;
+		GUI.PID_STATE.x = xPos;
+		GUI.PID_STATE.y = yPos;
 	});
 	SimDisp::SetOnDestroy([] {
 		ExitProcess(0);
@@ -42,7 +40,7 @@ void MainTask();
 
 int main() {
 	SimDisp_Start(800, 480);
-	GUI_Init();
+	GUI.Init();
 	GUI.Cursor.Visible(true);
 	MainTask();
 	return 0;

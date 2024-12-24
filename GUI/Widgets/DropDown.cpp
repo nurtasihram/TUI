@@ -5,7 +5,7 @@ static int _Tolower(int Key) {
 }
 static void _DrawTriangleDown(int x, int y, int Size) {
 	for (; Size >= 0; Size--, ++y)
-		GUI.DrawLineH(y, x - Size, x + Size);
+		GUI.DrawLineH(x - Size, y, x + Size);
 }
 
 void DropDown::_SelectByKey(int Key) {
@@ -32,8 +32,7 @@ void DropDown::_OnPaint() const {
 	auto Border = EffectSize();
 	auto TextBorderSize = Props.TextBorderSize;
 	GUI.Font(Props.pFont);
-	auto ColorIndex = (State & WIDGET_STATE_FOCUS) ? 2 : 1;
-	auto s = Handles[sel];
+	auto ColorIndex = Focussed() ? 2 : 1;
 	auto &&r = ClientRect() / Border;
 	auto InnerSize = r.ysize();
 	/* Draw the 3D effect (if configured) */
@@ -41,13 +40,15 @@ void DropDown::_OnPaint() const {
 	/* Draw the outer text frames */
 	r.x1 -= InnerSize; /* Spare square area to the right */
 	GUI.PenColor(Props.aBkColor[ColorIndex]);
-	/* Draw the text */
-	GUI.BkColor(Props.aBkColor[ColorIndex]);
-	GUI.Fill(r);
-	r.x0 += TextBorderSize;
-	r.x1 -= TextBorderSize;
-	GUI.PenColor(Props.aTextColor[ColorIndex]);
-	GUI_DispStringInRect(s, r, Props.Align);
+	if (sel > 0) {
+		/* Draw the text */
+		GUI.BkColor(Props.aBkColor[ColorIndex]);
+		GUI.Fill(r);
+		r.x0 += TextBorderSize;
+		r.x1 -= TextBorderSize;
+		GUI.PenColor(Props.aTextColor[ColorIndex]);
+		GUI.DispString(Handles[sel], r, Props.Align);
+	}
 	/* Draw arrow */
 	r = ClientRect() / Border;
 	r.x0 = r.x1 + 1 - InnerSize;
@@ -75,26 +76,26 @@ bool DropDown::_OnKey(const KEY_STATE *pKi) {
 }
 
 void DropDown::_AdjustHeight() {
-	int Height = textHeight;
+	auto Height = textHeight;
 	if (!Height)
 		Height = Props.pFont->YDist;
 	Height += EffectSize() + 2 * Props.TextBorderSize;
 	SizeY(Height);
 }
-void DropDown::_Callback(WObj *pWin, int msgid, WM_PARAM *pData, WObj *pWinSrc) {
+WM_RESULT DropDown::_Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc) {
 	auto pObj = (DropDown *)pWin;
-	auto IsExpandedBeforeMsg = pObj->pListbox;
-	if (!pObj->HandleActive(msgid, pData))
-		return;
-	switch (msgid) {
+	bool IsExpandedBeforeMsg = pObj->pListbox;
+	if (!pObj->HandleActive(MsgId, Param))
+		return Param;
+	switch (MsgId) {
 	case WM_NOTIFY_PARENT:
-		switch (*pData) {
+		switch ((int)Param) {
 		case WN_SCROLL_CHANGED:
 			pObj->NotifyParent(WN_SCROLL_CHANGED);
 			break;
 		case WN_CLICKED:
 			pObj->Sel(pObj->pListbox->Sel());
-			pObj->Focus();
+			pObj->pListbox->Focus();
 			break;
 		case LISTBOX_NOTIFICATION_LOST_FOCUS:
 			pObj->Collapse();
@@ -102,70 +103,68 @@ void DropDown::_Callback(WObj *pWin, int msgid, WM_PARAM *pData, WObj *pWinSrc) 
 		}
 		break;
 	case WM_PID_STATE_CHANGED:
-		if (IsExpandedBeforeMsg == 0) { /* Make sure we do not react a second time */
-			auto pInfo = (const PID_CHANGED_STATE *)*pData;
-			if (pInfo->State)
-				pObj->Expand();
-		}
+		if (!IsExpandedBeforeMsg) /* Make sure we do not react a second time */
+			if (const PID_CHANGED_STATE *pInfo = Param)
+				if (pInfo->Pressed)
+					pObj->Expand();
 		break;
 	case WM_TOUCH:
-		if (!pObj->_OnTouch((const PID_STATE *)*pData))
-			return;
-		break;
+		pObj->_OnTouch(Param);
+		return 0;
 	case WM_PAINT:
 		pObj->_OnPaint();
-		break;
+		return 0;
 	case WM_DELETE:
 		pObj->~DropDown();
-		break;
+		return 0;
 	case WM_KEY:
-		if (!pObj->_OnKey((const KEY_STATE *)*pData))
-			return;
+		if (!pObj->_OnKey(Param))
+			return 0;
 		break;
 	}
-	DefCallback(pObj, msgid, pData, pWinSrc);
+	return DefCallback(pObj, MsgId, Param, pSrc);
 }
 
-DropDown::DropDown(
-	int x0, int y0, int xsize, int ysize,
-	WObj *pParent, uint16_t Id, uint16_t Flags, uint8_t ExFlags) : 
+DropDown::DropDown(int x0, int y0, int xsize, int ysize,
+				   WObj *pParent, uint16_t Id,
+				   WM_CF Flags, uint8_t ExFlags) :
 	Widget(x0, y0, xsize, -1,
 		   _Callback,
-		   pParent, Id, Flags, WIDGET_STATE_FOCUSSABLE),
-	Flags(ExFlags), ySizeEx(ysize) { _AdjustHeight(); }
+		   pParent, Id,
+		   Flags | WC_FOCUSSABLE),
+	Flags(ExFlags),
+	ySizeEx(ysize)
+{ _AdjustHeight(); }
 
 void DropDown::Collapse() {
 	if (pListbox) {
-		delete pListbox;
+		pListbox->Destroy();
 		pListbox = nullptr;
 	}
 }
 void DropDown::Expand() {
 	if (pListbox) return;
-	auto pParent = Parent();
-	int xSize = SizeX(),
-		ySize = ySizeEx;
 	/* Get coordinates of window in client coordiantes of parent */
-	auto &&r = Rect() - pParent->Rect().left_top();
+	auto &&r = Rect();
 	if (Flags & DROPDOWN_CF_UP)
-		r.y0 -= ySize;
+		r.y0 -= ySizeEx;
 	else
 		r.y0 = r.y1;
 	pListbox = new ListBox(
 		r.x0, r.y0,
-		xSize, ySize,
-		Parent(), 0,
-		WC_VISIBLE, 0, NumItems());
+		SizeX(), ySizeEx,
+		WM_UNATTACHED, 0,
+		WC_VISIBLE | WC_STAYONTOP, 0, NumItems());
 	if (Flags & DROPDOWN_CF_AUTOSCROLLBAR) {
 		pListbox->ScrollBarWidth(ScrollbarWidth);
 		pListbox->AutoScrollV(true);
 	}
 	for (int i = 0, NumItems = this->NumItems(); i < NumItems; ++i)
 		pListbox->Add(Handles[i]);
-	for (int i = 0; i < GUI_COUNTOF(Props.aBkColor); ++i)
-		pListbox->BkColor(i, Props.aBkColor[i]);
-	for (int i = 0; i < GUI_COUNTOF(Props.aTextColor); ++i)
-		pListbox->TextColor(i, Props.aTextColor[i]);
+	//for (int i = 0; i < GUI_COUNTOF(Props.aBkColor); ++i)
+	//	pListbox->BkColor(i, Props.aBkColor[i]);
+	//for (int i = 0; i < GUI_COUNTOF(Props.aTextColor); ++i)
+	//	pListbox->TextColor(i, Props.aTextColor[i]);
 	pListbox->Spacing(ItemSpacing);
 	pListbox->Font(Props.pFont);
 	pListbox->Focus();

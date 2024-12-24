@@ -5,67 +5,6 @@
 
 #include "GUI.inl"
 
-#pragma region Colors
-using RGBC = uint32_t;
-constexpr RGBC RGBC_B(uint8_t b) { return b; }
-constexpr RGBC RGBC_G(uint8_t g) { return g << 0x08; }
-constexpr RGBC RGBC_R(uint8_t r) { return r << 0x10; }
-constexpr RGBC RGBC_C(uint8_t r, uint8_t g, uint8_t b) { return RGBC_R(r) | RGBC_G(g) | RGBC_B(b); }
-constexpr RGBC RGBC_GRAY(uint8_t l) { return RGBC_C(l, l, l); }
-enum Color : RGBC {
-	RGB_BLACK              = RGBC_GRAY(0x00),
-	RGB_DARKGRAY           = RGBC_GRAY(0x40),
-	RGB_GRAY               = RGBC_GRAY(0x80),
-	RGB_LIGHTGRAY          = RGBC_GRAY(0xD3),
-	RGB_WHITE              = RGBC_GRAY(0xFF),
-
-	RGB_RED                = RGBC_R(0xFF),
-	RGB_GREEN              = RGBC_G(0xFF),
-	RGB_BLUE               = RGBC_B(0xFF),
-
-	RGB_DARKRED            = RGBC_R(0x80),
-	RGB_DARKGREEN          = RGBC_G(0x80),
-	RGB_DARKBLUE           = RGBC_B(0x80),
-
-	RGB_LIGHTBLUE          = RGBC_C(0x80, 0x80, 0xFF),
-	RGB_LIGHTGREEN         = RGBC_C(0x80, 0xFF, 0x80),
-	RGB_LIGHTRED           = RGBC_C(0xFF, 0x80, 0x80),
-
-	RGB_BROWN              = RGBC_C(0xA5, 0x2A, 0x2A),
-
-	RGB_YELLOW             = RGBC_C(0xFF, 0xFF, 0x00),
-	RGB_LIGHTYELLOW        = RGBC_C(0xFF, 0xFF, 0x80),
-	RGB_DARKYELLOW         = RGBC_C(0x80, 0x80, 0x00),
-
-	RGB_MAGENTA            = RGBC_C(0xFF, 0x00, 0xFF),
-	RGB_LIGHTMAGENTA       = RGBC_C(0xFF, 0x80, 0xFF),
-	RGB_DARKMAGENTA        = RGBC_C(0x80, 0x00, 0x80),
-
-	RGB_CYAN               = RGBC_C(0x00, 0xFF, 0xFF),
-	RGB_LIGHTCYAN          = RGBC_C(0x80, 0xFF, 0xFF),
-	RGB_DARKCYAN           = RGBC_C(0x00, 0x80, 0x80),
-
-	RGB_INVALID_COLOR      = 0xFF000000,
-};
-#pragma endregion
-
-#define DRAWMODE_NORMAL (0)
-#define DRAWMODE_TRANS  (1<<1)
-#define DRAWMODE_REV    (1<<2)
-using DRAWMODE = uint8_t;
-
-/* Text alignment flags, horizontal */
-#define TEXTALIGN_LEFT			(0<<0)
-#define TEXTALIGN_RIGHT			(1<<0)
-#define TEXTALIGN_HCENTER		(2<<0)
-#define TEXTALIGN_HORIZONTAL	(3<<0)
-/* Text alignment flags, vertical */
-#define TEXTALIGN_TOP			(0<<2)
-#define TEXTALIGN_BOTTOM		(1<<2)
-#define TEXTALIGN_BASELINE		(2<<2)
-#define TEXTALIGN_VCENTER		(3<<2)
-using TEXTALIGN = uint8_t;
-
 template<class AnyType>
 inline AnyType Max(AnyType a, AnyType b) { return a > b ? a : b; }
 template<class AnyType>
@@ -83,8 +22,8 @@ struct Point {
 	inline Point operator-(int p) const { return{ x - p, y - p }; }
 	inline Point operator+(Point p) const { return{ x + p.x, y + p.y }; }
 	inline Point operator-(Point p) const { return{ x - p.x, y - p.y }; }
-	inline Point&operator+=(Point p) { x += p.x, y += p.y; return*this; }
-	inline Point&operator-=(Point p) { x -= p.x, y -= p.y; return*this; }
+	inline Point &operator+=(Point p) { x += p.x, y += p.y; return*this; }
+	inline Point &operator-=(Point p) { x -= p.x, y -= p.y; return*this; }
 	inline bool operator==(Point p) const { return x == p.x && y == p.y; }
 	inline bool operator!=(Point p) const { return x != p.x || y != p.y; }
 };
@@ -111,10 +50,12 @@ public:
 	inline Point d() const { return { x1 - x0, y1 - y0 }; }
 	inline auto dx() const { return x1 - x0; }
 	inline auto dy() const { return y1 - y0; }
-	inline SRect&move_to(Point p) { *this += p - left_top(); return*this; }
-	inline SRect&xmove(int step) { x0 += step, x1 += step; return*this; }
-	inline SRect&ymove(int step) { y0 += step, y1 += step; return*this; }
-	inline SRect rot90() const { return { -y1, x0, -y0, x1 }; }
+	inline SRect &move_to(Point p) { *this += p - left_top(); return*this; }
+	inline SRect &xmove(int step) { x0 += step, x1 += step; return*this; }
+	inline SRect &ymove(int step) { y0 += step, y1 += step; return*this; }
+	inline SRect rot90()  const { return { -y1,  x0, -y0,  x1 }; }
+	inline SRect rot270() const { return {  y0, -x1,  y1, -x0 }; }
+	SRect &AlignTo(ALIGN a, const SRect &r2);
 	inline SRect operator~() const { return{ ~left_top(), ~right_bottom() }; }
 public:
 	inline SRect operator*(int p) const { return{ x0 - p, y0 - p, x1 + p, y1 + p }; }
@@ -198,6 +139,11 @@ public:
 	}
 	inline bool operator!=(const SRect &r) const { return !(*this == r); }
 };
+constexpr int16_t
+	GUI_XMIN = -4095,
+	GUI_XMAX = 4095,
+	GUI_YMIN = -4095,
+	GUI_YMAX = 4095;
 #pragma endregion
 
 #pragma region Image
@@ -208,7 +154,7 @@ struct LogPalette {
 	LogPalette(const RGBC *pPalEntries, size_t NumEntries) :
 		pPalEntries(pPalEntries), NumEntries(NumEntries) {}
 	template<size_t Len>
-	LogPalette(const RGBC (&Entries)[Len]) :
+	LogPalette(const RGBC(&Entries)[Len]) :
 		pPalEntries(Entries), NumEntries(Len) {}
 };
 using CPalette = const LogPalette;
@@ -275,6 +221,7 @@ struct BitmapRect : SRect {
 	bool HasTrans = false;
 public:
 	BitmapRect() {}
+	BitmapRect(const SRect &r) : SRect(r) {}
 	BitmapRect(CBitmap &bmp, Point Pos = 0);
 public:
 	inline auto CountPixel() const { return xsize() * ysize(); }
@@ -298,6 +245,27 @@ inline const BitmapRect Bitmap::operator+(Point Pos) const {
 }
 #pragma endregion
 
+struct PID_STATE : Point {
+	int8_t Pressed;
+	PID_STATE(Point p = 0, int8_t Pressed = 0) : Point(p), Pressed(Pressed) {}
+	inline PID_STATE operator+(const PID_STATE &pid) const { return{ Point::operator+(pid), pid.Pressed }; }
+	inline bool operator==(const PID_STATE &pid) const { return (const Point &)*this == pid && Pressed == pid.Pressed; }
+	inline bool operator!=(const PID_STATE &pid) const { return (const Point &)*this != pid || Pressed != pid.Pressed; }
+};
+
+static constexpr uint8_t
+	SIZE_RESIZE_X		= 1 << 0,
+	SIZE_RESIZE_Y		= 1 << 1,
+	SIZE_REPOS_X		= 1 << 2,
+	SIZE_REPOS_Y		= 1 << 3,
+	SIZE_MOUSEMOVE		= 1 << 4,
+	SIZE_MOUSEOVER		= 1 << 5;
+static constexpr uint8_t
+	SIZE_RESIZE =
+	SIZE_RESIZE_X | SIZE_RESIZE_Y |
+	SIZE_REPOS_X | SIZE_REPOS_Y |
+	SIZE_MOUSEMOVE;
+
 #pragma region Cursor
 struct Cursor : Bitmap {
 	Point Hot;
@@ -311,24 +279,17 @@ class CursorCtl {
 	uint8_t _CursorDeActCnt = 0;
 	Point Pos;
 private:
-	inline void _Hide() {
-		if (_CursorIsVis) {
-			_Undraw();
-			_CursorIsVis = false;
-		}
-	}
+	void _Hide();
 private:
 	void _Draw();
 	void _Undraw();
 public:
 	bool _TempHide(const SRect *pRect);
-	inline void _TempShow() {
-		if (_CursorOn && !_CursorDeActCnt) {
-			_CursorIsVis = true;
-			_Draw();
-		}
-	}
-	CCursor *Select(CCursor *pCursor);
+	void _TempShow();
+	static CCursor *GetResizeCursor(uint8_t Mode);
+public:
+	inline CCursor *operator()(CCursor *pCursor);
+	inline operator CCursor *() const { return _pCursor; }
 public: // Property - Activate
 	/* W */ void Activate(bool);
 public: // Property - Visible
@@ -344,54 +305,30 @@ extern CPalette GUI_CursorPalI;
 
 #pragma region Draw
 struct GUI_DRAW_BASE {
-	virtual Point Size() const { return 0; }
-	void Paint(SRect);
-protected:
 	virtual void Draw(SRect) {}
+	virtual Point Size() { return 0; }
 };
 struct GUI_DRAW_BMP : GUI_DRAW_BASE {
 	CBitmap *pBitmap;
 	GUI_DRAW_BMP(CBitmap *pBitmap) : pBitmap(pBitmap) {}
-	void Draw(SRect)  override;
-	Point Size() const override;
+	void Draw(SRect) override;
+	Point Size() override { return pBitmap->Size; }
 	static GUI_DRAW_BMP *Create(CBitmap *pBitmap);
 };
 using GUI_DRAW_CB = void(SRect);
 struct GUI_DRAW_SELF : GUI_DRAW_BASE {
 	GUI_DRAW_CB *pfDraw;
 	GUI_DRAW_SELF(GUI_DRAW_CB *pfDraw) : pfDraw(pfDraw) {}
-	void Draw(SRect)  override;
+	void Draw(SRect) override;
 	static GUI_DRAW_SELF *Create(GUI_DRAW_CB *pfDraw);
 };
 #pragma endregion
 
 #pragma region Font
-typedef uint16_t tGUI_GetCharCode(const char *s);
-typedef int tGUI_GetCharSize(const char *s);
-typedef int tGUI_CalcSizeOfChar(uint16_t Char);
-typedef int tGUI_Encode(char *s, uint16_t Char);
-typedef struct {
-	tGUI_GetCharCode *pfGetCharCode;
-	tGUI_GetCharSize *pfGetCharSize;
-	tGUI_CalcSizeOfChar *pfCalcSizeOfChar;
-	tGUI_Encode *pfEncode;
-} GUI_UC_ENC_APILIST;
-extern const GUI_UC_ENC_APILIST GUI__API_TableNone;
-
-typedef int  tGUI_GetLineDistX(const char *s, int Len);
-typedef int  tGUI_GetLineLen(const char *s, int MaxLen);
-typedef void tGL_DispLine(const char *s, int Len);
-typedef struct {
-	tGUI_GetLineDistX *pfGetLineDistX;
-	tGUI_GetLineLen *pfGetLineLen;
-	tGL_DispLine *pfDispLine;
-} tGUI_ENC_APIList;
-
 typedef class Font Font;
 typedef const Font CFont;
 class Font {
 public:
-	const tGUI_ENC_APIList *pafEncode = nullptr;
 	uint8_t YSize, YDist;
 	uint8_t Baseline;
 	uint8_t LHeight, CHeight;
@@ -399,13 +336,14 @@ public:
 	Font(
 		uint8_t YSize, uint8_t YDist,
 		uint8_t Baseline,
-		uint8_t LHeight, uint8_t CHeight) : 
+		uint8_t LHeight, uint8_t CHeight) :
 		YSize(YSize), YDist(YDist),
 		Baseline(Baseline),
 		LHeight(LHeight), CHeight(CHeight) {}
 public:
 	virtual void DispChar(uint16_t) const = 0;
 	virtual int  XDist(uint16_t) const = 0;
+	virtual int  XDist(const char *pString, int NumChars) const;
 	virtual bool IsInFont(uint16_t) const = 0;
 };
 class FontProp : public Font {
@@ -473,75 +411,107 @@ public:
 		const TransInfo *pTrans,
 		uint16_t FirstChar, uint16_t LastChar,
 		uint8_t XSize, uint8_t XDist,
-		uint8_t BytesPerLine) : 
+		uint8_t BytesPerLine) :
 		Font(YSize, YDist, Baseline, LHeight, CHeight),
 		pData(pData), pTransData(pTransData), pTrans(pTrans),
 		FirstChar(FirstChar), LastChar(LastChar),
-		xSize(xSize), xDist(xDist),
+		xSize(XSize), xDist(XDist),
 		BytesPerLine(BytesPerLine) {}
 public:
 	void DispChar(uint16_t) const override;
 	int  XDist(uint16_t) const override;
 	bool IsInFont(uint16_t) const override;
 };
-
 #pragma endregion
 
 #include "Resources.inl"
 
-struct PID_STATE : Point {
-	int8_t Pressed;
-	PID_STATE(Point p = 0, int8_t Pressed = 0) : Point(p), Pressed(Pressed) {}
-	inline bool operator==(const PID_STATE &pid) const { return (const Point &)*this == pid && Pressed == pid.Pressed; }
-	inline bool operator!=(const PID_STATE &pid) const { return (const Point &)*this != pid || Pressed != pid.Pressed; }
-};
-
-DRAWMODE GUI_LCD_SetDrawMode(DRAWMODE);
-
+#pragma region LCD
 void GUI_LCD_SetBitmap(BitmapRect);
-void GUI_LCD_FillRect(SRect);
 
 void LCD_SetBitmap(const BitmapRect &);
 void LCD_GetBitmap(BitmapRect &);
 void LCD_FillRect(const SRect &);
 
+BitmapRect LCD_AllocBitmap(const SRect &);
+void LCD_FreeBitmap(BitmapRect &);
+#pragma endregion
+
 SRect LCD_Rect();
 
-#define GUI_COUNTOF(a) (sizeof(a) / sizeof(a[0]))
+void GUI_DispChar(uint16_t c);
+void GUI_DispString(const char *s);
+void GUI_DispStringAt(const char *s, Point Pos);
+int  GUI_GetYAdjust();
+void GUI_DispNextLine();
 
-#define GUI_XMIN -4095
-#define GUI_XMAX  4095
-#define GUI_YMIN -4095
-#define GUI_YMAX  4095
+void GUI__strcpy(char *s, const char *c);
+void GUI__memcpy(void *sDest, const void *pSrc, size_t Len);
+
+uint16_t GUI__NumTexts(const char *pText);
+const char *GUI__NextText(const char *pText);
+uint16_t GUI__NumLines(const char *pText);
+const char *GUI__NextLines(const char *pText);
+uint16_t GUI__NumCharsLine(const char *pText);
+uint16_t GUI__NumChars(const char *pText);
+void GUI__SetText(char **ppText, const char *pText);
+
+void *GUI_MEM_Alloc(size_t size);
+void *GUI_MEM_AllocZero(size_t size);
+void  GUI_MEM_Free(void *);
+void *GUI_MEM_Realloc(void *hOld, int NewSize);
+
+struct TString {
+	char *pText = nullptr;
+	TString() {}
+	TString(const TString &s) { GUI__SetText(&pText, s); }
+	TString(const char *s) { GUI__SetText(&pText, s); }
+	~TString() {
+		GUI_MEM_Free(pText);
+		pText = nullptr;
+	}
+	inline char **operator&() { return &pText; }
+	inline void operator=(const char *s) { GUI__SetText(&pText, s); }
+	inline operator const char *() const { return pText; }
+};
+
+/* Message layer */
+void GUI_StoreKeyMsg(int Key, int Pressed);
+void GUI_SendKeyMsg(int Key, int Pressed);
+bool GUI_PollKeyMsg();
+
+/* Application layer */
+int  GUI_GetKey();
+void GUI_StoreKey(int c);
+void GUI_ClearKeyBuffer();
+
+void GUI__DispLine(const char *s, int MaxNumChars, Point Pos);
 
 struct GUI_PANEL {
 	struct Property {
 		CFont *pFont = &GUI_Font13_1;
 		TEXTSTYLES TextStyle = TS_NORMAL;
 		TEXTALIGN TextAlign = TEXTALIGN_LEFT | TEXTALIGN_TOP;
-		DRAWMODE TextMode = DRAWMODE_NORMAL;
-		DRAWMODE DrawMode = DRAWMODE_NORMAL;
-		CCursor *pCursor = &GUI_CursorArrowM;
+		CCursor *pCursor = &GUI_CursorArrow;
 		RGBC aColor[2]{
 			RGB_BLACK,
 			RGB_WHITE
 		};
 	} Props;
 	static Property DefaultProps;
-
 	/* Variables in LCD module */
 	SRect rClip;
-	/* Variables in GL module */
-	SRect* pClipRect_HL; /* High level clip rectangle ... Speed optimization so drawing routines can optimize */
 	/* Variables in GUICHAR module */
-	const GUI_UC_ENC_APILIST* pUC_API = &GUI__API_TableNone;
-	Point dispPos;
+	Point dispPos, off;
 	/* Variables in WM module */
-	const SRect* prUserClip = nullptr;
-	Point off;
+	const SRect *prUserClip = nullptr;
+	/* Cursor Control */
 	CursorCtl Cursor;
+	PID_STATE PID_STATE;
 
-#pragma region Basic graphics
+	void Init();
+
+#pragma region Basic Graphics
 public:
 	void Clear();
 	void Clear(SRect);
@@ -549,12 +519,22 @@ public:
 	void OutlineFocus(SRect, int Dist = 0);
 	void Outline(SRect);
 	void DrawBitmap(CBitmap &, Point);
-	inline void DrawLineH(int x0, int y0, int x1) { Fill({x0, y0, x1, y0}); }
+	inline void DrawLineH(int x0, int y0, int x1) { Fill({ x0, y0, x1, y0 }); }
 	inline void DrawLineV(int x0, int y0, int y1) { Fill({ x0, y0, x0, y1 }); }
 public:
 	inline void ClipRect() { rClip = LCD_Rect(); }
 	inline void ClipRect(const SRect &r) { rClip = LCD_Rect() & r; }
+	inline void RevColor() {
+		auto tmp = Props.aColor[0];
+		Props.aColor[0] = Props.aColor[1];
+		Props.aColor[1] = tmp;
+	}
+public:
+	void DispString(const char *s, SRect r, int MaxNumChars = 0x7fff);
 #pragma endregion
+
+	int XDist(const char *pString, int NumChars) { return Props.pFont->XDist(pString, NumChars); }
+	inline int XDist(const char *pString) { return XDist(pString, GUI__NumChars(pString)); }
 
 #pragma region Properties
 public: // Property - DispPos
@@ -577,100 +557,7 @@ public: // Property - TextStyle
 public: // Property - TextAlign
 	/* W */ inline void TextAlign(TEXTALIGN Align) { Props.TextAlign = Align; }
 	/* R */ inline auto TextAlign() const { return Props.TextAlign; }
-public: // Property - TextMode
-	/* W */ inline void TextMode(DRAWMODE Mode) { Props.TextMode = Mode; }
-	/* R */ inline auto TextMode() const { return Props.TextMode; }
-public: // Property - DrawMode
-	/* W */ inline void DrawMode(DRAWMODE Mode) { Props.DrawMode = Mode; }
-	/* R */ inline auto DrawMode() const { return Props.DrawMode; }
 #pragma endregion
 
 };
-
 extern GUI_PANEL GUI, GUI_Default;
-
-void GUI__DrawTextStyle(uint16_t Char);
-
-void GUI_Init();
-
-#define GUI_SetDrawMode GUI_LCD_SetDrawMode
-int  GUI__DivideRound(int a, int b);
-bool GUI__SetText(char** ppText, const char* s);
-
-void  GUI_DispChar(uint16_t c);
-void  GUI_DispChars(uint16_t c, int NumChars);
-void  GUI_DispCharAt(uint16_t c, Point Pos);
-void  GUI_DispString(const char * s);
-void  GUI_DispStringAt(const char * s, Point Pos);
-void  GUI__DispStringInRect(const char * s, const SRect &r, int TextAlign, int MaxNumChars);
-void  GUI_DispStringInRect(const char * s, const SRect &r, int Flags);
-void  GUI_DispStringInRect(const char * s, const SRect &r, int TextAlign, int MaxLen); /* Not to be doc. */
-void  GUI_DispStringLen(const char * s, int Len);
-void  GUI_GetTextExtend(SRect* pRect, const char * s, int Len);
-int   GUI_GetYAdjust();
-int   GUI_GetStringDistX(const char * s);
-void  GUI_DispNextLine();
-int      GUI_UC_Encode(char* s, uint16_t Char);
-int      GUI_UC_GetCharSize(const char * s);
-uint16_t GUI_UC_GetCharCode(const char * s);
-
-void *GUI_MEM_Alloc(size_t size);
-void *GUI_MEM_AllocZero(size_t size);
-void     GUI_MEM_Free(void *);
-void *GUI_MEM_Realloc(void *hOld, int NewSize);
-
-int  GUI__strlen(const char *s);
-void GUI__strcpy(char *s, const char *c);
-void GUI__memcpy(void *sDest, const void *pSrc, size_t Len);
-uint16_t GUI__countStrings(const char *pStrings);
-const char *GUI__nextString(const char *pStrings);
-
-struct TString {
-	char *pText = nullptr;
-	TString() {}
-	TString(const TString &s) { GUI__SetText(&pText, s); }
-	TString(const char *s) { GUI__SetText(&pText, s); }
-	~TString() {
-		GUI_MEM_Free(pText);
-		pText = nullptr;
-	}
-	inline char **operator&() { return &pText; }
-	inline void operator=(const char *s) { GUI__SetText(&pText, s); }
-	inline operator const char *() const { return pText; }
-};
-
-/* Message layer */
-void GUI_StoreKeyMsg(int Key, int Pressed);
-void GUI_SendKeyMsg(int Key, int Pressed);
-bool GUI_PollKeyMsg();
-/* Application layer */
-int  GUI_GetKey();
-void GUI_StoreKey(int c);
-void GUI_ClearKeyBuffer();
-void GUI_PID_StoreState(const PID_STATE* pState);
-int  GUI_PID_GetState(PID_STATE* pState);
-
-enum GUI_WRAPMODE {
-	GUI_WRAPMODE_NONE,
-	GUI_WRAPMODE_WORD,
-	GUI_WRAPMODE_CHAR
-};
-
-#define GUI_UC__GetCharSize(sText)  GUI.pUC_API->pfGetCharSize(sText)
-#define GUI_UC__GetCharCode(sText)  GUI.pUC_API->pfGetCharCode(sText)
-int      GUI_UC__CalcSizeOfChar(uint16_t Char);
-uint16_t GUI_UC__GetCharCodeInc(const char **ps);
-int      GUI_UC__NumChars2NumBytes(const char *s, int NumChars);
-int      GUI_UC__NumBytes2NumChars(const char *s, intptr_t NumBytes);
-int  GUI__GetLineNumChars(const char *s, int MaxNumChars);
-int  GUI__GetNumChars(const char *s);
-int  GUI__GetLineDistX(const char *s, int Len);
-int  GUI__HandleEOLine(const char **ps);
-void GUI__DispLine(const char *s, int MaxNumChars, SRect r);
-void GL_DispChar(uint16_t c);
-
-void GUI__CalcTextRect(const char *pText, const SRect *pTextRectIn, SRect *pTextRectOut, int TextAlign);
-
-int  GUI__WrapGetNumCharsDisp(const char *pText, int xSize, GUI_WRAPMODE WrapMode);
-int  GUI__WrapGetNumCharsToNextLine(const char *pText, int xSize, GUI_WRAPMODE WrapMode);
-int  GUI__WrapGetNumBytesToNextLine(const char *pText, int xSize, GUI_WRAPMODE WrapMode);

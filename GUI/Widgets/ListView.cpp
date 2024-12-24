@@ -36,7 +36,6 @@ static void _OnPaint(ListView *pObj, WM_PARAM *pData) {
 	rClip &= rect;
 	GUI.PenColor(pObj->Props.aTextColor[0]);
 	GUI.Font(pObj->Props.pFont);
-	GUI.TextMode(DRAWMODE_TRANS);
 	for (auto i = pObj->scrollStateV.v; i < EndRow; ++i) {
 		auto &row = pObj->RowArray[i];
 		rect.y0 = yPos;
@@ -44,8 +43,7 @@ static void _OnPaint(ListView *pObj, WM_PARAM *pData) {
 			break;
 		rect.y1 = yPos + RowDistY - 1;
 		if (rect.y1 >= rClip.y0) {
-			int ColorIndex = i == pObj->Sel ?
-				(pObj->State & WIDGET_STATE_FOCUS) ? 2 : 1 : 0;
+			int ColorIndex = i == pObj->Sel ? pObj->Focussed() ? 2 : 1 : 0;
 			GUI.BkColor(pObj->Props.aBkColor[ColorIndex]);
 			if (pObj->ShowGrid)
 				rect.y1--;
@@ -120,7 +118,7 @@ void LISTVIEW__InvalidateRow(ListView *pObj, int Sel) {
 	rect.y1 = rect.y0 + RowDistY - 1;
 	pObj->Invalidate(rect);
 }
-static void _SetSelFromPos(ListView *pObj, const PidState *pState) {
+static void _SetSelFromPos(ListView *pObj, const PID_STATE *pState) {
 	auto &&rect = pObj->InsideRectScrollBar();
 	int HeaderHeight = HEADER_GetHeight(pObj->pHeader);
 	int x = pState->x - rect.x0,
@@ -138,14 +136,14 @@ static void _SetSelFromPos(ListView *pObj, const PidState *pState) {
 static void _NotifyOwner(ListView *pObj, int Notification) {
 	auto pOwner = pObj->pOwner ? pObj->pOwner : pObj->Parent();
 	WM_PARAM data;
-	msg.msgid = WM_NOTIFY_PARENT;
+	msg.MsgId = WM_NOTIFY_PARENT;
 	data = Notification;
 	msg.pWin = pObj;
-	pOwner->SendMessage(msgid, &data);
+	pOwner->SendMessage(MsgId, &data);
 }
 static void _OnTouch(ListView *pObj, WM_PARAM *pData) {
 	int Notification;
-	const PidState *pState = (const PidState *)*pData;
+	const PID_STATE *pState = (const PID_STATE *)*pData;
 	if (pState) {
 		if (pState->Pressed) {
 			_SetSelFromPos(pObj, pState);
@@ -204,11 +202,11 @@ static int _AddKey(ListView *pObj, int Key) {
 	}
 	return 0;
 }
-static void _LISTVIEW_Callback(int msgid, WM_PARAM *pData) {
+static void _LISTVIEW_Callback(int MsgId, WM_PARAM *pData) {
 	ListView *pObj = (ListView *)pWin;
-	if (!pObj->HandleActive(msgid, pData))
+	if (!pObj->HandleActive(MsgId, pData))
 		return;
-	switch (msgid) {
+	switch (MsgId) {
 	case WM_NOTIFY_CLIENTCHANGE:
 	case WM_SIZE:
 		LISTVIEW__UpdateScrollParas(pObj);
@@ -255,7 +253,7 @@ static void _LISTVIEW_Callback(int msgid, WM_PARAM *pData) {
 		_FreeAttached(pObj);
 		break;
 	}
-	DefCallback(pObj, msgid, pData, pWinSrc);
+	DefCallback(pObj, MsgId, pData, pWinSrc);
 }
 ListView *LISTVIEW_CreateEx(
 	int x0, int y0, int xsize, int ysize, WObj *pParent,
@@ -270,7 +268,7 @@ ListView *LISTVIEW_CreateEx(
 	//	sizeof(ListView) - sizeof(WObj));
 	//if (!pObj)
 	//	return nullptr;
-	//pObj->Init(Id, WIDGET_STATE_FOCUSSABLE);
+	//pObj->Init(Id, WC_FOCUSSABLE);
 	//pObj->Props = ListView::DefaultProps;
 	//pObj->ShowGrid = 0;
 	//pObj->RowDistY = 0;
