@@ -70,7 +70,7 @@ public:
 	void Expand();
 
 	inline void Add(const char *s) {
-		Handles.Add(s);
+		Handles.Add() = s;
 		Invalidate();
 	}
 	void InsertString(uint16_t Index, const char *s);

@@ -57,8 +57,6 @@ public:
 			  wc.pParent, wc.Id,
 			  wc.Flags, wc.ExFlags,
 			  wc.Para.pString) {}
-protected:
-	~Radio() { TextArray.Destruct(); }
 
 public:
 	inline void Add(int d) { Sel(sel + d); }

@@ -7,14 +7,13 @@ constexpr WC_EX HEADER_CF_DRAG = WC_USER(0);
 class Header : public Widget {
 	struct Column {
 		GUI_DRAW_BASE *pDrawObj = nullptr;
-		char *pText = nullptr;
-		uint16_t Width;
-		TEXTALIGN Align;
+		TString Text;
+		uint16_t Width = 0;
+		TEXTALIGN Align = TEXTALIGN_LEFT;
+		Column() {}
 		~Column() {
-			pDrawObj = nullptr;
-			pText = nullptr;
 			GUI_MEM_Free(pDrawObj);
-			GUI_MEM_Free(pText);
+			pDrawObj = nullptr;
 		}
 	};
 public:
@@ -42,11 +41,9 @@ public:
 	Header(int x0, int y0, int xsize, int ysize,
 		   WObj *pParent, uint16_t Id,
 		   uint16_t Flags, uint16_t ExFlags = 0);
-protected:
-	~Header();
 
 public:
-	void Add(const char *s, uint16_t Width = 0, TEXTALIGN Align= TEXTALIGN_LEFT);
+	void Add(const char *pText, uint16_t Width = 0, TEXTALIGN Align= TEXTALIGN_LEFT);
 
 	void DeleteItem(unsigned Index);
 
@@ -70,24 +67,29 @@ public: // Property - BkColor
 		Invalidate();
 	}
 public: // Property - ItemWidth
-	/* R */ inline uint16_t ItemWidth(unsigned Index) const {
+	/* R */ inline uint16_t ItemWidth(uint16_t Index) const {
 		if (Index < Columns.NumItems())
 			return Columns[Index].Width;
 		return 0;
 	}
-	/* W */ void ItemWidth(unsigned Index, int Width);
-public: // Property - ItemTextAlign
-	/* W */ void ItemTextAlign(unsigned Index, TEXTALIGN Align) {
+	/* W */ void ItemWidth(uint16_t Index, int Width);
+public: // Property - ItemAlign
+	/* R */ inline TEXTALIGN ItemAlign(uint16_t Index) const {
+		if (Index < Columns.NumItems())
+			return Columns[Index].Align;
+		return 0;
+	}
+	/* W */ inline void ItemAlign(uint16_t Index, TEXTALIGN Align) {
 		if (Index < Columns.NumItems()) {
 			Columns[Index].Align = Align;
 			Invalidate();
 		}
 	}
 public: // Property - ItemText
-	/* R */ inline const char *ItemText(unsigned Index) const { return Columns[Index].pText; }
-	/* W */ inline void ItemText(unsigned Index, const char *pText) {
+	/* R */ inline const char *ItemText(uint16_t Index) const { return Columns[Index].Text; }
+	/* W */ inline void ItemText(uint16_t Index, const char *pText) {
 		if (Index < Columns.NumItems())
-			GUI__SetText(&Columns[Index].pText, pText);
+			Columns[Index].Text = pText;
 	}
 public: // Property - ScrollPos
 	/* R */ inline auto ScrollPos() const { return scrollPos; }

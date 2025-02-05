@@ -37,11 +37,11 @@ void DropDown::_OnPaint() const {
 	auto InnerSize = r.ysize();
 	/* Draw the 3D effect (if configured) */
 	DrawDown();
-	/* Draw the outer text frames */
+	/* Draw the outer Text frames */
 	r.x1 -= InnerSize; /* Spare square area to the right */
 	GUI.PenColor(Props.aBkColor[ColorIndex]);
 	if (sel > 0) {
-		/* Draw the text */
+		/* Draw the Text */
 		GUI.BkColor(Props.aBkColor[ColorIndex]);
 		GUI.Fill(r);
 		r.x0 += TextBorderSize;
@@ -197,7 +197,7 @@ void DropDown::InsertString(uint16_t Index, const char *s) {
 			pListbox->Add(s);
 		return;
 	}
-	Handles.Insert(s, Index);
+	Handles.Insert(Index) = s;
 	Invalidate();
 	if (pListbox)
 		pListbox->Insert(Index, s);

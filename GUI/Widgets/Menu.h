@@ -47,18 +47,18 @@ public:
 	struct Property {
 		CFont *pFont{ &GUI_Font13_1 };
 		RGBC aTextColor[5]{
-			RGB_BLACK,
-			RGB_WHITE,
-			RGBC_GRAY(0x7C),
-			RGB_LIGHTGRAY,
-			RGB_WHITE
+			/* Enabled */ RGB_BLACK,
+			/* Selected */ RGB_WHITE,
+			/* Disabled */ RGBC_GRAY(0x7C),
+			/* Disabled selected */ RGB_LIGHTGRAY,
+			/* Active */ RGB_WHITE
 		};
 		RGBC aBkColor[5]{
-			RGB_LIGHTGRAY,
-			RGBC_B(0x98),
-			RGB_LIGHTGRAY,
-			RGBC_B(0x98),
-			RGBC_GRAY(0x7C),
+			/* Enabled */ RGB_LIGHTGRAY,
+			/* Selected */ RGBC_B(0x98),
+			/* Disabled */ RGB_LIGHTGRAY,
+			/* Disabled selected */ RGBC_B(0x98),
+			/* Active */ RGBC_GRAY(0x7C),
 		};
 		uint8_t aBorder[4]{
 			4,
@@ -69,7 +69,7 @@ public:
 	} static DefaultProps;
 	struct Item {
 		Menu *pSubmenu = nullptr;
-		char *pText = nullptr;
+		TString text = nullptr;
 		uint16_t Id = 0, Flags = 0;
 		uint16_t TextWidth = 0;
 	};

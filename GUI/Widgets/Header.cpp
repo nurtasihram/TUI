@@ -3,8 +3,6 @@
 
 Header::Property Header::DefaultProps;
 
-#define HEADER_SUPPORT_DRAG 1
-
 static int _DefaultBorderH = 0;
 static int _DefaultBorderV = 2;
 
@@ -51,14 +49,12 @@ void Header::_OnPaint() {
 		rClient.y1 -= EffectSize + _DefaultBorderV;
 		GUI.PenColor(Props.TextColor);
 		GUI.TextAlign(Col.Align);
-		GUI.DispString(Col.pText, rClient);
+		GUI.DispString(Col.Text, rClient);
 	}
 	auto &&rClient = ClientRect();
 	rClient.x0 = xPos;
 	DrawUp(rClient);
 }
-
-#if (HEADER_SUPPORT_DRAG)
 int Header::_GetItemIndex(Point Pos) {
 	if (0 > Pos.y || Pos.y >= SizeY())
 		return -1;
@@ -123,7 +119,6 @@ bool Header::_HandleDrag(int MsgId, const PID_STATE *pState) {
 	}
 	return false;
 }
-#endif
 
 WM_RESULT Header::_Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc) {
 	auto pObj = (Header *)pWin;
@@ -159,19 +154,17 @@ Header::Header(int x0, int y0, int xsize, int ysize,
 			2 * _DefaultBorderV +
 			2 * Effect()->EffectSize);
 }
-Header::~Header() {
-	Columns.Destruct();
-}
 
-void Header::Add(const char *s, uint16_t Width, TEXTALIGN Align) {
+void Header::Add(const char *pText, uint16_t Width, TEXTALIGN Align) {
 	if (!Width)
-		Width = Props.pFont->XDist(s, strlen(s)) + 2 * (EffectSize() + _DefaultBorderH);
-	Header::Column Col;
+		Width =
+			Props.pFont->XDist(pText, strlen(pText)) +
+			2 * (EffectSize() + _DefaultBorderH);
+	auto &Col = Columns.Add();
 	Col.Width = Width;
 	Col.Align = Align;
 	Col.pDrawObj = nullptr;
-	GUI__SetText(&Col.pText, s);
-	Columns.Add(Col);
+	Col.Text = pText;
 	Invalidate();
 	Parent()->Invalidate();
 }
@@ -187,7 +180,7 @@ void Header::Height(uint16_t height) {
 	SizeY(height);
 	Parent()->Invalidate();
 }
-void Header::ItemWidth(unsigned Index, int Width) {
+void Header::ItemWidth(uint16_t Index, int Width) {
 	if (Width < 0)
 		return;
 	if (Index < Columns.NumItems()) {

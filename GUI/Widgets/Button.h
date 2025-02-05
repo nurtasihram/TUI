@@ -93,9 +93,9 @@ public: // Property - Focussable
 	/* R */ inline bool Focussable() const { return StatusEx & WC_FOCUSSABLE; }
 	/* W */ void Focussable(bool bFocussable);
 public: // Property - Text
-	/* R */ inline auto Text() const { return text; }
+	/* R */ inline const char *Text() const { return text; }
 	/* W */ inline void Text(const char *pText) {
-		GUI__SetText(&text, pText);
+		text = pText;
 		Invalidate();
 	}
 #pragma endregion

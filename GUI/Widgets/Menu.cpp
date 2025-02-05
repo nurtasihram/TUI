@@ -10,12 +10,12 @@ bool Menu::_HasEffect() {
 	return true;
 }
 int Menu::_GetEffectSize() { return _HasEffect() ? EffectSize() : 0; }
-int Menu::_CalcTextWidth(const char *sText) {
+int Menu::_CalcTextWidth(const char *pText) {
 	int TextWidth = 0;
-	if (sText) {
+	if (pText) {
 		auto pOldFont = GUI.Font();
 		GUI.Font(Props.pFont);
-		TextWidth = GUI.XDist(sText);
+		TextWidth = GUI.XDist(pText);
 		GUI.Font(pOldFont);
 	}
 	return TextWidth;
@@ -415,7 +415,7 @@ void Menu::_OnPaint() {
 				rText.y0 = rFill.y0 + BorderTop;
 				rText.y1 = rText.y0 + FontHeight - 1;
 				GUI.Clear(rFill);
-				GUI.DispString(Item.pText, rText);
+				GUI.DispString(Item.text, rText);
 			}
 			rFill.y0 += ItemHeight;
 		}
@@ -440,7 +440,7 @@ void Menu::_OnPaint() {
 				rText.x0 = rFill.x0 + BorderLeft;
 				rText.x1 = rText.x0 + Item.TextWidth - 1;
 				GUI.Clear(rFill);
-				GUI.DispString(Item.pText, rText);
+				GUI.DispString(Item.text, rText);
 			}
 			rFill.x0 += ItemWidth;
 		}
@@ -493,7 +493,7 @@ void Menu::_RecalcTextWidthOfItems() {
 	GUI.Font(Props.pFont);
 	for (int i = 0; i < NumItems; ++i) {
 		auto &Item = ItemArray[i];
-		Item.TextWidth = GUI.XDist(Item.pText);
+		Item.TextWidth = GUI.XDist(Item.text);
 	}
 	GUI.Font(pOldFont);
 }
@@ -503,16 +503,14 @@ void Menu::_ResizeMenu() {
 }
 
 void Menu::_SetItem(unsigned Index, const Menu::Item &NewItem) {
-	const char *pText = NewItem.pText ? NewItem.pText : "";
 	auto &Item = ItemArray[Index];
 	Item = NewItem;
-	Item.TextWidth = _CalcTextWidth(pText);
+	Item.text = NewItem.text;
+	Item.TextWidth = _CalcTextWidth(Item.text);
 	if (Item.Flags & MENU_IF_SEPARATOR)
 		Item.pSubmenu = nullptr;   /* Ensures that no separator is a submenu */
 	else if (Item.pSubmenu)
 		Item.pSubmenu->Owner(this);
-	Item.pText = nullptr;
-	GUI__SetText(&Item.pText, pText);
 }
 void Menu::_SetItemFlags(unsigned Index, uint16_t Mask, uint16_t Flags) {
 	auto &Item = ItemArray[Index];
@@ -558,7 +556,12 @@ Menu::Menu(int x0, int y0, int xsize, int ysize,
 }
 
 void Menu::AddItem(const Menu::Item &Item) {
-	ItemArray.Add(Item);
+	auto &&NewItem = ItemArray.Add();
+	NewItem.Flags = Item.Flags;
+	NewItem.Id = Item.Id;
+	NewItem.pSubmenu = NewItem.pSubmenu;
+	NewItem.text = Item.text;
+	NewItem.TextWidth = Item.TextWidth;
 	_SetItem(NumItems() - 1, Item);
 	_ResizeMenu();
 }
@@ -600,7 +603,12 @@ void Menu::InsertItem(uint16_t ItemId, const Menu::Item &Item) {
 	auto Index = _FindItem(ItemId, &pMenu);
 	if (Index < 0)
 		return;
-	ItemArray.Insert(Item, Index);
+	auto &NewItem = ItemArray.Insert(Index);
+	NewItem.Flags = Item.Flags;
+	NewItem.Id = Item.Id;
+	NewItem.pSubmenu = Item.pSubmenu;
+	NewItem.text = Item.text;
+	NewItem.TextWidth = Item.TextWidth;
 	_SetItem(Index, Item);
 	_ResizeMenu();
 }

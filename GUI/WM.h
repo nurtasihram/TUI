@@ -578,8 +578,6 @@ public: // Property - ScrollStateH
 	/* W */ void ScrollStateH(const SCROLL_STATE &s);
 public: // Property - ScrollStateV
 	/* W */ void ScrollStateV(const SCROLL_STATE &s);
-public: // Property - InsideRect
-	/* R */ inline auto InsideRect() const { return WObj::InsideRect() / pEffect->EffectSize; }
 public: // Property - ClientRect
 	/* R */ inline SRect ClientRect() const {
 		auto &&r = WObj::ClientRect();

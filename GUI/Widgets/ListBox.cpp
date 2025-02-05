@@ -399,7 +399,7 @@ void ListBox::Add(const char *s) {
 	if (!s)
 		return;
 	auto Index = ItemArray.NumItems() - 1;
-	ItemArray.Add(s);
+	ItemArray.Add().Text = s;
 	_InvalidateItemSize(Index);
 	_UpdateScrollers();
 	_InvalidateItem(Index);
@@ -410,7 +410,7 @@ void ListBox::Insert(uint16_t Index, const char *s) {
 	if (Index >= ItemArray.NumItems())
 		Add(s);
 	else {
-		ItemArray.Insert((const char *)ItemArray[Index].Text, Index);
+		ItemArray.Insert(Index).Text = s;
 		InvalidateItem(Index);
 	}
 }
@@ -572,7 +572,7 @@ void ListBox::ItemEnabled(uint16_t Index, bool bEnabled) {
 
 void ListBox::ItemText(uint16_t Index, const char *s) {
 	if (Index < ItemArray.NumItems()) {
-		ItemArray[Index] = s;
+		ItemArray[Index].Text = s;
 		_InvalidateItemSize(Index);
 		_UpdateScrollers();
 		_InvalidateItem(Index);

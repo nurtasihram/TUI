@@ -23,13 +23,13 @@ public:
 		RGBC aBkColor[4]{
 			/* Unselect */ RGB_WHITE,
 			/* Selected */ RGB_GRAY,
-			/* Select focused */ RGB_DARKBLUE,
+			/* Selected focussed */ RGB_DARKBLUE,
 			/* Disabled */ RGBC_GRAY(0xC0)
 		};
 		RGBC aTextColor[4]{
 			/* Unselect */ RGB_BLACK,
 			/* Selected */ RGB_WHITE,
-			/* Select focused */ RGB_WHITE,
+			/* Selected focussed */ RGB_WHITE,
 			/* Disabled */ RGB_GRAY
 		};
 		uint16_t ScrollStepH{ 10 };
@@ -38,7 +38,7 @@ public:
 		TString Text;
 		uint16_t xSize = 0, ySize = 0;
 		uint8_t Status = 0;
-		Item(const char *pText) : Text(pText) {}
+		Item() {}
 	};
 
 private:

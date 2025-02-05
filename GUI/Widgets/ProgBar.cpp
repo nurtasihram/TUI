@@ -132,7 +132,7 @@ void ProgBar::Text(const char *s) {
 	auto pOldFont = GUI.Font();
 	GUI.Font(Props.pFont);
 	auto &&r1 = _GetTextRect(_GetText(acBuffer));
-	GUI__SetText(&text, s);
+	text = s;
 	auto &&r2 = _GetTextRect(_GetText(acBuffer));
 	Invalidate(r1 | r2);
 	GUI.Font(pOldFont);

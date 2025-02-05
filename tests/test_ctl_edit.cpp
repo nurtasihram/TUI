@@ -247,82 +247,98 @@ CtlEdit::CtlEdit(Widget *pWidget) :
 }
 
 void MainTask() {
-	auto pStatic = new Static(
-		10, 10, 45, 20,
-		WObj::Desktop(), 0,
-		WC_VISIBLE, 0, "Static");
-	new CtlEdit(pStatic);
-	auto pButton = new Button(
-		10, 40, 45, 20,
-		WObj::Desktop(), 0,
-		WC_VISIBLE, "Button");
-	new CtlEdit(pButton);
-	auto pCheckBox = new CheckBox(
-		10, 70, 85, 20,
-		WObj::Desktop(), 0,
-		WC_VISIBLE, "CheckBox");
-	new CtlEdit(pCheckBox);
-	auto pProgBar = new ProgBar(
-		10, 100, 85, 20,
-		WObj::Desktop(), 0,
-		WC_VISIBLE);
-	new CtlEdit(pProgBar);
-	auto pScrollBarH = new ScrollBar(
-		10, 130, 85, 15,
-		WObj::Desktop(), 0,
-		WC_VISIBLE, 0);
-	new CtlEdit(pScrollBarH);
-	auto pScrollBarV = new ScrollBar(
-		10, 155, 15, 80,
-		WObj::Desktop(), 0,
-		WC_VISIBLE, SCROLLBAR_CF_VERTICAL);
-	new CtlEdit(pScrollBarV);
-	auto pSlider = new Slider(
-		30, 155, 85, 20,
-		WObj::Desktop(), 0,
-		WC_VISIBLE, 0);
-	new CtlEdit(pSlider);
-	auto pRadio = new Radio(
-		30, 185, 85, 60,
-		WObj::Desktop(), 0,
-		WC_VISIBLE, 0,
-		"Radio 1\0"
-		"Radio 2\0"
-		"Radio 3\0");
-	new CtlEdit(pRadio);
-	auto pListBox = new ListBox(
-		10, 250, 105, 60,
-		WObj::Desktop(), 0,
-		WC_VISIBLE, 0,
-		"ListBox 1\0"
-		"ListBox 2\0"
-		"ListBox 3\0");
-	new CtlEdit(pListBox);
-	auto pFrame = new Frame(
-		130, 10, 105, 300,
-		WObj::Desktop(), 0,
-		WC_VISIBLE, 0,
-		"Frame");
-	new CtlEdit(pFrame);
-	auto pHeader = new Header(
-		240, 10, 105, 0,
-		WObj::Desktop(), 0,
-		WC_VISIBLE);
-	pHeader->Add("Col 1");
-	pHeader->Add("Col 2");
-	pHeader->Add("Col 3");
-	new CtlEdit(pHeader);
+	//auto pStatic = new Static(
+	//	10, 10, 45, 20,
+	//	WObj::Desktop(), 0,
+	//	WC_VISIBLE, 0, "Static");
+	//new CtlEdit(pStatic);
+	//auto pButton = new Button(
+	//	10, 40, 45, 20,
+	//	WObj::Desktop(), 0,
+	//	WC_VISIBLE, "Button");
+	//new CtlEdit(pButton);
+	//auto pCheckBox = new CheckBox(
+	//	10, 70, 85, 20,
+	//	WObj::Desktop(), 0,
+	//	WC_VISIBLE, "CheckBox");
+	//new CtlEdit(pCheckBox);
+	//auto pProgBar = new ProgBar(
+	//	10, 100, 85, 20,
+	//	WObj::Desktop(), 0,
+	//	WC_VISIBLE);
+	//new CtlEdit(pProgBar);
+	//auto pScrollBarH = new ScrollBar(
+	//	10, 130, 85, 15,
+	//	WObj::Desktop(), 0,
+	//	WC_VISIBLE, 0);
+	//new CtlEdit(pScrollBarH);
+	//auto pScrollBarV = new ScrollBar(
+	//	10, 155, 15, 80,
+	//	WObj::Desktop(), 0,
+	//	WC_VISIBLE, SCROLLBAR_CF_VERTICAL);
+	//new CtlEdit(pScrollBarV);
+	//auto pSlider = new Slider(
+	//	30, 155, 85, 20,
+	//	WObj::Desktop(), 0,
+	//	WC_VISIBLE, 0);
+	//new CtlEdit(pSlider);
+	//auto pRadio = new Radio(
+	//	30, 185, 85, 60,
+	//	WObj::Desktop(), 0,
+	//	WC_VISIBLE, 0,
+	//	"Radio 1\0"
+	//	"Radio 2\0"
+	//	"Radio 3\0");
+	//new CtlEdit(pRadio);
+	//auto pListBox = new ListBox(
+	//	10, 250, 105, 60,
+	//	WObj::Desktop(), 0,
+	//	WC_VISIBLE, 0,
+	//	"ListBox 1\0"
+	//	"ListBox 2\0"
+	//	"ListBox 3\0");
+	//new CtlEdit(pListBox);
+	//auto pFrame = new Frame(
+	//	130, 10, 105, 300,
+	//	WObj::Desktop(), 0,
+	//	WC_VISIBLE, 0,
+	//	"Frame");
+	//new CtlEdit(pFrame);
+	//auto pHeader = new Header(
+	//	240, 10, 105, 0,
+	//	WObj::Desktop(), 0,
+	//	WC_VISIBLE);
+	//pHeader->Add("Col 1");
+	//pHeader->Add("Col 2");
+	//pHeader->Add("Col 3");
+	//new CtlEdit(pHeader);
 	auto pListView = new ListView(
 		240, 40, 105, 100,
 		WObj::Desktop(), 0,
-		WC_VISIBLE, LISTVIEW_CF_HEADER_DRAG);
-	pListView->AddColumn("Col 1");
-	pListView->AddColumn("Col 2");
-	pListView->AddColumn("Col 3");
+		WC_VISIBLE, LISTVIEW_CF_HEADER_DRAG | LISTVIEW_CF_GRIDLINE);
+	pListView->AddColumn("Col 1   ");
+	pListView->AddColumn("Col 2   ");
+	pListView->AddColumn("Col 3   ");
 	pListView->AddRow(
 		"Col 1x1\0"
 		"Col 1x2\0"
 		"Col 1x3\0");
+	pListView->AddRow(
+		"Col 2x1\0"
+		"Col 2x2\0"
+		"Col 2x3\0");
+	pListView->AddRow(
+		"Col 3x1\0"
+		"Col 3x2\0"
+		"Col 3x3\0");
+	pListView->AddRow(
+		"Col 4x1\0"
+		"Col 4x2\0"
+		"Col 4x3\0");
+	pListView->AddRow(
+		"Col 5x1\0"
+		"Col 5x2\0"
+		"Col 5x3\0");
 	new CtlEdit(pListView);
 	for (;;)
 		WObj::Exec();

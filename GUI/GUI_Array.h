@@ -16,11 +16,6 @@ public:
 	~GUI_Array() { Delete(); }
 public:
 	void Delete() {
-		GUI_MEM_Free(pElems);
-		pElems = nullptr;
-		nItems = 0;
-	}
-	void Destruct() {
 		if (pElems) {
 			for (auto i = 0; i < nItems; ++i)
 				pElems[i].~AnyType();
@@ -45,16 +40,16 @@ public:
 		memmove(pElems + Index, pElems + Index - 1, sizeof(AnyType));
 		pElems = (AnyType *)GUI_MEM_Realloc(pElems, --nItems * sizeof(AnyType));
 	}
-	void Add(const AnyType &i) {
+	inline AnyType &Add() {
 		pElems = (AnyType *)GUI_MEM_Realloc(pElems, ++nItems * sizeof(AnyType));
-		GUI__memcpy(pElems + nItems - 1, &i, sizeof(AnyType));
+		return *(new (pElems + nItems - 1) AnyType);
 	}
-	void Insert(const AnyType &i, unsigned Index) {
+	inline AnyType &Insert(unsigned Index) {
 		if (Index >= nItems) Index = nItems - 1;
 		pElems = (AnyType *)GUI_MEM_Realloc(pElems, ++nItems * sizeof(AnyType));
 		if (auto size = (nItems - Index) * sizeof(AnyType))
 			memmove(pElems + Index + 1, pElems + Index, size);
-		GUI__memcpy(pElems + Index, &i, sizeof(AnyType));
+		return pElems[Index];
 	}
 	inline auto begin() { return pElems; }
 	inline auto begin() const { return pElems; }

@@ -90,7 +90,7 @@ public: // Property - Spacing
 public: // Property - Text
 	/* R */ inline const char *Text() const { return text; }
 	/* W */ inline void Text(const char *s) {
-		GUI__SetText(&text, s);
+		text = s;
 		Invalidate();
 	}
 public: // Property - TextAlign
