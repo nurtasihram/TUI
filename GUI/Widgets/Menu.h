@@ -32,7 +32,6 @@ enum MENU_MSGID : uint16_t {
 	MENU_ON_ITEMSELECT = 0, /* Send to owner when selecting a menu item */
 	MENU_ON_INITMENU,		/* Send to owner when for the first time selecting a submenu */
 	MENU_ON_INITSUBMENU,	/* Send to owner when selecting a submenu */
-
 	MENU_ON_OPEN,			/* Internal message of menu widget (send to submenus) */
 	MENU_ON_CLOSE,			/* Internal message of menu widget (send to submenus) */
 	MENU_IS_MENU			/* Internal message of menu widget. Owner must call */
@@ -152,35 +151,27 @@ public:
 public: // Property - Font
 	/* R */ inline auto Font() const { return Props.pFont; }
 	/* W */ inline void Font(CFont *pFont) {
-		if (Props.pFont != pFont) {
-			Props.pFont = pFont;
-			_RecalcTextWidthOfItems();
-			_ResizeMenu();
-		}
+		Props.pFont = pFont;
+		_RecalcTextWidthOfItems();
+		_ResizeMenu();
 	}
 public: // Property - TextColor
 	/* R */ inline auto TextColor(MENU_CI Index) const { return Props.aTextColor[Index]; }
 	/* W */ inline void TextColor(MENU_CI Index, RGBC Color) {
-		if (Props.aTextColor[Index] != Color) {
-			Props.aTextColor[Index] = Color;
-			Invalidate();
-		}
+		Props.aTextColor[Index] = Color;
+		Invalidate();
 	}
 public: // Property - BkColor
 	/* R */ inline auto BkColor(MENU_CI Index) const { return Props.aBkColor[Index]; }
 	/* W */ inline void BkColor(MENU_CI Index, RGBC Color) {
-		if (Props.aBkColor[Index] != Color) {
-			Props.aBkColor[Index] = Color;
-			Invalidate();
-		}
+		Props.aBkColor[Index] = Color;
+		Invalidate();
 	}
 public: // Property - BorderSize
 	/* R */ inline auto BorderSize(MENU_BI Index) const { return Props.aBorder[Index]; }
 	/* W */ inline void BorderSize(MENU_BI Index, uint8_t BorderSize) {
-		if (Props.aBorder[Index] != BorderSize) {
-			Props.aBorder[Index] = BorderSize;
-			_ResizeMenu();
-		}
+		Props.aBorder[Index] = BorderSize;
+		_ResizeMenu();
 	}
 public: // Property - NumItems
 	/* R */ inline auto NumItems() const { return ItemArray.NumItems(); }

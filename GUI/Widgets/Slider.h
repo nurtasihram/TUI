@@ -60,41 +60,33 @@ public: // Property - Color
 public:  // Propert - Width
 	/* R */ inline auto Width() const { return width; }
 	/* W */ inline void Width(int Width) {
-		if (this->width != Width) {
-			this->width = Width;
-			Invalidate();
-		}
+		this->width = Width;
+		Invalidate();
 	}
 public: // Property - Value
 	/* R */ inline auto Value() const { return this->v; }
 	/* W */ inline void Value(int16_t v) {
 		if (v < Min) v = Min;
 		if (v > Max) v = Max;
-		if (this->v != v) {
-			this->v = v;
-			Invalidate();
-			NotifyParent(WN_VALUE_CHANGED);
-		}
+		this->v = v;
+		Invalidate();
+		NotifyParent(WN_VALUE_CHANGED);
 	}
 public: // Property - NumTicks
 	/* R */ inline auto NumTicks() const { return this->nTicks; }
 	/* W */ inline void NumTicks(int16_t nTicks) {
-		if (this->nTicks != nTicks) {
-			this->nTicks = nTicks;
-			Invalidate();
-		}
+		this->nTicks = nTicks;
+		Invalidate();
 	}
 public: // Property - Range
 	/* W */ inline void Range(int16_t Min, int16_t Max) {
-		if (this->Min != Min || this->Max != Max) {
-			if (Max < Min)
-				Max = Min;
-			this->Min = Min;
-			this->Max = Max;
-			if (v < Min) v = Min;
-			if (v > Max) v = Max;
-			Invalidate();
-		}
+		if (Max < Min)
+			Max = Min;
+		this->Min = Min;
+		this->Max = Max;
+		if (v < Min) v = Min;
+		if (v > Max) v = Max;
+		Invalidate();
 	}
 #pragma endregion
 };

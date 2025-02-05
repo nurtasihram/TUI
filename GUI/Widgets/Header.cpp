@@ -3,9 +3,8 @@
 
 Header::Property Header::DefaultProps;
 
-#define HEADER_SUPPORT_DRAG      1
+#define HEADER_SUPPORT_DRAG 1
 
-static CCursor *_pDefaultCursor = &GUI_CursorMove;
 static int _DefaultBorderH = 0;
 static int _DefaultBorderV = 2;
 
@@ -100,6 +99,8 @@ void Header::_HandlePID(PID_STATE State) {
 			CaptureRelease();
 }
 bool Header::_HandleDrag(int MsgId, const PID_STATE *pState) {
+	if (!(StatusEx & HEADER_CF_DRAG))
+		return false;
 	switch (MsgId) {
 		case WM_TOUCH: {
 			int Notification;
@@ -131,11 +132,11 @@ WM_RESULT Header::_Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc) {
 	if (pObj->_HandleDrag(MsgId, Param))
 		return 0;
 	switch (MsgId) {
-		case WM_DELETE:
-			pObj->~Header();
-			return 0;
 		case WM_PAINT:
 			pObj->_OnPaint();
+			return 0;
+		case WM_DELETE:
+			pObj->~Header();
 			return 0;
 	}
 	return DefCallback(pObj, MsgId, Param, pSrc);
@@ -143,13 +144,14 @@ WM_RESULT Header::_Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc) {
 
 Header::Header(int x0, int y0, int xsize, int ysize,
 			   WObj *pParent, uint16_t Id,
-			   WM_CF Flags) :
+			   WM_CF Flags, uint16_t ExFlags) :
 	Widget(x0, y0, xsize, ysize,
 		   _Callback,
 		   pParent, Id,
-		   Flags | WC_ANCHOR_LEFT | WC_ANCHOR_RIGHT) {
+		   Flags | WC_ANCHOR_LEFT | WC_ANCHOR_RIGHT,
+		   ExFlags) {
 	if (x0 == 0 && y0 == 0)
-		Position(Parent()->InsideRect().left_top());
+		Move(Parent()->InsideRect().left_top());
 	if (xsize == 0)
 		SizeX(Parent()->InsideRect().xsize());
 	if (ysize == 0)
@@ -157,7 +159,6 @@ Header::Header(int x0, int y0, int xsize, int ysize,
 			2 * _DefaultBorderV +
 			2 * Effect()->EffectSize);
 }
-
 Header::~Header() {
 	Columns.Destruct();
 }
@@ -182,19 +183,10 @@ void Header::DeleteItem(unsigned Index) {
 	}
 }
 
-int HEADER_GetHeight(Header *pObj) {
-	if (!pObj)
-		return 0;
-	auto rect = pObj->ClientRect() - pObj->Rect().left_top();
-	return rect.y1 - rect.y0 + 1;
+void Header::Height(uint16_t height) {
+	SizeY(height);
+	Parent()->Invalidate();
 }
-void HEADER_SetHeight(Header *pObj, int Height) {
-	if (!pObj)
-		return;
-	pObj->Size({ pObj->ClientRect().xsize(), Height });
-	pObj->Parent()->Invalidate();
-}
-
 void Header::ItemWidth(unsigned Index, int Width) {
 	if (Width < 0)
 		return;

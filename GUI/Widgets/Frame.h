@@ -118,35 +118,27 @@ public: // Action - Maximize
 public: // Property - Font
 	/* R */ inline auto Font() const { return Props.pFont; }
 	/* W */ inline void Font(CFont *pFont) {
-		if (Props.pFont != pFont) {
-			Props.pFont = pFont;
-			_UpdatePositions();
-			Invalidate();
-		}
+		Props.pFont = pFont;
+		_UpdatePositions();
+		Invalidate();
 	}
 public: // Property - BarColor
 	/* R */ inline RGBC BarColor(FRAME_CI Index) const { return Props.aBarColor[Index]; }
 	/* W */ inline void BarColor(FRAME_CI Index, RGBC Color) {\
-		if (Props.aBarColor[Index] != Color) {
-			Props.aBarColor[Index] = Color;
-			Invalidate();
-		}
+		Props.aBarColor[Index] = Color;
+		Invalidate();
 	}
 public: // Property - TextColor
 	/* R */ inline RGBC TextColor(FRAME_CI Index) const { return Props.aTextColor[Index]; }
 	/* W */ inline void TextColor(FRAME_CI Index, RGBC Color) {
-		if (Props.aTextColor[Index] != Color) {
-			Props.aTextColor[Index] = Color;
-			Invalidate();
-		}
+		Props.aTextColor[Index] = Color;
+		Invalidate();
 	}
 public: // Property - ClientColor
 	/* R */ inline RGBC ClientColor() const { return Props.ClientColor; }
 	/* W */ inline void ClientColor(RGBC Color) {
-		if (Props.ClientColor != Color) {
-			Props.ClientColor = Color;
-			pClient->Invalidate();
-		}
+		Props.ClientColor = Color;
+		pClient->Invalidate();
 	}
 public: // Property - Moveable
 	/* R */ inline bool Moveable() const { return Flags & FRAME_CF_MOVEABLE; }
@@ -189,10 +181,8 @@ public: // Property - Text
 public: // Property - TextAlign
 	/* R */ inline auto TextAlign() const { return Props.Align; }
 	/* W */ inline void TextAlign(TEXTALIGN Align) {
-		if (Props.Align != Align) {
-			Props.Align = Align;
-			Invalidate();
-		}
+		Props.Align = Align;
+		Invalidate();
 	}
 public: // Property - Menu
 	/* R */ inline auto Menu() { return pMenu; }

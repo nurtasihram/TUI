@@ -94,19 +94,19 @@ WM_RESULT CheckBox::_Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc)
 	if (!pObj->HandleActive(MsgId, Param))
 		return Param;
 	switch (MsgId) {
-	case WM_KEY:
-		if (!pObj->_OnKey(Param))
+		case WM_TOUCH:
+			pObj->_OnTouch(Param);
 			return 0;
-		break;
-	case WM_PAINT:
-		pObj->_OnPaint();
-		return 0;
-	case WM_DELETE:
-		pObj->~CheckBox();
-		return 0;
-	case WM_TOUCH:
-		pObj->_OnTouch(Param);
-		return 0;
+		case WM_KEY:
+			if (!pObj->_OnKey(Param))
+				return 0;
+			break;
+		case WM_PAINT:
+			pObj->_OnPaint();
+			return 0;
+		case WM_DELETE:
+			pObj->~CheckBox();
+			return 0;
 	}
 	return DefCallback(pObj, MsgId, Param, pSrc);
 }

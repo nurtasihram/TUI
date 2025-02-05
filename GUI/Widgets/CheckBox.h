@@ -60,42 +60,32 @@ protected:
 public: // Property - Font
 	/* R */ inline auto Font() const { return Props.pFont; }
 	/* W */ inline void Font(CFont *pFont) {
-		if (Props.pFont != pFont) {
-			Props.pFont = pFont;
-			Invalidate();
-		}
+		Props.pFont = pFont;
+		Invalidate();
 	}
 public: // Property - TextColor
 	/* R */ inline auto TextColor() const { return Props.TextColor; }
 	/* W */ inline void TextColor(RGBC Color) {
-		if (Props.TextColor != Color) {
-			Props.TextColor = Color;
-			Invalidate();
-		}
+		Props.TextColor = Color;
+		Invalidate();
 	}
 public: // Property - BkColor
 	/* R */ inline auto BkColor() const { return Props.BkColor; }
 	/* W */ inline void BkColor(RGBC Color) {
-		if (Props.BkColor != Color) {
-			Props.BkColor = Color;
-			Invalidate();
-		}
+		Props.BkColor = Color;
+		Invalidate();
 	}
 public: // Property - BkColorBox
 	/* R */ inline auto BkColorBox(CHECKBOX_CI Index) const { return Props.aBkColorBox[Index]; }
 	/* W */ inline void BkColorBox(CHECKBOX_CI Index, RGBC Color) {
-		if (Props.aBkColorBox[Index] != Color) {
-			Props.aBkColorBox[Index] = Color;
-			Invalidate();
-		}
+		Props.aBkColorBox[Index] = Color;
+		Invalidate();
 	}
 public: // Property - Spacing
 	/* R */ inline auto Spacing() const { return Props.Spacing; }
 	/* W */ inline void Spacing(unsigned Spacing) {
-		if (Props.Spacing != Spacing) {
-			Props.Spacing = Spacing;
-			Invalidate();
-		}
+		Props.Spacing = Spacing;
+		Invalidate();
 	}
 public: // Property - Text
 	/* R */ inline const char *Text() const { return text; }
@@ -106,19 +96,15 @@ public: // Property - Text
 public: // Property - TextAlign
 	/* R */ inline auto TextAlign() const { return Props.Align; }
 	/* W */ inline void TextAlign(TEXTALIGN Align) {
-		if (Props.Align != Align) {
-			Props.Align = Align;
-			Invalidate();
-		}
+		Props.Align = Align;
+		Invalidate();
 	}
 public: // Property - Image
 	/* R */ inline auto Image(CHECKBOX_BI Index) const { return Props.apBm[Index]; }
 	/* W */ inline void Image(CHECKBOX_BI Index, CBitmap *pBitmap) {
 		if (!pBitmap) pBitmap = DefaultProps.apBm[Index];
-		if (Props.apBm[Index] != pBitmap) {
-			Props.apBm[Index] = pBitmap;
-			Invalidate();
-		}
+		Props.apBm[Index] = pBitmap;
+		Invalidate();
 	}
 public: // Property - CheckState
 	/* R */ inline uint8_t CheckState() const { return CurrentState; }

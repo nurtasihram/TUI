@@ -182,16 +182,16 @@ CCursor *CursorCtl::GetResizeCursor(uint8_t Mode) {
 #pragma endregion
 
 #pragma region String 
-uint16_t GUI__NumTexts(const char *pText) {
+uint16_t GUI__NumTexts(const char *pTexts) {
 	uint16_t NumTexts = 0;
-	if (pText)
-		for (; *pText; ++NumTexts)
-			while (*pText++);
+	if (pTexts)
+		for (; *pTexts; ++NumTexts)
+			while (*pTexts++);
 	return NumTexts;
 }
-const char *GUI__NextText(const char *pText) {
-	while (*pText++);
-	return pText;
+const char *GUI__NextText(const char *pTexts) {
+	while (*pTexts++);
+	return pTexts;
 }
 uint16_t GUI__NumLines(const char *pText) {
 	uint16_t NumLines = 1;

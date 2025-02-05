@@ -53,34 +53,26 @@ protected:
 public: // Property - Font
 	/* R */ inline auto Font() const { return Props.pFont; }
 	/* W */ inline void Font(CFont *pFont) {
-		if (Props.pFont != pFont && pFont) {
-			Props.pFont = pFont;
-			Invalidate();
-		}
+		Props.pFont = pFont;
+		Invalidate();
 	}
 public: // Property - BkColor
 	/* R */ inline auto BkColor(PROGBAR_CI Index) const { return Props.aBkColor[Index]; }
 	/* W */ inline void BkColor(PROGBAR_CI Index, RGBC Color) {
-		if (Props.aBkColor[Index] != Color) {
-			Props.aBkColor[Index] = Color;
-			Invalidate();
-		}
+		Props.aBkColor[Index] = Color;
+		Invalidate();
 	}
 public: // Property - TextColor
 	/* R */ inline auto TextColor(PROGBAR_CI Index) const { return Props.aTextColor[Index]; }
 	/* W */ inline void TextColor(PROGBAR_CI Index, RGBC Color) {
-		if (Props.aTextColor[Index] != Color) {
-			Props.aTextColor[Index] = Color;
-			Invalidate();
-		}
+		Props.aTextColor[Index] = Color;
+		Invalidate();
 	}
 public: // Property - TextAlign
 	/* R */ inline auto TextAlign() const { return Props.Align; }
 	/* W */ inline void TextAlign(int Align) {
-		if (Props.Align != Align) {
-			Props.Align = Align;
-			Invalidate();
-		}
+		Props.Align = Align;
+		Invalidate();
 	}
 public: // Property - Value
 	/* R */ inline auto Value() const { return v; }
@@ -90,10 +82,8 @@ public: // Property - Text
 	/* W */ void Text(const char *s);
 public: // Property - TextPos
 	/* W */ void TextPos(Point Off) {
-		if (this->Off != Off) {
-			this->Off = Off;
-			Invalidate();
-		}
+		this->Off = Off;
+		Invalidate();
 	}
 public: // Property - Range
 	/* R */ inline auto Range() const { struct { int16_t Min, Max; } r{ Min, Max }; return r; }

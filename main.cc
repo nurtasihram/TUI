@@ -21,7 +21,7 @@ void SimDisp_Start(uint16_t xSize, uint16_t ySize) {
 		GUI.PID_STATE.x = xPos;
 		GUI.PID_STATE.y = yPos;
 	});
-	SimDisp::SetOnDestroy([] {
+	SimDisp::SetOnClose([] {
 		ExitProcess(0);
 	});
 	SimDisp::SetOnResize([](uint16_t nSizeX, uint16_t nSizeY) -> BOOL {

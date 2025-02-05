@@ -119,56 +119,41 @@ public:
 public: // Property - Font
 	/* R */ inline auto Font() const { return Props.pFont; }
 	/* W */ inline void Font(CFont *pFont) {
-		if (Props.pFont != pFont && pFont) {
-			Props.pFont = pFont;
-			_InvalidateInsideArea();
-		}
+		Props.pFont = pFont;
+		_InvalidateInsideArea();
 	}
 public: // Property - BkColor
 	/* R */ inline auto BkColor(LISTBOX_CI Index) const { return Props.aBkColor[Index]; }
 	/* W */ inline void BkColor(LISTBOX_CI Index, RGBC Color) {
-		if (Props.aBkColor[Index] != Color) {
-			Props.aBkColor[Index] = Color;
-			_InvalidateInsideArea();
-		}
+		Props.aBkColor[Index] = Color;
+		_InvalidateInsideArea();
 	}
 public: // Property - TextColor
 	/* R */ inline auto TextColor(LISTBOX_CI Index) const { return Props.aTextColor[Index]; }
 	/* W */ inline void TextColor(LISTBOX_CI Index, RGBC Color) {
-		if (Props.aTextColor[Index] != Color) {
-			Props.aTextColor[Index] = Color;
-			_InvalidateInsideArea();
-		}
+		Props.aTextColor[Index] = Color;
+		_InvalidateInsideArea();
 	}
 public: // Property - OwnerDraw
 	/* R */ inline void OwnerDraw(WIDGET_DRAW_ITEM_FUNC *pfDrawItem) {
-		if (this->pfDrawItem != pfDrawItem) {
-			this->pfDrawItem = pfDrawItem;
-			InvalidateItem(LISTBOX_ALL_ITEMS);
-		}
+		this->pfDrawItem = pfDrawItem;
+		InvalidateItem(LISTBOX_ALL_ITEMS);
 	}
 public: // Property - Spacing
 	/* R */ inline auto Spacing() const { return ItemSpacing; }
 	/* W */ inline void Spacing(uint16_t Value) {
-		if (ItemSpacing != Value) {
-			ItemSpacing = Value;
-			InvalidateItem(LISTBOX_ALL_ITEMS);
-		}
+		ItemSpacing = Value;
+		InvalidateItem(LISTBOX_ALL_ITEMS);
 	}
 public: // Property - ScrollStepH
 	/* R */ inline int ScrollStepH() const { return Props.ScrollStepH; }
-	/* W */ inline void ScrollStepH(int Value) {
-		if (Props.ScrollStepH != Value)
-			Props.ScrollStepH = Value;
-	}
+	/* W */ inline void ScrollStepH(int Value) { Props.ScrollStepH = Value; }
 public: // Property - ScrollBarWidth
 	/* R */ inline auto ScrollBarWidth() const { return ScrollbarWidth; }
 	/* W */ inline void ScrollBarWidth(uint8_t Width) {
-		if (ScrollbarWidth != Width) {
-			ScrollbarWidth = Width;
-			_SetScrollbarWidth();
-			Invalidate();
-		}
+		ScrollbarWidth = Width;
+		_SetScrollbarWidth();
+		Invalidate();
 	}
 public: // Property - ItemSel
 	/* R */ bool ItemSel(uint16_t Index) const;
@@ -186,17 +171,7 @@ public: // Property - Sel
 	/* W */ void Sel(int NewSel);
 public: // Property - MultiSel
 	/* R */ inline bool MultiSel() const { return Flags & LISTBOX_CF_MULTISEL; }
-	/* W */ inline void MultiSel(bool bEnabled) {
-		auto Flags = this->Flags;
-		if (bEnabled)
-			Flags |= LISTBOX_CF_MULTISEL;
-		else
-			Flags &= ~LISTBOX_CF_MULTISEL;
-		if (this->Flags == Flags)
-			return;
-		this->Flags = Flags;
-		_InvalidateInsideArea();
-	}
+	/* W */ void MultiSel(bool bEnabled);
 public: // Property - Owner
 	/* R */ inline auto Owner() const { return pOwner; }
 	/* W */ inline void Owner(WObj *pOwner) {

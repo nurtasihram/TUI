@@ -386,6 +386,13 @@ bool WObj::Exec1() {
 
 WM_RESULT WObj::DefCallback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc) {
 	switch (MsgId) {
+		case WM_SET_ID:
+			pWin->Id = Param;
+			return true;
+		case WM_GET_ID:
+			return pWin->Id;
+		case WM_GET_ACCEPT_FOCUS:
+			return pWin->Status & WC_FOCUSSABLE;
 		case WM_GET_INSIDE_RECT:
 			return pWin->ClientRect();
 		case WM_GET_CLIENT_WINDOW:
@@ -1023,12 +1030,6 @@ bool Widget::HandleActive(int MsgId, WM_PARAM &Param) {
 					return false;
 				}
 			return true;
-		case WM_SET_ID:
-			Id = Param;
-			return false;
-		case WM_GET_ID:
-			Param = Id;
-			return false;
 		case WM_SET_FOCUS: {
 			int Notification;
 			if (Param) 
@@ -1040,9 +1041,6 @@ bool Widget::HandleActive(int MsgId, WM_PARAM &Param) {
 			Param = false;
 			return false;
 		}
-		case WM_GET_ACCEPT_FOCUS:
-			Param = Status & WC_FOCUSSABLE;
-			return false;
 		case WM_GET_INSIDE_RECT:
 			Param = WObj::ClientRect() / pEffect->EffectSize;
 			return false;

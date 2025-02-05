@@ -69,36 +69,28 @@ public:
 public: // Property - Value
 	/* R */ inline auto Value() const { return state.v; }
 	/* W */ inline void Value(int v) {
-		if (state.v != v) {
-			state.Value(v);
-			Invalidate();
-			NotifyParent(WN_VALUE_CHANGED);
-		}
+		state.Value(v);
+		Invalidate();
+		NotifyParent(WN_VALUE_CHANGED);
 	}
 public: // Property - NumItems
 	/* R */ inline auto NumItems() const { return state.NumItems; }
 	/* W */ inline void NumItems(int NumItems) {
-		if (state.NumItems != NumItems) {
-			state.NumItems = NumItems;
-			Invalidate();
-		}
+		state.NumItems = NumItems;
+		Invalidate();
 	}
 public: // Property - PageSize
 	/* R */ inline auto PageSize() const { return state.PageSize; }
 	/* W */ inline void PageSize(int PageSize) {
-		if (state.PageSize != PageSize) {
-			state.PageSize = PageSize;
-			Invalidate();
-		}
+		state.PageSize = PageSize;
+		Invalidate();
 	}
 public: // Property - ScrollState
 	/* R */ inline auto ScrollState() const { return state; }
 	/* W */ inline void ScrollState(const SCROLL_STATE &s) {
-		if (state != s) {
-			state = s;
-			Invalidate();
-			NotifyParent(WN_VALUE_CHANGED);
-		}
+		state = s;
+		Invalidate();
+		NotifyParent(WN_VALUE_CHANGED);
 	}
 public: // Property - Width
 	/* R */ inline auto Width() const { return SizeX(); }

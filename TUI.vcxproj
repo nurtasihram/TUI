@@ -65,16 +65,7 @@
     <ClCompile Include="GUI\Widgets\Frame.cpp" />
     <ClCompile Include="GUI\Widgets\Header.cpp" />
     <ClCompile Include="GUI\Widgets\ListBox.cpp" />
-    <ClCompile Include="GUI\Widgets\ListView.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release LLVM|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release LLVM|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
+    <ClCompile Include="GUI\Widgets\ListView.cpp" />
     <ClCompile Include="GUI\Widgets\Menu.cpp" />
     <ClCompile Include="GUI\Widgets\ProgBar.cpp" />
     <ClCompile Include="GUI\Widgets\Radio.cpp">

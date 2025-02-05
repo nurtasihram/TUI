@@ -88,39 +88,39 @@ WM_RESULT DropDown::_Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc)
 	if (!pObj->HandleActive(MsgId, Param))
 		return Param;
 	switch (MsgId) {
-	case WM_NOTIFY_PARENT:
-		switch ((int)Param) {
-		case WN_SCROLL_CHANGED:
-			pObj->NotifyParent(WN_SCROLL_CHANGED);
-			break;
-		case WN_CLICKED:
-			pObj->Sel(pObj->pListbox->Sel());
-			pObj->pListbox->Focus();
-			break;
-		case LISTBOX_NOTIFICATION_LOST_FOCUS:
-			pObj->Collapse();
-			break;
-		}
-		break;
-	case WM_PID_STATE_CHANGED:
-		if (!IsExpandedBeforeMsg) /* Make sure we do not react a second time */
-			if (const PID_CHANGED_STATE *pInfo = Param)
-				if (pInfo->Pressed)
-					pObj->Expand();
-		break;
-	case WM_TOUCH:
-		pObj->_OnTouch(Param);
-		return 0;
-	case WM_PAINT:
-		pObj->_OnPaint();
-		return 0;
-	case WM_DELETE:
-		pObj->~DropDown();
-		return 0;
-	case WM_KEY:
-		if (!pObj->_OnKey(Param))
+		case WM_PAINT:
+			pObj->_OnPaint();
 			return 0;
-		break;
+		case WM_NOTIFY_PARENT:
+			switch ((int)Param) {
+			case WN_SCROLL_CHANGED:
+				pObj->NotifyParent(WN_SCROLL_CHANGED);
+				break;
+			case WN_CLICKED:
+				pObj->Sel(pObj->pListbox->Sel());
+				pObj->pListbox->Focus();
+				break;
+			case LISTBOX_NOTIFICATION_LOST_FOCUS:
+				pObj->Collapse();
+				break;
+			}
+			break;
+		case WM_PID_STATE_CHANGED:
+			if (!IsExpandedBeforeMsg) /* Make sure we do not react a second time */
+				if (const PID_CHANGED_STATE *pInfo = Param)
+					if (pInfo->Pressed)
+						pObj->Expand();
+			break;
+		case WM_TOUCH:
+			pObj->_OnTouch(Param);
+			return 0;
+		case WM_DELETE:
+			pObj->~DropDown();
+			return 0;
+		case WM_KEY:
+			if (!pObj->_OnKey(Param))
+				return 0;
+			break;
 	}
 	return DefCallback(pObj, MsgId, Param, pSrc);
 }

@@ -64,10 +64,8 @@ protected:
 public: // Property - Font
 	/* R */ inline auto Font() const { return Props.pFont; }
 	/* W */ inline void Font(CFont *pFont) {
-		if (Props.pFont != pFont) {
-			Props.pFont = pFont;
-			Invalidate();
-		}
+		Props.pFont = pFont;
+		Invalidate();
 	}
 public: // Property - BkColor
 	/* R */ inline auto BkColor(BUTTON_CI Index) { return Props.aBkColor[Index]; }
@@ -85,10 +83,8 @@ public: // Property - SelfDraw
 public: // Property - TextAlign
 	/* R */ inline auto TextAlign() const { return Props.Align; }
 	/* W */ inline void TextAlign(TEXTALIGN Align) {
-		if (Props.Align != Align) {
-			Props.Align = Align;
-			Invalidate();
-		}
+		Props.Align = Align;
+		Invalidate();
 	}
 public: // Property - Pressed
 	/* R */ inline bool Pressed() const { return StatusEx & BUTTON_STATE_PRESSED; }

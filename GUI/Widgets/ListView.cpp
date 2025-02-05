@@ -5,51 +5,120 @@
 
 ListView::Property ListView::DefaultProps;
 
-unsigned LISTVIEW__GetRowDistY(const ListView *pObj) {
-	if (pObj->RowDistY)
-		return pObj->RowDistY;
-	unsigned RowDistY = GUI_GetYDistOfFont(pObj->Props.pFont);
-	if (pObj->ShowGrid)
-		return RowDistY + 1;
-	return RowDistY;
-}
-static unsigned _GetNumVisibleRows(ListView *pObj) {
-	auto RowDistY = LISTVIEW__GetRowDistY(pObj);
+uint16_t ListView::_GetNumVisibleRows() const {
+	auto RowDistY = _GetRowDistY();
 	if (!RowDistY)
 		return 1;
-	auto ySize = pObj->InsideRectScrollBar().ysize() - HEADER_GetHeight(pObj->pHeader);
+	auto ySize = InsideRect().ysize() - pHeader->Height();
 	unsigned r = ySize / RowDistY;
 	return r == 0 ? 1 : r;
 }
-static void _OnPaint(ListView *pObj, WM_PARAM *pData) {
-	int NumColumns = HEADER_GetNumItems(pObj->pHeader),
-		NumRows = pObj->RowArray.NumItems(),
-		NumVisRows = _GetNumVisibleRows(pObj);
-	int RowDistY = LISTVIEW__GetRowDistY(pObj);
-	int LBorder = pObj->LBorder,
-		RBorder = pObj->RBorder,
-		EffectSize = pObj->EffectSize();
-	int yPos = HEADER_GetHeight(pObj->pHeader) + EffectSize;
-	int EndRow = pObj->scrollStateV.v + (NumVisRows + 1 > NumRows ? NumRows : NumVisRows + 1);
-	SRect rClip = *(const SRect *)*pData - pObj->Rect().left_top();
-	auto &&rect = pObj->InsideRectScrollBar();
+uint16_t ListView::_GetRowDistY() const {
+	if (RowDistY)
+		return RowDistY;
+	auto RowDistY = Props.pFont->YDist;
+	if (bShowGrid)
+		return RowDistY + 1;
+	return RowDistY;
+}
+int ListView::_GetHeaderWidth() const {
+	int i, NumItems = pHeader->NumItems(), r = 1;
+	if (NumItems)
+		for (i = 0, r = 0; i < NumItems; ++i)
+			r += pHeader->ItemWidth(i);
+	int w = scrollStateH.v + scrollStateH.PageSize;
+	return w > r ? w : r;
+}
+
+void ListView::_InvalidateInsideArea() {
+	auto &&rInside = InsideRect();
+	rInside.y0 += pHeader->Height();
+	Invalidate(rInside);
+}
+void ListView::_InvalidateRow(int sel) {
+	if (sel < 0)
+		return;
+	auto HeaderHeight = pHeader->Height();
+	auto RowDistY = _GetRowDistY();
+	auto &&rect = InsideRect();
+	rect.y0 += HeaderHeight + (sel - scrollStateV.v) * RowDistY;
+	rect.y1 = rect.y0 + RowDistY - 1;
+	Invalidate(rect);
+}
+void ListView::_InvalidateRowAndBelow(int sel) {
+	if (sel < 0)
+		return;
+	auto &&rect = InsideRect();
+	rect.y0 += pHeader->Height() + (sel - scrollStateV.v) * _GetRowDistY();
+	Invalidate(rect);
+}
+void ListView::_SelFromPos(const PID_STATE *pState) {
+	auto &&rect = InsideRect();
+	int HeaderHeight = pHeader->Height();
+	int x = pState->x - rect.x0,
+		y = pState->y - rect.y0 - HeaderHeight;
+	rect.x1 -= rect.x0;
+	rect.y1 -= rect.y0;
+	if (x < 0 || x > rect.x1)
+		return;
+	if (y < 0 || y > rect.y1 - HeaderHeight)
+		return;
+	unsigned sel = (y / _GetRowDistY()) + scrollStateV.v;
+	if (sel < RowArray.NumItems())
+		Sel(sel);
+}
+void ListView::_NotifyOwner(int Notification) {
+	auto pOwner = this->pOwner ? this->pOwner : Parent();
+	pOwner->SendMessage(WM_NOTIFY_PARENT, Notification);
+}
+
+int ListView::_UpdateScrollPos() {
+	int PrevScrollStateV = scrollStateV.v;
+	if (sel >= 0)
+		scrollStateV.Pos(sel);
+	else
+		scrollStateV.Bound();
+	scrollStateH.Bound();
+	ScrollStateH(scrollStateH);
+	ScrollStateV(scrollStateV);
+	return scrollStateV.v - PrevScrollStateV;
+}
+int ListView::_UpdateScrollParas() {
+	int NumRows = RowArray.NumItems();
+	scrollStateV.PageSize = _GetNumVisibleRows();
+	scrollStateV.NumItems = NumRows ? NumRows : 1;
+	scrollStateH.PageSize = _GetXSize();
+	scrollStateH.NumItems = _GetHeaderWidth();
+	return _UpdateScrollPos();
+}
+
+void ListView::_OnPaint(SRect rClip) const {
+	int NumColumns = pHeader->NumItems(),
+		NumRows = RowArray.NumItems(),
+		NumVisRows = _GetNumVisibleRows();
+	int EffectSize = this->EffectSize();
+	int yPos = pHeader->Height() + EffectSize;
+	int EndRow = scrollStateV.v + (NumVisRows + 1 > NumRows ? NumRows : NumVisRows + 1);
+	int RowDistY = _GetRowDistY();
+	rClip -= Rect().left_top();
+	auto &&rect = InsideRectAbs();
 	rClip &= rect;
-	GUI.PenColor(pObj->Props.aTextColor[0]);
-	GUI.Font(pObj->Props.pFont);
-	for (auto i = pObj->scrollStateV.v; i < EndRow; ++i) {
-		auto &row = pObj->RowArray[i];
+	GUI.PenColor(Props.aTextColor[0]);
+	GUI.Font(Props.pFont);
+	for (auto i = scrollStateV.v; i < EndRow; ++i) {
+		auto &row = RowArray[i];
 		rect.y0 = yPos;
 		if (rect.y0 > rClip.y1)
 			break;
 		rect.y1 = yPos + RowDistY - 1;
 		if (rect.y1 >= rClip.y0) {
-			int ColorIndex = i == pObj->Sel ? pObj->Focussed() ? 2 : 1 : 0;
-			GUI.BkColor(pObj->Props.aBkColor[ColorIndex]);
-			if (pObj->ShowGrid)
+			auto ColorIndex = i == sel ? Focussed() ? 2 : 1 : 0;
+			GUI.BkColor(Props.aBkColor[ColorIndex]);
+			if (bShowGrid)
 				rect.y1--;
-			int xPos = EffectSize - pObj->scrollStateH.v;
+			auto xPos = EffectSize - scrollStateH.v;
 			for (int j = 0; j < NumColumns; ++j) {
-				int Width = HEADER_GetItemWidth(pObj->pHeader, j);
+				auto Width = pHeader->ItemWidth(j);
 				rect.x0 = xPos;
 				if (rect.x0 > rClip.x1)
 					break;
@@ -62,14 +131,14 @@ static void _OnPaint(ListView *pObj, WM_PARAM *pData) {
 						GUI.PenColor(pItemInfo->aTextColor[ColorIndex]);
 					}
 					else
-						GUI.PenColor(pObj->Props.aTextColor[ColorIndex]);
+						GUI.PenColor(Props.aTextColor[ColorIndex]);
 					GUI.Clear(rect);
-					rect.x0 += LBorder;
-					rect.x1 -= RBorder;
-					auto Align = pObj->AlignArray[j];
-					GUI_DispStringInRect(item.pText, &rect, Align);
+					rect.x0 += lBorder;
+					rect.x1 -= rBorder;
+					GUI.TextAlign(AlignArray[j]);
+					GUI.DispString(item.text, rect);
 					if (pItemInfo)
-						GUI.BkColor(pObj->Props.aBkColor[ColorIndex]);
+						GUI.BkColor(Props.aBkColor[ColorIndex]);
 				}
 				xPos += Width;
 			}
@@ -79,12 +148,12 @@ static void _OnPaint(ListView *pObj, WM_PARAM *pData) {
 		yPos += RowDistY;
 	}
 	if (yPos <= rClip.y1) {
-		GUI.BkColor(pObj->Props.aBkColor[0]);
+		GUI.BkColor(Props.aBkColor[0]);
 		GUI.Clear({ rClip.x0, yPos, rClip.x1, rClip.y1 });
 	}
-	if (pObj->ShowGrid) {
-		GUI.PenColor(pObj->Props.GridColor);
-		yPos = HEADER_GetHeight(pObj->pHeader) + EffectSize - 1;
+	if (bShowGrid) {
+		GUI.PenColor(Props.GridColor);
+		yPos = pHeader->Height() + EffectSize - 1;
 		for (int i = 0; i < NumVisRows; ++i) {
 			yPos += RowDistY;
 			if (yPos > rClip.y1)
@@ -92,445 +161,213 @@ static void _OnPaint(ListView *pObj, WM_PARAM *pData) {
 			if (yPos >= rClip.y0)
 				GUI.DrawLineH(yPos, rClip.x0, rClip.x1);
 		}
-		int xPos = EffectSize - pObj->scrollStateH.v;
+		auto xPos = EffectSize - scrollStateH.v;
 		for (int i = 0; i < NumColumns; ++i) {
-			xPos += HEADER_GetItemWidth(pObj->pHeader, i);
+			xPos += pHeader->ItemWidth(i);
 			if (xPos > rClip.x1)
 				break;
 			if (xPos >= rClip.x0)
 				GUI.DrawLineV(xPos, rClip.y0, rClip.y1);
 		}
 	}
-	pObj->DrawDown();
+	DrawDown();
 }
-void LISTVIEW__InvalidateInsideArea(ListView *pObj) {
-	auto &&rect = pObj->InsideRectScrollBar();
-	rect.y0 += HEADER_GetHeight(pObj->pHeader);
-	pObj->Invalidate(rect);
-}
-void LISTVIEW__InvalidateRow(ListView *pObj, int Sel) {
-	if (Sel < 0)
-		return;
-	int HeaderHeight = HEADER_GetHeight(pObj->pHeader);
-	int RowDistY = LISTVIEW__GetRowDistY(pObj);
-	auto &&rect = pObj->InsideRectScrollBar();
-	rect.y0 += HeaderHeight + (Sel - pObj->scrollStateV.v) * RowDistY;
-	rect.y1 = rect.y0 + RowDistY - 1;
-	pObj->Invalidate(rect);
-}
-static void _SetSelFromPos(ListView *pObj, const PID_STATE *pState) {
-	auto &&rect = pObj->InsideRectScrollBar();
-	int HeaderHeight = HEADER_GetHeight(pObj->pHeader);
-	int x = pState->x - rect.x0,
-		y = pState->y - rect.y0 - HeaderHeight;
-	rect.x1 -= rect.x0;
-	rect.y1 -= rect.y0;
-	if (x < 0 || x > rect.x1)
-		return;
-	if (y < 0 || y > rect.y1 - HeaderHeight)
-		return;
-	unsigned Sel = (y / LISTVIEW__GetRowDistY(pObj)) + pObj->scrollStateV.v;
-	if (Sel < pObj->RowArray.NumItems())
-		LISTVIEW_SetSel(pObj, Sel);
-}
-static void _NotifyOwner(ListView *pObj, int Notification) {
-	auto pOwner = pObj->pOwner ? pObj->pOwner : pObj->Parent();
-	WM_PARAM data;
-	msg.MsgId = WM_NOTIFY_PARENT;
-	data = Notification;
-	msg.pWin = pObj;
-	pOwner->SendMessage(MsgId, &data);
-}
-static void _OnTouch(ListView *pObj, WM_PARAM *pData) {
+void ListView::_OnTouch(const PID_STATE *pState) {
 	int Notification;
-	const PID_STATE *pState = (const PID_STATE *)*pData;
 	if (pState) {
 		if (pState->Pressed) {
-			_SetSelFromPos(pObj, pState);
+			_SelFromPos(pState);
 			Notification = WN_CLICKED;
-			pObj->Focus();
+			Focus();
 		}
 		else
 			Notification = WN_RELEASED;
 	}
 	else
 		Notification = WN_MOVED_OUT;
-	_NotifyOwner(pObj, Notification);
+	_NotifyOwner(Notification);
 }
-static int _GetXSize(ListView *pObj) {
-	return pObj->InsideRectScrollBar().x1 + 1;
-}
-static int _GetHeaderWidth(ListView *pObj, Header *pHeader) {
-	int i, NumItems = HEADER_GetNumItems(pHeader), r = 1;
-	if (NumItems)
-		for (i = 0, r = 0; i < NumItems; ++i)
-			r += HEADER_GetItemWidth(pHeader, i);
-	int w = pObj->scrollStateH.v + pObj->scrollStateH.PageSize;
-	return w > r ? w : r;
-}
-int LISTVIEW__UpdateScrollPos(ListView *pObj) {
-	int PrevScrollStateV = pObj->scrollStateV.v;
-	if (pObj->Sel >= 0)
-		pObj->scrollStateV.Pos(pObj->Sel);
-	else
-		pObj->scrollStateV.Bound();
-	pObj->scrollStateH.Bound();
-	pObj->ScrollStateH(pObj->scrollStateH);
-	pObj->ScrollStateV(pObj->scrollStateV);
-	return pObj->scrollStateV.v - PrevScrollStateV;
-}
-int LISTVIEW__UpdateScrollParas(ListView *pObj) {
-	int NumRows = pObj->RowArray.NumItems();
-	pObj->scrollStateV.PageSize = _GetNumVisibleRows(pObj);
-	pObj->scrollStateV.NumItems = NumRows ? NumRows : 1;
-	pObj->scrollStateH.PageSize = _GetXSize(pObj);
-	pObj->scrollStateH.NumItems = _GetHeaderWidth(pObj, pObj->pHeader);
-	return LISTVIEW__UpdateScrollPos(pObj);
-}
-static void _FreeAttached(ListView *pObj) {
-	pObj->RowArray.Destruct();
-	pObj->AlignArray.Delete();
-}
-static int _AddKey(ListView *pObj, int Key) {
+bool ListView::_OnKey(int Key) {
 	switch (Key) {
-	case GUI_KEY_DOWN:
-		LISTVIEW_IncSel(pObj);
-		return 1;
-	case GUI_KEY_UP:
-		LISTVIEW_DecSel(pObj);
-		return 1;
+		case GUI_KEY_DOWN:
+			Inc();
+			return true;
+		case GUI_KEY_UP:
+			Dec();
+			return true;
 	}
-	return 0;
+	return false;
 }
-static void _LISTVIEW_Callback(int MsgId, WM_PARAM *pData) {
-	ListView *pObj = (ListView *)pWin;
-	if (!pObj->HandleActive(MsgId, pData))
-		return;
+
+WM_RESULT  ListView::_Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc) {
+	auto pObj = (ListView *)pWin;
+	if (!pObj->HandleActive(MsgId, Param))
+		return Param;
 	switch (MsgId) {
-	case WM_NOTIFY_CLIENTCHANGE:
-	case WM_SIZE:
-		LISTVIEW__UpdateScrollParas(pObj);
-		return;
-	case WM_NOTIFY_PARENT:
-		switch (*pData) {
-		case WN_CHILD_DELETED:
-			if (pData->pWinSrc == pObj->pHeader)
-				pObj->pHeader = 0;
-			break;
-		case WN_VALUE_CHANGED:
-			if (pData->pWinSrc == pObj->ScrollBarV()) {
-				pObj->scrollStateV.v = ((ScrollBar *)pData->pWinSrc)->ScrollState().v;
-				LISTVIEW__InvalidateInsideArea(pObj);
-				_NotifyOwner(pObj, WN_SCROLL_CHANGED);
+		case WM_PAINT:
+			pObj->_OnPaint(Param);
+			return 0;
+		case WM_TOUCH:
+			pObj->_OnTouch(Param);
+			return 0;
+		case WM_DELETE:
+			pObj->~ListView();
+			return 0;
+		case WM_NOTIFY_CLIENTCHANGE:
+		case WM_SIZE:
+			pObj->_UpdateScrollParas();
+			return 0;
+		case WM_NOTIFY_PARENT:
+			switch ((int)Param) {
+				case WN_CHILD_DELETED:
+					if (pSrc == pObj->pHeader)
+						pObj->pHeader = nullptr;
+					break;
+				case WN_VALUE_CHANGED:
+					if (pSrc == (WObj *)pObj->ScrollBarV()) {
+						pObj->scrollStateV.v = ((ScrollBar *)pSrc)->ScrollState().v;
+						pObj->_InvalidateInsideArea();
+						pObj->_NotifyOwner(WN_SCROLL_CHANGED);
+					}
+					else if (pSrc == (WObj *)pObj->ScrollBarH()) {
+						pObj->scrollStateH.v = ((ScrollBar *)pSrc)->ScrollState().v;
+						pObj->_UpdateScrollParas();
+						pObj->pHeader->ScrollPos(pObj->scrollStateH.v);
+						pObj->_NotifyOwner(WN_SCROLL_CHANGED);
+					}
+					break;
+				case WN_SCROLLBAR_ADDED:
+					pObj->_UpdateScrollParas();
+					break;
 			}
-			else if (pData->pWinSrc == pObj->ScrollBarH()) {
-				pObj->scrollStateH.v = ((ScrollBar *)pData->pWinSrc)->ScrollState().v;
-				LISTVIEW__UpdateScrollParas(pObj);
-				HEADER_SetScrollPos(pObj->pHeader, pObj->scrollStateH.v);
-				_NotifyOwner(pObj, WN_SCROLL_CHANGED);
-			}
+			return 0;
+		case WM_KEY:
+			if (const KEY_STATE *pKi = Param)
+				if (pKi->PressedCnt > 0)
+					if (pObj->_OnKey(pKi->Key))
+						return 0;
 			break;
-		case WN_SCROLLBAR_ADDED:
-			LISTVIEW__UpdateScrollParas(pObj);
-			break;
-		}
-		return;
-	case WM_PAINT:
-		_OnPaint(pObj, pData);
-		return;
-	case WM_TOUCH:
-		_OnTouch(pObj, pData);
-		return;
-	case WM_KEY:
-	{
-		const WM_KEY_INFO *ki = (const WM_KEY_INFO *)*pData;
-		if (ki->PressedCnt > 0)
-			if (_AddKey(pObj, ki->Key))
-				return;
-		break;
 	}
-	case WM_DELETE:
-		_FreeAttached(pObj);
-		break;
-	}
-	DefCallback(pObj, MsgId, pData, pWinSrc);
+	return DefCallback(pWin, MsgId, Param, pSrc);
 }
-ListView *LISTVIEW_CreateEx(
-	int x0, int y0, int xsize, int ysize, WObj *pParent,
-	uint16_t Flags, uint16_t ExFlags, uint16_t Id) {
-	//if (xsize == 0 && ysize == 0 && x0 == 0 && y0 == 0) {
-	//	auto &&rect = pParent->ClientRect();
-	//	xsize = rect.x1 - rect.x0 + 1;
-	//	ysize = rect.y1 - rect.y0 + 1;
-	//}
-	//auto pObj = (ListView *)WObj::Create(
-	//	x0, y0, xsize, ysize, pParent, Flags, &_LISTVIEW_Callback,
-	//	sizeof(ListView) - sizeof(WObj));
-	//if (!pObj)
-	//	return nullptr;
-	//pObj->Init(Id, WC_FOCUSSABLE);
-	//pObj->Props = ListView::DefaultProps;
-	//pObj->ShowGrid = 0;
-	//pObj->RowDistY = 0;
-	//pObj->Sel = -1;
-	//pObj->LBorder = 1;
-	//pObj->RBorder = 1;
-	//pObj->pHeader = HEADER_CreateEx(0, 0, 0, 0, pObj, WC_VISIBLE, 0, 0);
-	//LISTVIEW__UpdateScrollParas(pObj);
-	//return pObj;
+
+ListView::ListView(int x0, int y0, int xsize, int ysize,
+				   WObj *pParent, uint16_t Id,
+				   uint16_t Flags, uint16_t ExFlags) : 
+	Widget(x0, y0, xsize, ysize,
+		   _Callback,
+		   pParent, Id,
+		   Flags | WC_FOCUSSABLE) {
+	if (xsize == 0 && ysize == 0 && x0 == 0 && y0 == 0)
+		Size(Parent()->ClientRect().size());
+	pHeader = new Header(0, 0, 0, 0, this, 0, WC_VISIBLE, ExFlags);
+	_UpdateScrollParas();
 }
-void LISTVIEW_IncSel(ListView *pObj) {
-	LISTVIEW_SetSel(pObj, LISTVIEW_GetSel(pObj) + 1);
+ListView::~ListView() {
+	RowArray.Destruct();
+	AlignArray.Delete();
 }
-void LISTVIEW_DecSel(ListView *pObj) {
-	if (int Sel = LISTVIEW_GetSel(pObj))
-		LISTVIEW_SetSel(pObj, Sel - 1);
-}
-void LISTVIEW_AddColumn(ListView *pObj, int Width, const char *s, int Align) {
-	if (!pObj)
-		return;
-	HEADER_AddItem(pObj->pHeader, Width, s, Align);
-	pObj->AlignArray.Add(Align);
-	auto NumRows = LISTVIEW_GetNumRows(pObj);
+
+void ListView::AddColumn(const char *s, uint16_t Width, TEXTALIGN Align) {
+	pHeader->Add(s, Width, Align);
+	AlignArray.Add(Align);
+	auto NumRows = this->NumRows();
 	if (!NumRows)
 		return;
 	for (auto i = 0; i < NumRows; ++i)
-		pObj->RowArray[i].Add({});
-	LISTVIEW__UpdateScrollParas(pObj);
-	LISTVIEW__InvalidateInsideArea(pObj);
+		RowArray[i].Add({});
+	_UpdateScrollParas();
+	_InvalidateInsideArea();
 }
-void LISTVIEW_AddRow(ListView *pObj, const char **ppText) {
-	if (!pObj)
-		return;
-	auto NumRows = pObj->RowArray.NumItems();
-	pObj->RowArray.Add({});
-	for (int i = 0, NumColumns = HEADER_GetNumItems(pObj->pHeader); i < NumColumns; ++i) {
-		auto &Row = pObj->RowArray[NumRows];
-		const char *s = ppText ? *ppText++ : nullptr;
-		if (s == 0)
-			ppText = 0;
-		int NumBytes = GUI__strlen(s) + 1;
+void ListView::AddRow(const char *pTexts) {
+	auto NumRows = this->NumRows();
+	RowArray.Add({});
+	auto &Row = RowArray[NumRows];
+	for (int i = 0, NumColumns = this->NumColumns(); i < NumColumns; ++i) {
 		Row.Add({});
-		GUI__SetText(&Row[i].pText, s);
+		Row[i].text = pTexts;
+		pTexts = GUI__NextText(pTexts);
 	}
-	LISTVIEW__UpdateScrollParas(pObj);
-	LISTVIEW__InvalidateRow(pObj, NumRows);
+	_UpdateScrollParas();
+	_InvalidateRow(NumRows);
 }
-void LISTVIEW_DeleteColumn(ListView *pObj, unsigned Index) {
-	if (!pObj)
+void ListView::DeleteColumn(unsigned Index) {
+	if (Index >= AlignArray.NumItems())
 		return;
-	if (Index >= pObj->AlignArray.NumItems())
-		return;
-	HEADER_DeleteItem(pObj->pHeader, Index);
-	pObj->AlignArray.Delete(Index);
-	for (int i = 0, NumRows = pObj->RowArray.NumItems(); i < NumRows; ++i) {
-		auto &Row = pObj->RowArray[i];
+	pHeader->DeleteItem(Index);
+	AlignArray.Delete(Index);
+	for (int i = 0, NumRows = RowArray.NumItems(); i < NumRows; ++i) {
+		auto &Row = RowArray[i];
 		auto &Item = Row[Index];
 		if (auto pItemInfo = Item.pItemInfo)
 			GUI_MEM_Free(pItemInfo);
 		Row.Delete(Index);
 	}
-	LISTVIEW__UpdateScrollParas(pObj);
-	LISTVIEW__InvalidateInsideArea(pObj);
+	_UpdateScrollParas();
+	_InvalidateInsideArea();
 }
-RGBC LISTVIEW_GetBkColor(ListView *pObj, unsigned Index) {
-	if (!pObj)
-		return RGB_INVALID_COLOR;
-	if (Index >= GUI_COUNTOF(pObj->Props.aBkColor))
-		return RGB_INVALID_COLOR;
-	return pObj->Props.aBkColor[Index];
-}
-CFont *LISTVIEW_GetFont(ListView *pObj) {
-	if (!pObj)
-		return nullptr;
-	return pObj->Props.pFont;
-}
-Header *LISTVIEW_GetHeader(ListView *pObj) {
-	return pObj ? pObj->pHeader : 0;
-}
-unsigned LISTVIEW_GetNumColumns(ListView *pObj) {
-	if (!pObj)
-		return 0;
-	return pObj->AlignArray.NumItems();
-}
-unsigned LISTVIEW_GetNumRows(ListView *pObj) {
-	if (!pObj)
-		return 0;
-	return pObj->RowArray.NumItems();
-}
-int LISTVIEW_GetSel(ListView *pObj) {
-	if (!pObj)
-		return -1;
-	return pObj->Sel;
-}
-RGBC LISTVIEW_GetTextColor(ListView *pObj, unsigned Index) {
-	if (!pObj)
-		return RGB_INVALID_COLOR;
-	if (Index >= GUI_COUNTOF(pObj->Props.aTextColor))
-		return RGB_INVALID_COLOR;
-	return pObj->Props.aTextColor[Index];
-}
-void LISTVIEW_SetBkColor(ListView *pObj, unsigned int Index, RGBC Color) {
-	if (!pObj)
+void ListView::DeleteRow(unsigned Index) {
+	auto NumRows = RowArray.NumItems();
+	if (Index >= NumRows)
 		return;
-	if (Index >= GUI_COUNTOF(pObj->Props.aBkColor))
-		return;
-	if (Color == pObj->Props.aBkColor[Index])
-		return;
-	pObj->Props.aBkColor[Index] = Color;
-	LISTVIEW__InvalidateInsideArea(pObj);
+	auto &Row = RowArray[Index];
+	Row.Destruct();
+	RowArray[Index];
+	if (sel == Index)
+		sel = -1;
+	if (sel > Index)
+		sel--;
+	if (_UpdateScrollParas())
+		_InvalidateInsideArea();
+	else
+		_InvalidateRowAndBelow(Index);
 }
-void LISTVIEW_SetColumnWidth(ListView *pObj, unsigned int Index, int Width) {
-	if (!pObj)
-		return;
-	HEADER_SetItemWidth(pObj->pHeader, Index, Width);
-}
-void LISTVIEW_SetFont(ListView *pObj, CFont *pFont) {
-	if (!pObj)
-		return;
-	if (pFont == pObj->Props.pFont)
-		return;
-	pObj->Props.pFont = pFont;
-	LISTVIEW__UpdateScrollParas(pObj);
-	LISTVIEW__InvalidateInsideArea(pObj);
-}
-int LISTVIEW_SetGridVis(ListView *pObj, int Show) {
-	if (!pObj)
-		return 0;
-	int ShowGrid = pObj->ShowGrid;
-	if (Show == ShowGrid)
-		return ShowGrid;
-	pObj->ShowGrid = Show;
-	LISTVIEW__UpdateScrollParas(pObj);
-	LISTVIEW__InvalidateInsideArea(pObj);
-	return ShowGrid;
-}
-void LISTVIEW_SetItemText(ListView *pObj, unsigned Column, unsigned Row, const char *s) {
-	if (!pObj)
-		return;
-	if (Column >= LISTVIEW_GetNumColumns(pObj) || Row >= LISTVIEW_GetNumRows(pObj))
-		return;
-	GUI__SetText(&pObj->RowArray[Row][Column].pText, s);
-	LISTVIEW__InvalidateRow(pObj, Row);
-}
-void LISTVIEW_SetLBorder(ListView *pObj, unsigned BorderSize) {
-	if (!pObj)
-		return;
-	if (pObj->LBorder == BorderSize)
-		return;
-	pObj->LBorder = BorderSize;
-	LISTVIEW__InvalidateInsideArea(pObj);
-}
-void LISTVIEW_SetRBorder(ListView *pObj, unsigned BorderSize) {
-	if (!pObj)
-		return;
-	if (pObj->RBorder == BorderSize)
-		return;
-	pObj->RBorder = BorderSize;
-	LISTVIEW__InvalidateInsideArea(pObj);
-}
-unsigned LISTVIEW_SetRowHeight(ListView *pObj, unsigned RowHeight) {
-	if (!pObj)
-		return 0;
-	unsigned r = pObj->RowDistY;
-	if (RowHeight == r)
-		return r;
-	pObj->RowDistY = RowHeight;
-	LISTVIEW__UpdateScrollParas(pObj);
-	LISTVIEW__InvalidateInsideArea(pObj);
-	return r;
-}
-void LISTVIEW_SetSel(ListView *pObj, int NewSel) {
-	if (!pObj)
-		return;
-	int MaxSel = pObj->RowArray.NumItems() - 1;
+void ListView::Sel(int16_t NewSel) {
+	int MaxSel = RowArray.NumItems() - 1;
 	if (NewSel > MaxSel)
 		NewSel = MaxSel;
 	if (NewSel < 0)
 		NewSel = -1;
-	if (NewSel == pObj->Sel)
+	if (NewSel == sel)
 		return;
-	int OldSel = pObj->Sel;
-	pObj->Sel = NewSel;
-	if (LISTVIEW__UpdateScrollPos(pObj))
-		LISTVIEW__InvalidateInsideArea(pObj);
+	int OldSel = sel;
+	sel = NewSel;
+	if (_UpdateScrollPos())
+		_InvalidateInsideArea();
 	else {
-		LISTVIEW__InvalidateRow(pObj, OldSel);
-		LISTVIEW__InvalidateRow(pObj, NewSel);
+		_InvalidateRow(OldSel);
+		_InvalidateRow(NewSel);
 	}
-	pObj->NotifyParent(WN_SEL_CHANGED);
+	NotifyParent(WN_SEL_CHANGED);
 }
-void LISTVIEW_SetTextAlign(ListView *pObj, unsigned int Index, int Align) {
-	if (Index >= pObj->AlignArray.NumItems())
-		return;
-	auto &OldAlign = pObj->AlignArray[Index];
-	if (Align == OldAlign)
-		return;
-	OldAlign = Align;
-	LISTVIEW__InvalidateInsideArea(pObj);
-}
-void LISTVIEW_SetTextColor(ListView *pObj, unsigned int Index, RGBC Color) {
-	if (!pObj)
-		return;
-	if (Index >= GUI_COUNTOF(pObj->Props.aTextColor))
-		return;
-	if (Color == pObj->Props.aTextColor[Index])
-		return;
-	pObj->Props.aTextColor[Index] = Color;
-	LISTVIEW__InvalidateInsideArea(pObj);
-}
-static LISTVIEW_ITEM_INFO *_GetpItemInfo(ListView *pObj, unsigned Column, unsigned Row, unsigned int Index) {
-	if (!pObj)
-		return nullptr;
-	LISTVIEW_ITEM_INFO *pItemInfo;
-	if (Index >= GUI_COUNTOF(pItemInfo->aTextColor))
-		return nullptr;
-	if (Column >= LISTVIEW_GetNumColumns(pObj) || Row >= LISTVIEW_GetNumRows(pObj))
-		return nullptr;
-	auto &Item = pObj->RowArray[Row][Column];
-	pItemInfo = Item.pItemInfo;
-	if (pItemInfo)
-		return pItemInfo;
-	Item.pItemInfo = (LISTVIEW_ITEM_INFO *)GUI_MEM_AllocZero(sizeof(LISTVIEW_ITEM_INFO));
-	pItemInfo = Item.pItemInfo;
-	for (int i = 0; i < GUI_COUNTOF(pItemInfo->aTextColor); ++i) {
-		pItemInfo->aTextColor[i] = LISTVIEW_GetTextColor(pObj, i);
-		pItemInfo->aBkColor[i] = LISTVIEW_GetBkColor(pObj, i);
-	}
-	return pItemInfo;
-}
-void LISTVIEW_SetItemTextColor(ListView *pObj, unsigned Column, unsigned Row, unsigned int Index, RGBC Color) {
-	LISTVIEW_ITEM_INFO *pItemInfo = _GetpItemInfo(pObj, Column, Row, Index);
-	if (pItemInfo)
-		pItemInfo->aTextColor[Index] = Color;
-}
-void LISTVIEW_SetItemBkColor(ListView *pObj, unsigned Column, unsigned Row, unsigned int Index, RGBC Color) {
-	LISTVIEW_ITEM_INFO *pItemInfo = _GetpItemInfo(pObj, Column, Row, Index);
-	if (pItemInfo)
-		pItemInfo->aBkColor[Index] = Color;
-}
-static void _InvalidateRowAndBelow(ListView *pObj, int Sel) {
-	if (Sel < 0)
-		return;
-	auto &&rect = pObj->InsideRectScrollBar();
-	rect.y0 += HEADER_GetHeight(pObj->pHeader) + (Sel - pObj->scrollStateV.v) * LISTVIEW__GetRowDistY(pObj);
-	pObj->Invalidate(rect);
-}
-void LISTVIEW_DeleteRow(ListView *pObj, unsigned Index) {
-	if (!pObj)
-		return;
-	unsigned NumRows = pObj->RowArray.NumItems();
-	if (Index >= NumRows)
-		return;
-	auto &Row = pObj->RowArray[Index];
-	Row.Destruct();
-	pObj->RowArray[Index];
-	if (pObj->Sel == (signed int)Index)
-		pObj->Sel = -1;
-	if (pObj->Sel > (signed int)Index)
-		pObj->Sel--;
-	if (LISTVIEW__UpdateScrollParas(pObj))
-		LISTVIEW__InvalidateInsideArea(pObj);
-	else
-		_InvalidateRowAndBelow(pObj, Index);
-}
+
+//static ListView::ITEM_INFO *_GetpItemInfo(unsigned Column, unsigned Row, unsigned int Index) {
+//	if (!pObj)
+//		return nullptr;
+//	ListView::ITEM_INFO *pItemInfo;
+//	if (Index >= GUI_COUNTOF(pItemInfo->aTextColor))
+//		return nullptr;
+//	if (Column >= GetNumColumns() || Row >= GetNumRows())
+//		return nullptr;
+//	auto &Item = pObj->RowArray[Row][Column];
+//	pItemInfo = Item.pItemInfo;
+//	if (pItemInfo)
+//		return pItemInfo;
+//	Item.pItemInfo = (ListView::ITEM_INFO *)GUI_MEM_AllocZero(sizeof(ListView::ITEM_INFO));
+//	pItemInfo = Item.pItemInfo;
+//	for (int i = 0; i < GUI_COUNTOF(pItemInfo->aTextColor); ++i) {
+//		pItemInfo->aTextColor[i] = GetTextColor(i);
+//		pItemInfo->aBkColor[i] = GetBkColor(i);
+//	}
+//	return pItemInfo;
+//}
+//void ListView::SetItemTextColor(unsigned Column, unsigned Row, unsigned int Index, RGBC Color) {
+//	ListView::ITEM_INFO *pItemInfo = _GetpItemInfo(Column, Row, Index);
+//	if (pItemInfo)
+//		pItemInfo->aTextColor[Index] = Color;
+//}
+//void ListView::SetItemBkColor(unsigned Column, unsigned Row, unsigned int Index, RGBC Color) {
+//	ListView::ITEM_INFO *pItemInfo = _GetpItemInfo(Column, Row, Index);
+//	if (pItemInfo)
+//		pItemInfo->aBkColor[Index] = Color;
+//}

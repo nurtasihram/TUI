@@ -66,11 +66,11 @@ WM_RESULT Frame::_Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc) {
 		if (pObj->_HandleResize(MsgId, Param))
 			return Param;
 	switch (MsgId) {
-		case WM_DELETE:
-			pObj->~Frame();
-			return 0;
 		case WM_PAINT:
 			pObj->_OnPaint();
+			return 0;
+		case WM_DELETE:
+			pObj->~Frame();
 			return 0;
 		case WM_HANDLE_DIALOG_STATUS:
 			if (DIALOG_STATE *wds = Param)

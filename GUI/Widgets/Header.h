@@ -2,6 +2,8 @@
 #include "GUI_Array.h"
 #include "WM.h"
 
+constexpr WC_EX HEADER_CF_DRAG = WC_USER(0);
+
 class Header : public Widget {
 	struct Column {
 		GUI_DRAW_BASE *pDrawObj = nullptr;
@@ -39,7 +41,7 @@ private:
 public:
 	Header(int x0, int y0, int xsize, int ysize,
 		   WObj *pParent, uint16_t Id,
-		   uint16_t Flags);
+		   uint16_t Flags, uint16_t ExFlags = 0);
 protected:
 	~Header();
 
@@ -87,19 +89,18 @@ public: // Property - ItemText
 		if (Index < Columns.NumItems())
 			GUI__SetText(&Columns[Index].pText, pText);
 	}
-public:
+public: // Property - ScrollPos
+	/* R */ inline auto ScrollPos() const { return scrollPos; }
 	/* W */ void ScrollPos(uint16_t ScrollPos) {
-		if (scrollPos != ScrollPos) {
-			scrollPos = ScrollPos;
-			Invalidate();
-			Parent()->Invalidate();
-		}
+		scrollPos = ScrollPos;
+		Invalidate();
+		Parent()->Invalidate();
 	}
+public: // Property - Height
+	/* R */ inline auto Height() const { return ClientRect().ysize(); }
+	/* W */ void Height(uint16_t height);
 public: // Property - NumItems
 	/* R */ inline auto NumItems() const { return Columns.NumItems(); }
 #pragma endregion
 
 };
-
-int  HEADER_GetHeight(Header *pObj);
-void HEADER_SetHeight(Header *pObj, int Height);

@@ -69,28 +69,22 @@ public:
 public: // Property - Font
 	/* R */ inline auto Font() const { return Props.pFont; }
 	/* W */ inline void Font(CFont *pFont) {
-		if (Props.pFont != pFont && pFont) {
-			Props.pFont  = pFont;
-			if (TextArray.NumItems())
-				Invalidate();
-		}
+		Props.pFont = pFont;
+		if (TextArray.NumItems())
+			Invalidate();
 	}
 public: // Property - TextColor
 	/* R */ inline auto BkColor() const { return Props.BkColor; }
 	/* W */ inline void BkColor(RGBC Color) {
-		if (Props.BkColor != Color) {
-			Props.BkColor = Color;
-			Invalidate();
-		}
+		Props.BkColor = Color;
+		Invalidate();
 	}
 public: // Property - TextColor
 	/* R */ inline auto TextColor() const { return Props.TextColor; }
 	/* W */ inline void TextColor(RGBC Color) {
-		if (Props.TextColor != Color) {
-			Props.TextColor = Color;
-			if (TextArray.NumItems())
-				Invalidate();
-		}
+		Props.TextColor = Color;
+		if (TextArray.NumItems())
+			Invalidate();
 	}
 public: // Property - Text
 	/* R */ inline const char *Text(unsigned Index) const {
@@ -108,10 +102,8 @@ public: // Property - Image
 	/* R */ inline auto Image(RADIO_BI Index) const { return Props.apBm[Index]; }
 	/* W */ inline void Image(RADIO_BI Index, CBitmap *pBitmap) {
 		if (!pBitmap) pBitmap = DefaultProps.apBm[Index];
-		if (Props.apBm[Index] != pBitmap) {
-			Props.apBm[Index] = pBitmap;
-			Invalidate();
-		}
+		Props.apBm[Index] = pBitmap;
+		Invalidate();
 	}
 public: // Property - Sel
 	/* R */ inline auto Sel() const { return sel; }

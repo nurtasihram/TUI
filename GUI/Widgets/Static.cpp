@@ -14,12 +14,12 @@ WM_RESULT Static::_Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc) {
 	if (!pObj->HandleActive(MsgId, Param))
 		return Param;
 	switch (MsgId) {
-	case WM_PAINT:
-		pObj->_OnPaint();
-		return 0;
-	case WM_DELETE:
-		pObj->~Static();
-		return 0;
+		case WM_PAINT:
+			pObj->_OnPaint();
+			return 0;
+		case WM_DELETE:
+			pObj->~Static();
+			return 0;
 	}
 	return DefCallback(pObj, MsgId, Param, pSrc);
 }
@@ -32,6 +32,5 @@ Static::Static(int x0, int y0, int xsize, int ysize,
 		   _Callback,
 		   pParent, Id,
 		   Flags),
-	text(pText) {
-	Props.Align = (TEXTALIGN)ExFlags;
-}
+	text(pText)
+{ Props.Align = (TEXTALIGN)ExFlags; }

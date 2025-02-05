@@ -8,6 +8,7 @@
 #include "ListBox.h"
 #include "Frame.h"
 #include "Header.h"
+#include "ListView.h"
 
 class CtlEdit : public WObj {
 	Widget *pWidget = nullptr;
@@ -311,6 +312,18 @@ void MainTask() {
 	pHeader->Add("Col 2");
 	pHeader->Add("Col 3");
 	new CtlEdit(pHeader);
+	auto pListView = new ListView(
+		240, 40, 105, 100,
+		WObj::Desktop(), 0,
+		WC_VISIBLE, LISTVIEW_CF_HEADER_DRAG);
+	pListView->AddColumn("Col 1");
+	pListView->AddColumn("Col 2");
+	pListView->AddColumn("Col 3");
+	pListView->AddRow(
+		"Col 1x1\0"
+		"Col 1x2\0"
+		"Col 1x3\0");
+	new CtlEdit(pListView);
 	for (;;)
 		WObj::Exec();
 }

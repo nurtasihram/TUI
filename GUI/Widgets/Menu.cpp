@@ -463,6 +463,12 @@ WM_RESULT Menu::_Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc) {
 		if (!pObj->HandleActive(MsgId, Param))
 			return Param;
 	switch (MsgId) {
+		case WM_PAINT:
+			pObj->_OnPaint();
+			return 0;
+		case WM_DELETE:
+			pObj->ItemArray.Delete();
+			return 0;
 		case WM_MENU:
 			pObj->_OnMenu(Param);
 			return 0;
@@ -473,12 +479,6 @@ WM_RESULT Menu::_Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc) {
 		case WM_MOUSEOVER:
 			if (pObj->_OnMouseOver(Param))
 				pObj->_ForwardPIDMsgToOwner(MsgId, Param);
-			return 0;
-		case WM_PAINT:
-			pObj->_OnPaint();
-			return 0;
-		case WM_DELETE:
-			pObj->ItemArray.Delete();
 			return 0;
 	}
 	return DefCallback(pObj, MsgId, Param, pSrc);

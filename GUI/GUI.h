@@ -288,7 +288,7 @@ public:
 	void _TempShow();
 	static CCursor *GetResizeCursor(uint8_t Mode);
 public:
-	inline CCursor *operator()(CCursor *pCursor);
+	CCursor *operator()(CCursor *pCursor);
 	inline operator CCursor *() const { return _pCursor; }
 public: // Property - Activate
 	/* W */ void Activate(bool);
@@ -448,9 +448,9 @@ void GUI_DispNextLine();
 void GUI__strcpy(char *s, const char *c);
 void GUI__memcpy(void *sDest, const void *pSrc, size_t Len);
 
-uint16_t GUI__NumTexts(const char *pText);
-const char *GUI__NextText(const char *pText);
-uint16_t GUI__NumLines(const char *pText);
+uint16_t GUI__NumTexts(const char *pTexts);
+const char *GUI__NextText(const char *pTexts);
+uint16_t GUI__NumLines(const char *pTexts);
 const char *GUI__NextLines(const char *pText);
 uint16_t GUI__NumCharsLine(const char *pText);
 uint16_t GUI__NumChars(const char *pText);
@@ -489,10 +489,10 @@ void GUI__DispLine(const char *s, int MaxNumChars, Point Pos);
 
 struct GUI_PANEL {
 	struct Property {
-		CFont *pFont = &GUI_Font13_1;
-		TEXTSTYLES TextStyle = TS_NORMAL;
-		TEXTALIGN TextAlign = TEXTALIGN_LEFT | TEXTALIGN_TOP;
-		CCursor *pCursor = &GUI_CursorArrow;
+		CFont *pFont{ &GUI_Font13_1 };
+		TEXTSTYLES TextStyle{ TS_NORMAL };
+		TEXTALIGN TextAlign{ TEXTALIGN_LEFT | TEXTALIGN_TOP };
+		CCursor *pCursor{ &GUI_CursorArrow };
 		RGBC aColor[2]{
 			RGB_BLACK,
 			RGB_WHITE

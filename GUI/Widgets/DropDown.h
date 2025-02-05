@@ -38,7 +38,6 @@ private:
 	int16_t sel = 0;
 	int16_t ySizeEx = 0;
 	int16_t textHeight = 0;
-	bool bPressed = false;
 
 private:
 	void _SelectByKey(int Key);
@@ -81,10 +80,8 @@ public:
 public: // Property - TextAlign
 	/* R */ inline auto TextAlign() const { return Props.Align; }
 	/* W */ inline void TextAlign(TEXTALIGN Align) {
-		if (Props.Align != Align) {
-			Props.Align = Align;
-			Invalidate();
-		}
+		Props.Align = Align;
+		Invalidate();
 	}
 public: // Property - NumItems
 	/* R */ inline auto NumItems() const { return Handles.NumItems(); }
@@ -94,20 +91,16 @@ public: // Property - Sel
 public: // Property - Spacing
 	/* R */ inline auto Spacing() { return ItemSpacing; }
 	/* W */ inline void Spacing(uint16_t ItemSpacing) {
-		if (this->ItemSpacing != ItemSpacing) {
-			this->ItemSpacing = ItemSpacing;
-			if (pListbox)
-				pListbox->Spacing(ItemSpacing);
-		}
+		this->ItemSpacing = ItemSpacing;
+		if (pListbox)
+			pListbox->Spacing(ItemSpacing);
 	}
 public: // Property - ScrollBarWidth
 	/* R */ inline auto ScrollBarWidth() const { return ScrollbarWidth; }
 	/* W */ inline void ScrollBarWidth(uint8_t Width) {
-		if (ScrollbarWidth != Width) {
-			ScrollbarWidth = Width;
-			if (pListbox)
-				pListbox->ScrollBarWidth(Width);
-		}
+		ScrollbarWidth = Width;
+		if (pListbox)
+			pListbox->ScrollBarWidth(Width);
 	}
 public: // Property - AutoScroll
 	/* R */ inline bool AutoScroll() const { return Flags & DROPDOWN_CF_AUTOSCROLLBAR; }
@@ -115,12 +108,10 @@ public: // Property - AutoScroll
 public: // Property - TextHeight
 	/* R */ inline auto TextHeight() const { return textHeight; }
 	/* W */ inline void TextHeight(int16_t TextHeight) {
-		if (textHeight != TextHeight) {
-			textHeight = TextHeight;
-			_AdjustHeight();
-			textHeight = TextHeight;
-			Invalidate();
-		}
+		textHeight = TextHeight;
+		_AdjustHeight();
+		textHeight = TextHeight;
+		Invalidate();
 	}
 #pragma endregion
 };

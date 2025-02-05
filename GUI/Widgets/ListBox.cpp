@@ -262,6 +262,9 @@ WM_RESULT ListBox::_Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc) 
 		return Param;
 	}
 	switch (MsgId) {
+		case WM_PAINT:
+			pObj->_OnPaint(Param);
+			return 0;
 		case WM_NOTIFY_PARENT:
 			switch ((int)Param) {
 				case WN_VALUE_CHANGED:
@@ -281,9 +284,6 @@ WM_RESULT ListBox::_Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc) 
 					break;
 			}
 			break;
-		case WM_PAINT:
-			pObj->_OnPaint(Param);
-			return 0;
 		case WM_PID_STATE_CHANGED:
 		{
 			const PID_CHANGED_STATE *pInfo = Param;
@@ -577,4 +577,15 @@ void ListBox::ItemText(uint16_t Index, const char *s) {
 		_UpdateScrollers();
 		_InvalidateItem(Index);
 	}
+}
+void ListBox::MultiSel(bool bEnabled) {
+	auto Flags = this->Flags;
+	if (bEnabled)
+		Flags |= LISTBOX_CF_MULTISEL;
+	else
+		Flags &= ~LISTBOX_CF_MULTISEL;
+	if (this->Flags == Flags)
+		return;
+	this->Flags = Flags;
+	_InvalidateInsideArea();
 }

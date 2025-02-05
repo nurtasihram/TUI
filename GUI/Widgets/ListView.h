@@ -2,17 +2,21 @@
 #include "GUI_Array.h"
 #include "Header.h"
 
-#define LISTVIEW_CI_UNSEL    0
-#define LISTVIEW_CI_SEL      1
-#define LISTVIEW_CI_SELFOCUS 2
-typedef struct {
+enum LISTVIEW_CI {
+	 LISTVIEW_CI_UNSEL = 0,
+	 LISTVIEW_CI_SEL,
+	 LISTVIEW_CI_SELFOCUS
+};
+constexpr WC_EX LISTVIEW_CF_HEADER_DRAG = HEADER_CF_DRAG;
+
+struct LISTVIEW_ITEM_INFO {
 	RGBC aBkColor[3];
 	RGBC aTextColor[3];
-} LISTVIEW_ITEM_INFO;
+};
 struct ListView : public Widget {
 public:
 	struct Property {
-		CFont *pFont = &GUI_Font13_1;
+		CFont *pFont{ &GUI_Font13_1 };
 		RGBC aBkColor[3]{
 			/* Not selected */ RGB_WHITE,
 			/* Selected, no focus */ RGB_GRAY,
@@ -23,61 +27,140 @@ public:
 			/* Selected, no focus */ RGB_WHITE,
 			/* Selected, focus */ RGB_WHITE
 		};
-		RGBC GridColor = RGB_LIGHTGRAY;
+		RGBC GridColor{ RGB_LIGHTGRAY };
 	} static DefaultProps;
 	struct Item {
-		LISTVIEW_ITEM_INFO *pItemInfo;
-		char *pText = nullptr;
+		LISTVIEW_ITEM_INFO *pItemInfo = nullptr;
+		TString text;
 		~Item() {
-			GUI_MEM_Free(pText);
 			GUI_MEM_Free(pItemInfo);
-			pText = nullptr;
 			pItemInfo = nullptr;
 		}
 	};
-public:
-	Header *pHeader;
+private:
 	GUI_Array<GUI_Array<Item>> RowArray;
 	GUI_Array<TEXTALIGN> AlignArray;
 	Property Props;
-	int Sel;
-	int ShowGrid;
-	uint16_t RowDistY;
-	uint16_t LBorder, RBorder;
-	WM_SCROLL_STATE scrollStateV, scrollStateH;
-	WObj *pOwner;
-};
+	SCROLL_STATE scrollStateV;
+	int16_t sel = -1;
+	SCROLL_STATE scrollStateH;
+	uint16_t RowDistY = 0;
+	uint16_t lBorder = 1, rBorder = 1;
+	bool bShowGrid = true;
+	WObj *pOwner = nullptr;
+	Header *pHeader = nullptr;
+private:
+	inline auto _GetXSize() const { return InsideRect().x1 + 1; }
+	uint16_t _GetNumVisibleRows() const;
+	uint16_t _GetRowDistY() const;
+	int _GetHeaderWidth() const;
+	int _UpdateScrollParas();
+	void _InvalidateInsideArea();
+	void _InvalidateRow(int sel);
+	void _InvalidateRowAndBelow(int sel);
+	int _UpdateScrollPos();
+	void _NotifyOwner(int Notification);
+	void _SelFromPos(const PID_STATE *pState);
 
-ListView *LISTVIEW_CreateEx(int x0, int y0, int xsize, int ysize, WObj *pParent, uint16_t Flags, uint16_t ExFlags, uint16_t Id);
-void          LISTVIEW_AddColumn       (ListView *pObj, int Width, const char * s, int Align);
-void          LISTVIEW_AddRow          (ListView *pObj, const char **ppText);
-void          LISTVIEW_DecSel          (ListView *pObj);
-void          LISTVIEW_DeleteColumn    (ListView *pObj, unsigned Index);
-void          LISTVIEW_DeleteRow       (ListView *pObj, unsigned Index);
-RGBC          LISTVIEW_GetBkColor      (ListView *pObj, unsigned Index);
-CFont*        LISTVIEW_GetFont         (ListView *pObj);
-Header   *LISTVIEW_GetHeader       (ListView *pObj);
-unsigned      LISTVIEW_GetNumColumns   (ListView *pObj);
-unsigned      LISTVIEW_GetNumRows      (ListView *pObj);
-int           LISTVIEW_GetSel          (ListView *pObj);
-RGBC          LISTVIEW_GetTextColor    (ListView *pObj, unsigned Index);
-void          LISTVIEW_IncSel          (ListView *pObj);
-void          LISTVIEW_SetBkColor      (ListView *pObj, unsigned int Index, RGBC Color);
-void          LISTVIEW_SetColumnWidth  (ListView *pObj, unsigned int Index, int Width);
-void          LISTVIEW_SetFont         (ListView *pObj, CFont* pFont);
-int           LISTVIEW_SetGridVis      (ListView *pObj, int Show);
-void          LISTVIEW_SetItemBkColor  (ListView *pObj, unsigned Column, unsigned Row, unsigned int Index, RGBC Color);
-void          LISTVIEW_SetItemText     (ListView *pObj, unsigned Column, unsigned Row, const char * s);
-void          LISTVIEW_SetItemTextColor(ListView *pObj, unsigned Column, unsigned Row, unsigned int Index, RGBC Color);
-void          LISTVIEW_SetLBorder      (ListView *pObj, unsigned BorderSize);
-void          LISTVIEW_SetRBorder      (ListView *pObj, unsigned BorderSize);
-unsigned      LISTVIEW_SetRowHeight    (ListView *pObj, unsigned RowHeight);
-void          LISTVIEW_SetSel          (ListView *pObj, int Sel);
-void          LISTVIEW_SetTextAlign    (ListView *pObj, unsigned int Index, int Align);
-void          LISTVIEW_SetTextColor    (ListView *pObj, unsigned int Index, RGBC Color);
-// private
-int      LISTVIEW__UpdateScrollParas(ListView *pObj);
-void     LISTVIEW__InvalidateInsideArea(ListView *pObj);
-unsigned LISTVIEW__GetRowDistY(const ListView* pObj);
-void     LISTVIEW__InvalidateRow(ListView *pObj, int Sel);
-int      LISTVIEW__UpdateScrollPos(ListView *pObj);
+	void _OnTouch(const PID_STATE *pState);
+	void _OnPaint(SRect rClip) const;
+	bool _OnKey(int Key);
+
+	static WM_RESULT _Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc);
+public:
+	ListView(int x0, int y0, int xsize, int ysize,
+			 WObj *pParent, uint16_t Id,
+			 uint16_t Flags, uint16_t ExFlags);
+protected:
+	~ListView();
+
+public:
+
+	inline void Inc() { Sel(sel + 1); }
+	inline void Dec() {
+		if (auto sel = Sel())
+			Sel(sel - 1);
+	}
+
+	void AddRow(const char *pTexts);
+	void AddColumn(const char *s, uint16_t Width = 0, TEXTALIGN Align = TEXTALIGN_LEFT);
+	void DeleteColumn(unsigned Index);
+	void DeleteRow(unsigned Index);
+
+#pragma region Properties
+public: // Property - Font
+	/* R */ inline auto Font() const { return Props.pFont; }
+	/* W */ inline void Font(CFont *pFont) {
+		Props.pFont = pFont;
+		_UpdateScrollParas();
+		_InvalidateInsideArea();
+	}
+public: // Property - BkColor
+	/* R */ inline auto BkColor(LISTVIEW_CI Index) const { return Props.aBkColor[Index]; }
+	/* W */ inline void BkColor(LISTVIEW_CI Index, RGBC Color) {
+		Props.aBkColor[Index] = Color;
+		_InvalidateInsideArea();
+	}
+public: // Property - TextColor
+	/* R */ inline auto TextColor(LISTVIEW_CI Index) const { return Props.aTextColor[Index]; }
+	/* W */ inline void TextColor(LISTVIEW_CI Index, RGBC Color) {
+		Props.aTextColor[Index] = Color;
+		_InvalidateInsideArea();
+	}
+public: // Property - LBorder
+	/* R */ inline auto LBorder() const { return lBorder; }
+	/* W */ inline void LBorder(uint16_t BorderSize) {
+		lBorder = BorderSize;
+		_InvalidateInsideArea();
+	}
+public: // Property - RBorder
+	/* R */ inline auto RBorder() const { return rBorder; }
+	/* W */ inline void RBorder(uint16_t BorderSize) {
+		rBorder = BorderSize;
+		_InvalidateInsideArea();
+	}
+public: // Property - RowHeight
+	/* R */ inline auto RowHeight() const { return RowDistY; }
+	/* W */ inline void RowHeight(uint16_t height) {
+		RowDistY = height;
+		_UpdateScrollParas();
+		_InvalidateInsideArea();
+	}
+public: // Proeprty - Sel
+	/* R */ inline int16_t Sel() const { return sel; }
+	/* W */ void Sel(int16_t sel);
+public: // Property - GridVis
+	/* R */ inline auto GridVis() const { return bShowGrid; }
+	/* W */ inline void GridVis(int Show) {
+		bShowGrid = Show;
+		_UpdateScrollParas();
+		_InvalidateInsideArea();
+	}
+public: // Property - NumColumns
+	/* R */ inline auto NumColumns() const { return pHeader->NumItems(); }
+public: // Property - NumRows
+	/* R */ inline auto NumRows() const { return RowArray.NumItems(); }
+public: // Property - ColumnWidth
+	/* R */ inline auto ColumnWidth(unsigned Index) const { return pHeader->ItemWidth(Index); }
+	/* W */ inline void ColumnWidth(unsigned Index, uint16_t Width) { pHeader->ItemWidth(Index, Width); }
+public: // Property - TextAlign
+	/* R */ inline auto TextAlign(unsigned Index) const { return AlignArray[Index]; }
+	/* W */ inline void TextAlign(unsigned Index, TEXTALIGN Align) {
+		AlignArray[Index] = Align;
+		_InvalidateInsideArea();
+	}
+public: // Property - ItemColor
+	/* W */ inline void ItemColor(unsigned Column, unsigned Row, RGBC Color) {
+		if (Column >= NumColumns() || Row >= NumRows())
+			return;
+	}
+ public: // Property - ItemText
+	 /* W */ inline void ItemText(unsigned Column, unsigned Row, const char *s) {
+		 if (Column >= NumColumns() || Row >= NumRows())
+			 return;
+		 GUI__SetText(&RowArray[Row][Column].text, s);
+		 _InvalidateRow(Row);
+	 }
+#pragma endregion
+
+};

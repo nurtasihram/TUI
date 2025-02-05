@@ -100,22 +100,22 @@ WM_RESULT Button::_Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc) {
 	if (!pObj->HandleActive(MsgId, Param))
 		return Param;
 	switch (MsgId) {
-	case WM_PID_STATE_CHANGED:
-		pObj->_OnPidStateChange(Param);
-		return 0;
-	case WM_TOUCH:
-		pObj->_OnTouch(Param);
-		return 0;
-	case WM_PAINT:
-		pObj->_OnPaint();
-		return 0;
-	case WM_DELETE:
-		pObj->~Button();
-		return 0;
-	case WM_KEY:
-		if (!pObj->_OnKey(Param))
-			break;
-		return 0;
+		case WM_PAINT:
+			pObj->_OnPaint();
+			return 0;
+		case WM_PID_STATE_CHANGED:
+			pObj->_OnPidStateChange(Param);
+			return 0;
+		case WM_TOUCH:
+			pObj->_OnTouch(Param);
+			return 0;
+		case WM_DELETE:
+			pObj->~Button();
+			return 0;
+		case WM_KEY:
+			if (!pObj->_OnKey(Param))
+				break;
+			return 0;
 	}
 	return DefCallback(pObj, MsgId, Param, pSrc);
 }
