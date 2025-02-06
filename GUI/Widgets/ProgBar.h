@@ -7,6 +7,7 @@ enum PROGBAR_CI {
 };
 
 struct ProgBar : public Widget {
+
 public:
 	struct Property {
 		CFont *pFont{ &GUI_Font13_1 };
@@ -20,9 +21,10 @@ public:
 		};
 		TEXTALIGN Align{ TEXTALIGN_HCENTER };
 	} static DefaultProps;
+
 private:
 	Property Props;
-	TString text;
+	GUI_STRING text;
 	Point Off;
 	int16_t Min, Max, v;
 
@@ -34,17 +36,17 @@ private:
 
 	void _OnPaint() const;
 
-	static WM_RESULT _Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc);
+	static WM_RESULT _Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc);
 
 public:
-	ProgBar(int x0, int y0, int xsize, int ysize,
-			WObj *pParent, uint16_t Id,
-			WM_CF Flags,
+	ProgBar(const SRect &rc = {},
+			PWObj pParent = nullptr, uint16_t Id = 0,
+			WM_CF Flags = WC_HIDE, WC_EX FlagsEx = 0,
 			int16_t Min = 0, int16_t Max = 100, int16_t v = 0, const char *s = nullptr);
 	ProgBar(const WM_CREATESTRUCT &wc) :
-		ProgBar(wc.x, wc.y, wc.xsize, wc.ysize,
+		ProgBar(wc.rect(),
 				wc.pParent, wc.Id,
-				wc.Flags,
+				wc.Flags, wc.FlagsEx,
 				wc.Para.i16_4[0], wc.Para.i16_4[1], wc.Para.i16_4[2], wc.pCaption) {}
 protected:
 	~ProgBar() = default;

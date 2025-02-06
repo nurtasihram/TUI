@@ -4,7 +4,7 @@ bool Menu::_IsTopLevelMenu() {
 	return !_SendMenuMessage(pOwner, MENU_IS_MENU);
 }
 bool Menu::_HasEffect() {
-	if (!(Flags & MENU_CF_POPUP))
+	if (!(Flags & MENU_CF__ACTIVE))
 		if (_IsTopLevelMenu())
 			return false;
 	return true;
@@ -114,12 +114,12 @@ void Menu::_SetCapture() {
 }
 void Menu::_ReleaseCapture() {
 	if (Captured())
-		if (_IsTopLevelMenu() && !(Flags & MENU_CF_POPUP))
+		if (_IsTopLevelMenu() && !(Flags & MENU_CF__ACTIVE))
 			CaptureRelease();
 }
 
 void Menu::_CloseSubmenu() {
-	if (!(Flags & MENU_CF_ACTIVE))
+	if (!(Flags & MENU_CF__ACTIVE))
 		return;
 	if (!bSubmenuActive)
 		return;
@@ -138,7 +138,7 @@ void Menu::_CloseSubmenu() {
 	_InvalidateItem(Sel);
 }
 void Menu::_OpenSubmenu(unsigned Index) {
-	if (!(Flags & MENU_CF_ACTIVE))
+	if (!(Flags & MENU_CF__ACTIVE))
 		return;
 	auto PrevActiveSubmenu = bSubmenuActive;
 	/* Close previous submenu (if needed) */
@@ -159,7 +159,7 @@ void Menu::_OpenSubmenu(unsigned Index) {
 		Pos.y += _CalcMenuSizeY() - _GetEffectSize() * 2;
 		Pos.x -= EffectSize;
 	}
-	Pos += Position();
+	Pos += PositionScreen();
 	/*
 	* Notify owner window when for the first time open a menu (when no
 	* other submenu was open), so it can initialize the menu items.
@@ -179,8 +179,8 @@ void Menu::_OpenSubmenu(unsigned Index) {
 	_InvalidateItem(Index);
 }
 void Menu::_ClosePopup() {
-	if (Flags & MENU_CF_POPUP) {
-		Flags &= ~MENU_CF_POPUP;
+	if (Flags & MENU_CF__ACTIVE) {
+		Flags &= ~MENU_CF__ACTIVE;
 		Detach();
 		CaptureRelease();
 	}
@@ -225,33 +225,33 @@ void Menu::_ActivateMenu(unsigned Index) {
 		return;
 	if (Flags & MENU_IF_DISABLED)
 		return;
-	if (!(Flags & MENU_CF_ACTIVE)) {
-		Flags |= MENU_CF_ACTIVE;
+	if (!(Flags & MENU_CF__ACTIVE)) {
+		Flags |= MENU_CF__ACTIVE;
 		_OpenSubmenu(Index);
 		_SetSelection(Index);
 	}
 	else if (Flags & MENU_CF_CLOSE_ON_SECOND_CLICK) {
 		if ((int)Index == Sel) {
 			_CloseSubmenu();
-			Flags &= ~MENU_CF_ACTIVE;
+			Flags &= ~MENU_CF__ACTIVE;
 		}
 	}
 }
 void Menu::_DeactivateMenu() {
 	_CloseSubmenu();
 	if (!(Flags & MENU_CF_OPEN_ON_POINTEROVER))
-		Flags &= ~MENU_CF_ACTIVE;
+		Flags &= ~MENU_CF__ACTIVE;
 }
 
 bool Menu::_ForwardMouseOverMsg(Point Pos) {
-	if (bSubmenuActive || (Flags & MENU_CF_POPUP))
+	if (bSubmenuActive || (Flags & MENU_CF__ACTIVE))
 		return false;
 	if (!_IsTopLevelMenu())
 		return false;
-	auto pBelow = ScreenToWin(Pos + Position());
+	auto pBelow = FindOnScreen(Client2Screen(Pos));
 	if (!pBelow || pBelow == this)
 		return false;
-	PID_STATE State = Pos - pBelow->Position();
+	PID_STATE State = pBelow->Screen2Client(Pos);
 	pBelow->_SendMessage(WM_MOUSEOVER, &State);
 	return true;
 }
@@ -263,7 +263,7 @@ void Menu::_ForwardPIDMsgToOwner(int MsgId, PID_STATE *pState) {
 		return;
 	if (pState) {
 		PID_STATE State = *pState;
-		State += Position() - pOwner->Position();
+		State += pOwner->Screen2Client(PositionScreen());
 		pOwner->_SendMessage(MsgId, &State);
 	}
 	else
@@ -325,7 +325,7 @@ bool Menu::_HandlePID(const PID_STATE &State) {
 	return false;
 }
 
-WM_RESULT Menu::_OnMenu(const MENU_MSG_DATA *pMsgData) {
+WM_RESULT Menu::_OnMenu(const MSG_DAT *pMsgData) {
 	if (!pMsgData)
 		return 0;
 	switch (pMsgData->MsgType) {
@@ -342,7 +342,7 @@ WM_RESULT Menu::_OnMenu(const MENU_MSG_DATA *pMsgData) {
 		case MENU_ON_OPEN:
 			Sel = -1;
 			bSubmenuActive = false;
-			Flags |= MENU_CF_ACTIVE | MENU_CF_OPEN_ON_POINTEROVER;
+			Flags |= MENU_CF__ACTIVE | MENU_CF_OPEN_ON_POINTEROVER;
 			_SetCapture();
 			_ResizeMenu();
 			break;
@@ -456,7 +456,7 @@ void Menu::_OnPaint() {
 		DrawUp();
 }
 
-WM_RESULT Menu::_Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc) {
+WM_RESULT Menu::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 	auto pObj = (Menu *)pWin;
 	if (MsgId != WM_PID_STATE_CHANGED)
 		/* Let widget handle the standard messages */
@@ -466,12 +466,6 @@ WM_RESULT Menu::_Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc) {
 		case WM_PAINT:
 			pObj->_OnPaint();
 			return 0;
-		case WM_DELETE:
-			pObj->ItemArray.Delete();
-			return 0;
-		case WM_MENU:
-			pObj->_OnMenu(Param);
-			return 0;
 		case WM_TOUCH:
 			if (pObj->_OnTouch(Param))
 				pObj->_ForwardPIDMsgToOwner(MsgId, Param);
@@ -479,6 +473,12 @@ WM_RESULT Menu::_Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc) {
 		case WM_MOUSEOVER:
 			if (pObj->_OnMouseOver(Param))
 				pObj->_ForwardPIDMsgToOwner(MsgId, Param);
+			return 0;
+		case WM_DELETE:
+			pObj->ItemArray.Delete();
+			return 0;
+		case WM_MENU:
+			pObj->_OnMenu(Param);
 			return 0;
 	}
 	return DefCallback(pObj, MsgId, Param, pSrc);
@@ -531,28 +531,28 @@ int Menu::_FindItem(uint16_t ItemId, Menu **ppMenu) {
 	}
 	return ItemIndex;
 }
-size_t Menu::_SendMenuMessage(WObj *pDestWin, MENU_MSGID MsgType, uint16_t ItemId) {
+size_t Menu::_SendMenuMessage(PWObj pDestWin, MENU_MSGID MsgType, uint16_t ItemId) {
 	if (!pDestWin)
 		pDestWin = Parent();
-	MENU_MSG_DATA MsgData{ MsgType, ItemId };
+	MSG_DAT MsgData{ MsgType, ItemId };
 	if (pDestWin)
 		return pDestWin->_SendMessage(WM_MENU, &MsgData, this);
 	return 0;
 }
 
-Menu::Menu(int x0, int y0, int xsize, int ysize,
-		   WObj *pParent, uint16_t Id,
-		   WM_CF Flags, uint16_t ExFlags) :
-	Widget(x0, y0, xsize, ysize,
+Menu::Menu(const SRect &rc,
+		   PWObj pParent, uint16_t Id,
+		   WM_CF Flags, MENU_CF FlagsEx) :
+	Widget(rc,
 		   _Callback,
 		   pParent, Id,
 		   Flags | WC_VISIBLE | WC_STAYONTOP | WC_FOCUSSABLE),
-	Width(xsize > 0 ? xsize : 0), Height(ysize > 0 ? ysize : 0),
-	Flags(ExFlags) {
+	Width(rc.x0 <= rc.x1 ? rc.xsize() : 0), Height(rc.y0 <= rc.y1 ? rc.ysize() : 0),
+	Flags(FlagsEx) {
 	if (this->Flags & MENU_CF_OPEN_ON_POINTEROVER)
-		this->Flags |= MENU_CF_ACTIVE;
+		this->Flags |= MENU_CF__ACTIVE;
 	else
-		this->Flags &= ~MENU_CF_ACTIVE;
+		this->Flags &= ~MENU_CF__ACTIVE;
 }
 
 void Menu::AddItem(const Menu::Item &Item) {
@@ -612,7 +612,7 @@ void Menu::InsertItem(uint16_t ItemId, const Menu::Item &Item) {
 	_SetItem(Index, Item);
 	_ResizeMenu();
 }
-void Menu::Attach(WObj *pDestWin, Point Pos, Point Size) {
+void Menu::Attach(PWObj pDestWin, Point Pos, Point Size) {
 	Width = Size.x > 0 ? Size.x : 0;
 	Height = Size.y > 0 ? Size.y : 0;
 	Parent(pDestWin, Pos);
@@ -621,10 +621,10 @@ void Menu::Attach(WObj *pDestWin, Point Pos, Point Size) {
 void Menu::Popup(Menu *pParentMenu, Point Pos, Point Size, uint16_t Flags) {
 	if (!pParentMenu)
 		return;
-	Flags |= MENU_CF_POPUP;
+	Flags |= MENU_CF__ACTIVE;
 	Width = Size.x > 0 ? Size.x : 0;
 	Height = Size.y > 0 ? Size.y : 0;
 	Owner(pParentMenu);
-	Parent(Desktop(), Pos + pParentMenu->Position());
+	Parent(Desktop(), pParentMenu->Client2Screen(Pos));
 	pParentMenu->_SendMenuMessage(this, MENU_ON_OPEN);
 }

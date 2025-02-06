@@ -2,32 +2,32 @@
 #include "GUI_Array.h"
 #include "WM.h"
 
-#define MENU_CF_HORIZONTAL              WC_USER(0)
-#define MENU_CF_VERTICAL                WC_USER(1)
-#define MENU_CF_OPEN_ON_POINTEROVER     WC_USER(2)
-#define MENU_CF_CLOSE_ON_SECOND_CLICK   WC_USER(3)
-#define MENU_CF_HIDE_DISABLED_SEL       WC_USER(4)  /* Hides the selection when a disabled item is selected */
-
-#define MENU_IF_DISABLED          (1<<0)
-#define MENU_IF_SEPARATOR         (1<<1)
-
-#define MENU_CF_ACTIVE            (1<<6)  /* Internal flag only */
-#define MENU_CF_POPUP             (1<<7)  /* Internal flag only */
-
+using		MENU_CF = uint16_t;
+constexpr	MENU_CF
+			MENU_CF_HORIZONTAL            = WC_EX_USER(0),
+			MENU_CF_VERTICAL              = WC_EX_USER(1),
+			MENU_CF_OPEN_ON_POINTEROVER   = WC_EX_USER(2),
+			MENU_CF_CLOSE_ON_SECOND_CLICK = WC_EX_USER(3),
+			MENU_CF_HIDE_DISABLED_SEL     = WC_EX_USER(4), /* Hides the selection when a disabled item is selected */
+			MENU_CF__ACTIVE               = WC_EX_USER(5),
+			MENU_CF__POPUP                = WC_EX_USER(6);
+using		MENU_IF = uint8_t;
+constexpr	MENU_IF
+			MENU_IF_DISABLED  = 1 << 0,
+			MENU_IF_SEPARATOR = 1 << 1;
 enum MENU_CI {
-	 MENU_CI_ENABLED = 0,
-	 MENU_CI_SELECTED,
-	 MENU_CI_DISABLED,
-	 MENU_CI_DISABLED_SEL,
-	 MENU_CI_ACTIVE_SUBMENU
+	MENU_CI_ENABLED = 0,
+	MENU_CI_SELECTED,
+	MENU_CI_DISABLED,
+	MENU_CI_DISABLED_SEL,
+	MENU_CI_ACTIVE_SUBMENU
 };
 enum MENU_BI {
-	 MENU_BI_LEFT = 0,
-	 MENU_BI_RIGHT,
-	 MENU_BI_TOP,
-	 MENU_BI_BOTTOM
+	MENU_BI_LEFT = 0,
+	MENU_BI_RIGHT,
+	MENU_BI_TOP,
+	MENU_BI_BOTTOM
 };
-
 enum MENU_MSGID : uint16_t {
 	MENU_ON_ITEMSELECT = 0, /* Send to owner when selecting a menu item */
 	MENU_ON_INITMENU,		/* Send to owner when for the first time selecting a submenu */
@@ -38,11 +38,8 @@ enum MENU_MSGID : uint16_t {
 							/* DefCallback() when not handle the message. */
 };
 
-struct MENU_MSG_DATA {
-	MENU_MSGID MsgType;
-	uint16_t ItemId;
-};
 class Menu : public Widget {
+
 public:
 	struct Property {
 		CFont *pFont{ &GUI_Font13_1 };
@@ -67,16 +64,21 @@ public:
 			2,
 		};
 	} static DefaultProps;
+
+public:
 	struct Item {
 		Menu *pSubmenu = nullptr;
-		TString text = nullptr;
-		uint16_t Id = 0, Flags = 0;
-		uint16_t TextWidth = 0;
+		GUI_STRING text = nullptr;
+		uint16_t Id = 0, TextWidth = 0;
+		MENU_IF Flags = 0;
 	};
-private:
+	struct MSG_DAT {
+		MENU_MSGID MsgType;
+		uint16_t ItemId = 0;
+	};
 	Property Props;
 	GUI_Array<Item> ItemArray;
-	WObj *pOwner = nullptr;
+	PWObj pOwner = nullptr;
 	uint16_t Width = 0, Height = 0;
 	int16_t Sel = -1;
 	uint16_t Flags = 0;
@@ -89,7 +91,7 @@ private:
 	void _SetItemFlags(unsigned Index, uint16_t Mask, uint16_t Flags);
 	void _InvalidateItem(unsigned Index);
 	int  _FindItem(uint16_t ItemId, Menu **ppMenu);
-	size_t _SendMenuMessage(WObj *pDestWin, MENU_MSGID MsgType, uint16_t ItemId = 0);
+	size_t _SendMenuMessage(PWObj pDestWin, MENU_MSGID MsgType, uint16_t ItemId = 0);
 
 	bool _IsTopLevelMenu();
 	bool _HasEffect();
@@ -117,27 +119,27 @@ private:
 	bool _ForwardMouseOverMsg(Point Pos);
 	bool _HandlePID(const PID_STATE &pid);
 	void _ForwardPIDMsgToOwner(int MsgId, PID_STATE *pState);
-	WM_RESULT _OnMenu(const MENU_MSG_DATA *pMsgData);
+	WM_RESULT _OnMenu(const MSG_DAT *pMsgData);
 	bool _OnTouch(const PID_STATE *pState);
 	bool _OnMouseOver(const PID_STATE *pState);
 	void _OnPaint();
 	void _SetPaintColors(const Menu::Item &Item, int ItemIndex) const;
 
-	static WM_RESULT _Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc);
+	static WM_RESULT _Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc);
 
 public:
-	Menu(int x0, int y0, int xsize, int ysize,
-		 WObj *pParent, uint16_t Id,
-		 WM_CF Flags, uint16_t ExFlags);
-	Menu(uint16_t ExFlags = 0, uint16_t Id = 0, WM_CF Flags = 0) :
-		Menu(0, 0, 0, 0,
+	Menu(const SRect &rc = {},
+		 PWObj pParent = nullptr, uint16_t Id = 0,
+		 WM_CF Flags = WC_HIDE, MENU_CF FlagsEx = 0);
+	Menu(MENU_CF FlagsEx = 0, uint16_t Id = 0, WM_CF Flags = WC_HIDE) :
+		Menu({},
 			 WM_UNATTACHED, Id,
-			 Flags, ExFlags) {}
+			 Flags, FlagsEx) {}
 private:
-	~Menu() { ItemArray.Delete(); }
+	~Menu() = default;
 
 public:
-	void Attach(WObj *pDestWin, Point Pos, Point Size);
+	void Attach(PWObj pDestWin, Point Pos, Point Size);
 	void Popup(Menu *pParentMenu, Point Pos, Point Size, uint16_t Flags);
 	void AddItem(const Menu::Item &Item);
 	void DeleteItem(uint16_t ItemId);
@@ -177,7 +179,7 @@ public: // Property - NumItems
 	/* R */ inline auto NumItems() const { return ItemArray.NumItems(); }
 public: // Property - Owner
 	/* R */ inline auto Owner() const { return pOwner; }
-	/* W */ inline void Owner(WObj *pOwner) { this->pOwner = pOwner; }
+	/* W */ inline void Owner(PWObj pOwner) { this->pOwner = pOwner; }
 #pragma endregion
 
 };

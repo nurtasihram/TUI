@@ -26,7 +26,7 @@ void MainTask() {
 		"VCenter\0"
 		"Bottom\0", 15);
 	WObj::Desktop()->Callback(
-		[](WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc) -> WM_RESULT {
+		[](PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) -> WM_RESULT {
 			switch (MsgId) {
 				case WM_NOTIFY_PARENT:
 					switch ((int)Param) {

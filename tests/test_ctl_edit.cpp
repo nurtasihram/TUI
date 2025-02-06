@@ -9,6 +9,7 @@
 #include "Frame.h"
 #include "Header.h"
 #include "ListView.h"
+#include "MultiPage.h"
 
 class CtlEdit : public WObj {
 	Widget *pWidget = nullptr;
@@ -29,7 +30,7 @@ public:
 	void _OnPaint() const;
 	bool _HandleResize(int MsgId, const PID_STATE *pState);
 
-	static WM_RESULT _Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc);
+	static WM_RESULT _Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc);
 public:
 	CtlEdit(Widget *pWidget);
 };
@@ -184,23 +185,24 @@ bool CtlEdit::_HandleResize(int MsgId, const PID_STATE *pState) {
 #pragma endregion
 void CtlEdit::_Expend(bool bOpen) {
 	auto Border = Props.Border + 1;
-	auto &&rExpend = RectAbs();
+	auto &&rExpend = RectScreen();
 	if (bOpen) {
 		rExpend *= (int)Border;
 		BringToTop();
 	}
 	else 
 		rExpend /= (int)Border;
-	RectAbs(rExpend);
+	RectScreen(rExpend);
 }
 
-WM_RESULT CtlEdit::_Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc) {
+WM_RESULT CtlEdit::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 	auto pObj = (CtlEdit *)pWin;
 	auto pWidget = pObj->pWidget;
 	if (pObj->_HandleResize(MsgId, Param))
 		return Param;
 	switch (MsgId) {
-		case WM_CREATE:
+		case WM_PAINT:
+			pObj->_OnPaint();
 			return 0;
 		case WM_GET_ACCEPT_FOCUS:
 			return !pWidget->Focussable();
@@ -229,9 +231,6 @@ WM_RESULT CtlEdit::_Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc) 
 			return 0;
 		case WM_GET_BKCOLOR:
 			return pObj->Parent()->BkColor();
-		case WM_PAINT:
-			pObj->_OnPaint();
-			return 0;
 	}
 	return WObj::DefCallback(pWin, MsgId, Param, pSrc);
 }
@@ -247,75 +246,81 @@ CtlEdit::CtlEdit(Widget *pWidget) :
 }
 
 void MainTask() {
-	//auto pStatic = new Static(
-	//	10, 10, 45, 20,
-	//	WObj::Desktop(), 0,
-	//	WC_VISIBLE, 0, "Static");
-	//new CtlEdit(pStatic);
-	//auto pButton = new Button(
-	//	10, 40, 45, 20,
-	//	WObj::Desktop(), 0,
-	//	WC_VISIBLE, "Button");
-	//new CtlEdit(pButton);
-	//auto pCheckBox = new CheckBox(
-	//	10, 70, 85, 20,
-	//	WObj::Desktop(), 0,
-	//	WC_VISIBLE, "CheckBox");
-	//new CtlEdit(pCheckBox);
-	//auto pProgBar = new ProgBar(
-	//	10, 100, 85, 20,
-	//	WObj::Desktop(), 0,
-	//	WC_VISIBLE);
-	//new CtlEdit(pProgBar);
-	//auto pScrollBarH = new ScrollBar(
-	//	10, 130, 85, 15,
-	//	WObj::Desktop(), 0,
-	//	WC_VISIBLE, 0);
-	//new CtlEdit(pScrollBarH);
-	//auto pScrollBarV = new ScrollBar(
-	//	10, 155, 15, 80,
-	//	WObj::Desktop(), 0,
-	//	WC_VISIBLE, SCROLLBAR_CF_VERTICAL);
-	//new CtlEdit(pScrollBarV);
-	//auto pSlider = new Slider(
-	//	30, 155, 85, 20,
-	//	WObj::Desktop(), 0,
-	//	WC_VISIBLE, 0);
-	//new CtlEdit(pSlider);
-	//auto pRadio = new Radio(
-	//	30, 185, 85, 60,
-	//	WObj::Desktop(), 0,
-	//	WC_VISIBLE, 0,
-	//	"Radio 1\0"
-	//	"Radio 2\0"
-	//	"Radio 3\0");
-	//new CtlEdit(pRadio);
-	//auto pListBox = new ListBox(
-	//	10, 250, 105, 60,
-	//	WObj::Desktop(), 0,
-	//	WC_VISIBLE, 0,
-	//	"ListBox 1\0"
-	//	"ListBox 2\0"
-	//	"ListBox 3\0");
-	//new CtlEdit(pListBox);
-	//auto pFrame = new Frame(
-	//	130, 10, 105, 300,
-	//	WObj::Desktop(), 0,
-	//	WC_VISIBLE, 0,
-	//	"Frame");
-	//new CtlEdit(pFrame);
-	//auto pHeader = new Header(
-	//	240, 10, 105, 0,
-	//	WObj::Desktop(), 0,
-	//	WC_VISIBLE);
-	//pHeader->Add("Col 1");
-	//pHeader->Add("Col 2");
-	//pHeader->Add("Col 3");
-	//new CtlEdit(pHeader);
+	auto pStatic = new Static(
+		{ 10, 10, 55, 30 },
+		nullptr, 0,
+		WC_VISIBLE, 0,
+		"Static");
+	new CtlEdit(pStatic);
+	auto pButton = new Button(
+		{ 10, 40, 55, 60 },
+		nullptr, 0,
+		WC_VISIBLE, 0,
+		"Button\n"
+		"Click me!");
+	new CtlEdit(pButton);
+	auto pCheckBox = new CheckBox(
+		{ 10, 70, 95, 90 },
+		nullptr, 0,
+		WC_VISIBLE, 0,
+		"CheckBox\n"
+		"Check this!");
+	new CtlEdit(pCheckBox);
+	auto pProgBar = new ProgBar(
+		{ 10, 100, 95, 120 },
+		nullptr, 0,
+		WC_VISIBLE);
+	pProgBar->Text("Progressing...");
+	new CtlEdit(pProgBar);
+	auto pScrollBarH = new ScrollBar(
+		{ 10, 130, 95, 145 },
+		nullptr, 0,
+		WC_VISIBLE, 0);
+	new CtlEdit(pScrollBarH);
+	auto pScrollBarV = new ScrollBar(
+		{ 10, 155, 25, 235 },
+		nullptr, 0,
+		WC_VISIBLE, SCROLLBAR_CF_VERTICAL);
+	new CtlEdit(pScrollBarV);
+	auto pSlider = new Slider(
+		{ 30, 155, 115, 175 },
+		nullptr, 0,
+		WC_VISIBLE, 0);
+	new CtlEdit(pSlider);
+	auto pRadio = new Radio(
+		{ 30, 185, 115, 245 },
+		nullptr, 0,
+		WC_VISIBLE, 0,
+		"Radio 1\0"
+		"Radio 2\0"
+		"Radio 3\0");
+	new CtlEdit(pRadio);
+	auto pListBox = new ListBox(
+		{ 10, 250, 115, 310 },
+		nullptr, 0,
+		WC_VISIBLE, 0,
+		"ListBox 1\0"
+		"ListBox 2\0"
+		"ListBox 3\0");
+	new CtlEdit(pListBox);
+	auto pFrame = new Frame(
+		{ 130, 10, 235, 310 },
+		nullptr, 0,
+		WC_VISIBLE, 0,
+		"Frame");
+	new CtlEdit(pFrame);
+	auto pHeader = new Header(
+		{ 240, 10, 345, 30 },
+		nullptr, 0,
+		WC_VISIBLE, HEADER_CF_DRAG);
+	pHeader->Add("Col\n1", -1, TEXTALIGN_CENTER);
+	pHeader->Add("Col\n2", -1, TEXTALIGN_CENTER);
+	pHeader->Add("Col\n3", -1, TEXTALIGN_CENTER);
+	new CtlEdit(pHeader);
 	auto pListView = new ListView(
-		240, 40, 105, 100,
-		WObj::Desktop(), 0,
-		WC_VISIBLE, LISTVIEW_CF_HEADER_DRAG | LISTVIEW_CF_GRIDLINE);
+		{ 240, 40, 345, 140 },
+		nullptr, 0,
+		WC_VISIBLE | WC_AUTOSCROLL, LISTVIEW_CF_HEADER_DRAG | LISTVIEW_CF_GRIDLINE);
 	pListView->AddColumn("Col 1   ");
 	pListView->AddColumn("Col 2   ");
 	pListView->AddColumn("Col 3   ");
@@ -340,6 +345,14 @@ void MainTask() {
 		"Col 5x2\0"
 		"Col 5x3\0");
 	new CtlEdit(pListView);
+	auto pPages = new MultiPage(
+		{ 240, 150, 345, 255 },
+		nullptr, 0,
+		WC_VISIBLE);
+	pPages->Add("1 - Static", new Static(pPages->ClientRect(), nullptr, 0, 0, STATIC_CF_CENTER, "Page 1"));
+	pPages->Add("2 - Button", new Button({ 15, 35, 55, 60 }, nullptr, 0, 0, 0, "Page 2"));
+	pPages->Add("3 - None");
+	new CtlEdit(pPages);
 	for (;;)
 		WObj::Exec();
 }

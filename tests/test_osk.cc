@@ -158,7 +158,7 @@ static int _OSK_ceil(float f) {
 }
 
 const Point border = { 6, 24 };
-static void _OSK_createButtons(WObj *pWin, Point size) {
+static void _OSK_createButtons(PWObj pWin, Point size) {
 	size -= border;
 	for (int i = 0; i < GUI_COUNTOF(_aButtonData); ++i) {
 		auto inf = _aButtonData + i;
@@ -180,7 +180,7 @@ static void _OSK_createButtons(WObj *pWin, Point size) {
 		}
 	}
 }
-static void _OSK_updateButtons(WObj *pWin, Point size) {
+static void _OSK_updateButtons(PWObj pWin, Point size) {
 	size -= border;
 	auto &&r = pWin->Rect();
 	for (int i = 0; i < GUI_COUNTOF(_aButtonData); ++i) {

@@ -1,16 +1,17 @@
 #pragma once
 #include "WM.h"
 
-#define SCROLLBAR_STATE_PRESSED   WC_USER(0)
-
-#define SCROLLBAR_CF_VERTICAL     WC_EX_VERTICAL
-#define SCROLLBAR_CF_FOCUSSABLE   WC_FOCUSSABLE
-
+using		SCROLLBAR_CF = WC_EX;
+constexpr	SCROLLBAR_CF
+			SCROLLBAR_CF__PRESSED	= WC_EX_USER(0),
+			SCROLLBAR_CF_VERTICAL	= WC_EX_VERTICAL,
+			SCROLLBAR_CF_FOCUSSABLE	= WC_FOCUSSABLE;
 enum SCROLLBAR_CI {
 	SCROLLBAR_CI_
 };
 
 class ScrollBar : public Widget {
+
 public:
 	struct Property {
 		RGBC aBkColor[2]{
@@ -20,9 +21,11 @@ public:
 		RGBC aColor{ RGBC_GRAY(0xC0) };
 	} static DefaultProps;
 	static const int16_t DefaultWidth = 12;
+
 private:
 	Property Props;
-	SCROLL_STATE state{ 100, 0, 10 };
+	SCROLL_STATE state;
+
 private:
 	struct Positions {
 		int16_t x0_LeftArrow = 0,
@@ -38,26 +41,33 @@ private:
 
 	int _GetArrowSize() const;
 	Positions _CalcPositions() const;
+	SRect _AutoSize(PWObj pParent, uint16_t FlagsEx) const;
+
 	void _DrawTriangle(int x, int y, int Size, int Inc) const;
 	void _InvalidatePartner();
 	void _ScrollbarPressed();
 	void _ScrollbarReleased();
+
 	void _OnTouch(const PID_STATE *pState);
 	void _OnKey(const KEY_STATE *pKeyInfo);
 	void _OnPaint();
 	
-	static WM_RESULT _Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc);
+	static WM_RESULT _Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc);
 
-protected:
-	SRect _AutoSize(WObj *pParent, uint16_t ExFlags) const;
 public:
-	ScrollBar(int x0, int y0, int xsize, int ysize,
-			  WObj *pParent, uint16_t Id,
-			  WM_CF Flags, uint16_t ExFlags);
-	ScrollBar(WObj *pParent, int SpecialFlags);
-	ScrollBar(const WM_CREATESTRUCT &wc) :
-		ScrollBar(wc.x, wc.y, wc.xsize, wc.ysize,
-				  wc.pParent, wc.Id, wc.Flags, wc.ExFlags) {}
+	ScrollBar(const SRect &rc,
+			  PWObj pParent = nullptr, uint16_t Id = 0,
+			  WM_CF Flags = WC_HIDE, SCROLLBAR_CF FlagsEx = 0,
+			  SCROLL_STATE State = { 100, 0, 10 });
+	ScrollBar(PWObj pParent, uint16_t Id);
+	ScrollBar(const WM_CREATESTRUCT &wc) : ScrollBar(
+		wc.rect(),
+		wc.pParent, wc.Id,
+		wc.Flags, wc.FlagsEx,
+		{ wc.Para.i16_4[0], wc.Para.i16_4[1], wc.Para.i16_4[2] }) {}
+protected:
+	~ScrollBar() = default;
+
 public:
 	inline void Dec() { AddValue(-1); }
 	inline void Inc() { AddValue(1); }
@@ -90,12 +100,14 @@ public: // Property - ScrollState
 	/* W */ inline void ScrollState(const SCROLL_STATE &s) {
 		state = s;
 		Invalidate();
-		NotifyParent(WN_VALUE_CHANGED);
 	}
 public: // Property - Width
-	/* R */ inline auto Width() const { return SizeX(); }
+	/* R */ inline auto Width() const { return StatusEx & SCROLLBAR_CF_VERTICAL ? SizeY() : SizeX(); }
 	/* W */ inline void Width(int Width) {
-		Widget::SizeX(Width);
+		if (StatusEx & SCROLLBAR_CF_VERTICAL)
+			Widget::SizeY(Width);
+		else
+			Widget::SizeX(Width);
 		_InvalidatePartner();
 	}
 #pragma endregion

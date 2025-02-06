@@ -1,14 +1,18 @@
 #pragma once
 #include "WM.h"
 
-#define TEXT_CF_LEFT    TEXTALIGN_LEFT
-#define TEXT_CF_RIGHT   TEXTALIGN_RIGHT
-#define TEXT_CF_HCENTER TEXTALIGN_HCENTER
-#define TEXT_CF_VCENTER TEXTALIGN_VCENTER
-#define TEXT_CF_TOP     TEXTALIGN_TOP
-#define TEXT_CF_BOTTOM  TEXTALIGN_BOTTOM
+using		STATIC_CF = uint16_t;
+constexpr	STATIC_CF
+			STATIC_CF_LEFT    = TEXTALIGN_LEFT,
+			STATIC_CF_HCENTER = TEXTALIGN_HCENTER,
+			STATIC_CF_RIGHT   = TEXTALIGN_RIGHT,
+			STATIC_CF_TOP     = TEXTALIGN_TOP,
+			STATIC_CF_VCENTER = TEXTALIGN_VCENTER,
+			STATIC_CF_BOTTOM  = TEXTALIGN_BOTTOM,
+			STATIC_CF_CENTER  = TEXTALIGN_CENTER;
 
 class Static : public Widget {
+
 public:
 	struct Property {
 		CFont *pFont{ &GUI_Font13_1 };
@@ -16,23 +20,28 @@ public:
 		RGBC BkColor{ RGB_INVALID_COLOR };
 		TEXTALIGN Align{ TEXTALIGN_LEFT };
 	} static DefaultProps;
+
 private:
 	Property Props;
-	TString text;
+	GUI_STRING text;
+
 private:
 	void _OnPaint() const;
 
-	static WM_RESULT _Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc);
+	static WM_RESULT _Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc);
+
 public:
-	Static(int x0, int y0, int xsize, int ysize,
-		   WObj *pParent, uint16_t Id,
-		   WM_CF Flags, uint16_t ExFlags,
-		   const char *pText);
+	Static(const SRect &rc = {},
+		   PWObj pParent = nullptr, uint16_t Id = 0,
+		   WM_CF Flags = WC_HIDE, STATIC_CF FlagsEx = 0,
+		   const char *pText = nullptr);
 	Static(const WM_CREATESTRUCT &wc) :
-		Static(wc.x, wc.y, wc.xsize, wc.ysize,
+		Static(wc.rect(),
 			   wc.pParent, wc.Id,
-			   wc.Flags, wc.ExFlags,
+			   wc.Flags, wc.FlagsEx,
 			   wc.pCaption) {}
+protected:
+	~Static() = default;
 
 #pragma region Properties
 public: // Property - Font

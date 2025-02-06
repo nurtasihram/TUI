@@ -120,7 +120,7 @@ static int _OwnerDraw(const WIDGET_ITEM_DRAW_INFO *pDrawItemInfo) {
 					pDrawItemInfo->y0 + YSize - 1
 				};
 				GUI.PenColor(RGB_WHITE - aBkColor[ColorIndex]);
-				GUI.OutlineFocus(rFocus);
+				GUI.DrawFocus(rFocus);
 			}
 			break;
 		}
@@ -133,7 +133,7 @@ static int _OwnerDraw(const WIDGET_ITEM_DRAW_INFO *pDrawItemInfo) {
 static bool _bMultiSel = false;
 static bool _bOwnerDrawn = true;
 
-static WM_RESULT _cbFrame(WObj *pDlg, int MsgId, WM_PARAM Param, WObj *pSrc) {
+static WM_RESULT _cbFrame(PWObj pDlg, int MsgId, WM_PARAM Param, PWObj pSrc) {
 	auto pListBox = (ListBox *)pDlg->DialogItem(GUI_ID_MULTIEDIT0);
 	switch (MsgId) {
 		case WM_INIT_DIALOG:
@@ -192,7 +192,7 @@ static WM_RESULT _cbFrame(WObj *pDlg, int MsgId, WM_PARAM Param, WObj *pSrc) {
 }
 
 static const WM_CREATESTRUCT aDialogCreate[]{
-/*    Class             , x		, y		, xsize	, ysize	, Caption				 , Id				, Flags	, ExFlags				, Para	*/
+/*    Class             , x		, y		, xsize	, ysize	, Caption				 , Id				, Flags	, FlagsEx				, Para	*/
 	{ WCLS_FRAME		, 50	, 50	, 220	, 165	, "Owner drawn list box" , 0				, 0		, FRAME_CF_MOVEABLE			 	},
 	{ WCLS_LISTBOX		, 10	, 10	, 100	, 100	, "English\0"
 														  "Deutsch\0"

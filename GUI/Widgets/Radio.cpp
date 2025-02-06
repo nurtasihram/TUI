@@ -2,6 +2,58 @@
 
 Radio::Property Radio::DefaultProps;
 
+static bool _IsInGroup(PWObj pWin, uint8_t GroupId) {
+	if (!GroupId) return false;
+	return (int)pWin->SendMessage(WM_GET_RADIOGROUP) == GroupId;
+}
+static PWObj _GetPrevInGroup(PWObj pWin, uint8_t GroupId) {
+	for (pWin = pWin->PrevSibling(); pWin; pWin = pWin->PrevSibling())
+		if (_IsInGroup(pWin, GroupId))
+			return pWin;
+	return nullptr;
+}
+static Radio *_GetNextInGroup(PWObj pWin, uint8_t GroupId) {
+	for (; pWin; pWin = pWin->NextSibling())
+		if (_IsInGroup(pWin, GroupId))
+			return (Radio *)pWin;
+	return nullptr;
+}
+void Radio::_ClearSelection(uint8_t GroupId) {
+	for (auto pWin = FirstSibling(); pWin; pWin = pWin->NextSibling())
+		if (pWin != this)
+			if (_IsInGroup(pWin, GroupId))
+				((Radio *)pWin)->_SetValue(-1);
+}
+void Radio::_HandleSetValue(int16_t v) {
+	if (v < 0) {
+		if (auto pWin = (Radio *)_GetPrevInGroup(this, groupId)) {
+			pWin->Focus();
+			_SetValue(0x7FFF);
+			_SetValue(-1);
+		}
+	}
+	else if (v >= NumItems()) {
+		if (auto pWin = _GetNextInGroup(NextSibling(), groupId)) {
+			pWin->Focus();
+			pWin->_SetValue(0);
+			_SetValue(-1);
+		}
+	}
+	else if (sel != v) {
+		_ClearSelection(groupId);
+		_SetValue(v);
+	}
+}
+void Radio::_SetValue(int v) {
+	if (v >= NumItems())
+		v = NumItems() - 1;
+	if (v == sel)
+		return;
+	sel = v;
+	Invalidate();
+	NotifyParent(WN_VALUE_CHANGED);
+}
+
 void Radio::_OnPaint() const {
 	auto &&rFocus = ClientRect();
 	bool bFocussed = Focussed();
@@ -9,18 +61,18 @@ void Radio::_OnPaint() const {
 		 pBmCheck = Props.apBm[2];
 	rFocus.x1 = pBmRadio->Size.x + Props.Border * 2 - 1;
 	rFocus.y1 = height + (NumItems() - 1) * spacing - 1;
-	GUI.PenColor(Props.TextColor);
 	GUI.Font(Props.pFont);
 	auto FontDistY = GUI.Font()->YDist;
 	auto CHeight = Props.pFont->CHeight;
 	auto SpaceAbove = Props.pFont->Baseline - CHeight;
-	SRect rect;
-	rect.x0 = pBmRadio->Size.x + Props.Border * 2 + 2;
-	rect.y0 = (CHeight <= height) ? (height - CHeight) / 2 : 0;
-	rect.y1 = rect.y0 + CHeight - 1;
+	SRect rsWin;
+	rsWin.x0 = pBmRadio->Size.x + Props.Border * 2 + 2;
+	rsWin.y0 = (CHeight <= height) ? (height - CHeight) / 2 : 0;
+	rsWin.y1 = rsWin.y0 + CHeight - 1;
 	int FocusBorder = FontDistY <= 12 ? 2 : 3;
-	if (FocusBorder > rect.y0)
-		FocusBorder = (uint8_t)rect.y0;
+	if (FocusBorder > rsWin.y0)
+		FocusBorder = (uint8_t)rsWin.y0;
+	GUI.PenColor(Props.TextColor);
 	GUI.BkColor(BkColorProp(Props.BkColor));
 	GUI.Clear();
 	for (int i = 0, nItems = NumItems(); i < nItems; ++i) {
@@ -36,7 +88,7 @@ void Radio::_OnPaint() const {
 			continue;
 		if (!*pText)
 			continue;
-		auto r = rect;
+		auto r = rsWin;
 		r.x1 = r.x0 + GUI.XDist(pText) - 2;
 		r.y0 -= SpaceAbove;
 		r += Point(0, y);
@@ -48,7 +100,7 @@ void Radio::_OnPaint() const {
 	}
 	if (bFocussed) {
 		GUI.PenColor(RGB_BLACK);
-		GUI.OutlineFocus(rFocus);
+		GUI.DrawFocus(rFocus);
 	}
 }
 void Radio::_OnTouch(const PID_STATE *pState) {
@@ -94,7 +146,7 @@ bool Radio::_OnKey(const KEY_STATE *pKeyInfo) {
 	return true;
 }
 
-WM_RESULT Radio::_Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc) {
+WM_RESULT Radio::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 	auto pObj = (Radio *)pWin;
 	if (!pObj->HandleActive(MsgId, Param))
 		return Param;
@@ -102,11 +154,6 @@ WM_RESULT Radio::_Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc) {
 	case WM_PAINT:
 		pObj->_OnPaint();
 		return 0;
-	case WM_DELETE:
-		pObj->~Radio();
-		return 0;
-	case WM_GET_RADIOGROUP:
-		return pObj->groupId;
 	case WM_TOUCH:
 		pObj->_OnTouch(Param);
 		return 0;
@@ -114,41 +161,36 @@ WM_RESULT Radio::_Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc) {
 		if (!pObj->_OnKey(Param))
 			return 0;
 		break;
+	case WM_DELETE:
+		pObj->~Radio();
+		return 0;
+	case WM_GET_RADIOGROUP:
+		return pObj->groupId;
 	}
 	return DefCallback(pObj, MsgId, Param, pSrc);
 }
 
-void Radio::_SetValue(int v) {
-	if (v >= NumItems())
-		v = NumItems() - 1;
-	if (v == sel)
-		return;
-	sel = v;
-	Invalidate();
-	NotifyParent(WN_VALUE_CHANGED);
-}
-
-Radio::Radio(int x0, int y0, int xSize, int ySize,
-			 WObj *pParent, uint16_t Id,
-			 WM_CF Flags, uint16_t ExFlags,
+Radio::Radio(const SRect &rc,
+			 PWObj pParent, uint16_t Id,
+			 WM_CF Flags, uint16_t FlagsEx,
 			 int NumItems, int Spacing) :
-	Widget(x0, y0, 
-		  xSize ? xSize : DefaultProps.apBm[0]->Size.x + DefaultProps.Border * 2,
-		  ySize ? ySize : DefaultProps.apBm[0]->Size.y + DefaultProps.Border * 2 + (NumItems - 1) * Spacing,
+	Widget({ rc.left_top(), {
+				rc.x1 >= rc.x0 ? rc.x1 : rc.x0 + DefaultProps.apBm[0]->Size.x + DefaultProps.Border * 2,
+				rc.y1 >= rc.y0 ? rc.y1 : rc.x0 + DefaultProps.apBm[0]->Size.y + DefaultProps.Border * 2 + (NumItems - 1) * Spacing }
+		   },
 		  _Callback,
 		   pParent, Id,
-		   Flags | WC_FOCUSSABLE, ExFlags),
+		   Flags | WC_FOCUSSABLE, FlagsEx),
 	TextArray(NumItems),
 	height(DefaultProps.apBm[0]->Size.y + DefaultProps.Border * 2),
-	spacing(Spacing <= 0 ? 20 : Spacing) {}
-
-Radio::Radio(int x0, int y0, int xSize, int ySize,
-			 WObj *pParent, uint16_t Id,
-			 WM_CF Flags, uint16_t ExFlags,
+	spacing(Spacing <= 0 ? 20 : Spacing) {}\
+Radio::Radio(const SRect &rc,
+			 PWObj pParent, uint16_t Id,
+			 WM_CF Flags, uint16_t FlagsEx,
 			 const char *pItems, int Spacing) :
-	Radio(x0, y0, xSize, ySize,
+	Radio(rc,
 		  pParent, Id,
-		  Flags, ExFlags,
+		  Flags, FlagsEx,
 		  GUI__NumTexts(pItems), Spacing) {
 	for (auto &s : TextArray) {
 		s = pItems;
@@ -180,49 +222,6 @@ void Radio::Sel(int16_t v) {
 //	}
 //	pObj->Invalidate();
 //}
-
-static bool _IsInGroup(WObj *pWin, uint8_t GroupId) {
-	if (!GroupId) return false;
-	return (int)pWin->SendMessage(WM_GET_RADIOGROUP) == GroupId;
-}
-static WObj *_GetPrevInGroup(WObj *pWin, uint8_t GroupId) {
-	for (pWin = pWin->PrevSibling(); pWin; pWin = pWin->PrevSibling())
-		if (_IsInGroup(pWin, GroupId))
-			return pWin;
-	return nullptr;
-}
-static Radio *_GetNextInGroup(WObj *pWin, uint8_t GroupId) {
-	for (; pWin; pWin = pWin->NextSibling())
-		if (_IsInGroup(pWin, GroupId))
-			return (Radio *)pWin;
-	return nullptr;
-}
-void Radio::_ClearSelection(uint8_t GroupId) {
-	for (auto pWin = FirstSibling(); pWin; pWin = pWin->NextSibling())
-		if (pWin != this)
-			if (_IsInGroup(pWin, GroupId))
-				((Radio *)pWin)->_SetValue(-1);
-}
-void Radio::_HandleSetValue(int16_t v) {
-	if (v < 0) {
-		if (auto pWin = (Radio *)_GetPrevInGroup(this, groupId)) {
-			pWin->Focus();
-			_SetValue(0x7FFF);
-			_SetValue(-1);
-		}
-	}
-	else if (v >= NumItems()) {
-		if (auto pWin = _GetNextInGroup(NextSibling(), groupId)) {
-			pWin->Focus();
-			pWin->_SetValue(0);
-			_SetValue(-1);
-		}
-	}
-	else if (sel != v) {
-		_ClearSelection(groupId);
-		_SetValue(v);
-	}
-}
 
 void Radio::GroupId(uint8_t NewGroupId) {
 	auto OldGroupId = groupId;

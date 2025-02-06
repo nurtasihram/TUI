@@ -29,7 +29,7 @@ struct Point {
 };
 struct SRect {
 	int16_t x0 = 0, y0 = 0;
-	int16_t x1 = 0, y1 = 0;
+	int16_t x1 = -1, y1 = -1;
 	SRect() {}
 	SRect(Point p0) :
 		x0(p0.x), y0(p0.y), x1(p0.x), y1(p0.y) {}
@@ -309,18 +309,42 @@ struct GUI_DRAW_BASE {
 	virtual Point Size() { return 0; }
 };
 struct GUI_DRAW_BMP : GUI_DRAW_BASE {
-	CBitmap *pBitmap;
-	GUI_DRAW_BMP(CBitmap *pBitmap) : pBitmap(pBitmap) {}
+	CBitmap &bmp;
+	GUI_DRAW_BMP(CBitmap &bmp) : bmp(bmp) {}
 	void Draw(SRect) override;
-	Point Size() override { return pBitmap->Size; }
-	static GUI_DRAW_BMP *Create(CBitmap *pBitmap);
+	Point Size() override { return bmp.Size; }
+	static GUI_DRAW_BMP *Create(CBitmap &);
 };
 using GUI_DRAW_CB = void(SRect);
 struct GUI_DRAW_SELF : GUI_DRAW_BASE {
 	GUI_DRAW_CB *pfDraw;
 	GUI_DRAW_SELF(GUI_DRAW_CB *pfDraw) : pfDraw(pfDraw) {}
 	void Draw(SRect) override;
-	static GUI_DRAW_SELF *Create(GUI_DRAW_CB *pfDraw);
+	static GUI_DRAW_SELF *Create(GUI_DRAW_CB *pcb);
+};
+class GUI_DRAW {
+	mutable GUI_DRAW_BASE *pDrawObj;
+public:
+	GUI_DRAW(const GUI_DRAW &obj) : pDrawObj(obj.pDrawObj) { obj.pDrawObj = nullptr; }
+	GUI_DRAW(GUI_DRAW_CB *pcb) : pDrawObj(GUI_DRAW_SELF::Create(pcb)) {}
+	GUI_DRAW(CBitmap &bmp) : pDrawObj(GUI_DRAW_BMP::Create(bmp)) {}
+	GUI_DRAW(GUI_DRAW_BASE *pDrawObj = nullptr) : pDrawObj(pDrawObj) {}
+	~GUI_DRAW();
+public:
+	inline operator bool() const { return pDrawObj; }
+	inline void operator=(const GUI_DRAW &DrawObj) {
+		pDrawObj = DrawObj.pDrawObj;
+		DrawObj.pDrawObj = nullptr;
+	}
+	inline void Draw(SRect r) const {
+		if (pDrawObj)
+			pDrawObj->Draw(r);
+	}
+	inline Point Size() const {
+		if (pDrawObj)
+			return pDrawObj->Size();
+		return 0;
+	}
 };
 #pragma endregion
 
@@ -341,10 +365,12 @@ public:
 		Baseline(Baseline),
 		LHeight(LHeight), CHeight(CHeight) {}
 public:
-	virtual void DispChar(uint16_t) const = 0;
+	virtual int  DispChar(uint16_t) const = 0;
 	virtual int  XDist(uint16_t) const = 0;
 	virtual int  XDist(const char *pString, int NumChars) const;
 	virtual bool IsInFont(uint16_t) const = 0;
+public:
+	Point Size(const char *pText) const;
 };
 class FontProp : public Font {
 public:
@@ -381,7 +407,7 @@ public:
 private:
 	const Prop *_FindChar(uint16_t) const;
 public:
-	void DispChar(uint16_t) const override;
+	int  DispChar(uint16_t) const override;
 	int  XDist(uint16_t) const override;
 	bool IsInFont(uint16_t) const override;
 };
@@ -418,7 +444,7 @@ public:
 		xSize(XSize), xDist(XDist),
 		BytesPerLine(BytesPerLine) {}
 public:
-	void DispChar(uint16_t) const override;
+	int  DispChar(uint16_t) const override;
 	int  XDist(uint16_t) const override;
 	bool IsInFont(uint16_t) const override;
 };
@@ -449,8 +475,9 @@ void GUI__strcpy(char *s, const char *c);
 void GUI__memcpy(void *sDest, const void *pSrc, size_t Len);
 
 uint16_t GUI__NumTexts(const char *pTexts);
-const char *GUI__NextText(const char *pTexts);
-uint16_t GUI__NumLines(const char *pTexts);
+const char *GUI__NextText(const char *pText);
+
+uint16_t GUI__NumLines(const char *pText);
 const char *GUI__NextLines(const char *pText);
 uint16_t GUI__NumCharsLine(const char *pText);
 uint16_t GUI__NumChars(const char *pText);
@@ -461,12 +488,12 @@ void *GUI_MEM_AllocZero(size_t size);
 void  GUI_MEM_Free(void *);
 void *GUI_MEM_Realloc(void *hOld, int NewSize);
 
-struct TString {
+struct GUI_STRING {
 	char *pText = nullptr;
-	TString() {}
-	TString(const TString &s) { GUI__SetText(&pText, s); }
-	TString(const char *s) { GUI__SetText(&pText, s); }
-	~TString() {
+	GUI_STRING() {}
+	GUI_STRING(const GUI_STRING &s) { GUI__SetText(&pText, s); }
+	GUI_STRING(const char *s) { GUI__SetText(&pText, s); }
+	~GUI_STRING() {
 		GUI_MEM_Free(pText);
 		pText = nullptr;
 	}
@@ -479,11 +506,9 @@ struct TString {
 void GUI_StoreKeyMsg(int Key, int Pressed);
 void GUI_SendKeyMsg(int Key, int Pressed);
 bool GUI_PollKeyMsg();
-
 /* Application layer */
 int  GUI_GetKey();
 void GUI_StoreKey(int c);
-void GUI_ClearKeyBuffer();
 
 void GUI__DispLine(const char *s, int MaxNumChars, Point Pos);
 
@@ -516,7 +541,7 @@ public:
 	void Clear();
 	void Clear(SRect);
 	void Fill(SRect);
-	void OutlineFocus(SRect, int Dist = 0);
+	void DrawFocus(SRect, int Dist = 0);
 	void Outline(SRect);
 	void DrawBitmap(CBitmap &, Point);
 	inline void DrawLineH(int x0, int y0, int x1) { Fill({ x0, y0, x1, y0 }); }
@@ -530,7 +555,7 @@ public:
 		Props.aColor[1] = tmp;
 	}
 public:
-	void DispString(const char *s, SRect r, int MaxNumChars = 0x7fff);
+	SRect DispString(const char *s, SRect r);
 #pragma endregion
 
 	int XDist(const char *pString, int NumChars) { return Props.pFont->XDist(pString, NumChars); }

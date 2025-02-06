@@ -1,21 +1,23 @@
 #pragma once
 #include "WM.h"
 
-#define BUTTON_STATE_HASFOCUS 0
-#define BUTTON_STATE_PRESSED  WC_USER(0)
-
+using		BUTTON_STATE = WC_EX;
+constexpr	BUTTON_STATE
+			BUTTON_STATE_HASFOCUS = 0,
+			BUTTON_STATE_PRESSED  = WC_EX_USER(0);
 enum BUTTON_BI {
-	 BUTTON_BI_UNPRESSED = 0,
-	 BUTTON_BI_PRESSED,
-	 BUTTON_BI_DISABLED
+	BUTTON_BI_UNPRESSED = 0,
+	BUTTON_BI_PRESSED,
+	BUTTON_BI_DISABLED
 };
 enum BUTTON_CI {
-	 BUTTON_CI_UNPRESSED = 0,
-	 BUTTON_CI_PRESSED,
-	 BUTTON_CI_DISABLED
+	BUTTON_CI_UNPRESSED = 0,
+	BUTTON_CI_PRESSED,
+	BUTTON_CI_DISABLED
 };
 
 class Button : public Widget {
+
 public:
 	struct Property {
 		CFont *pFont{ &GUI_Font13_1 };
@@ -29,36 +31,37 @@ public:
 			/* Pressed */ RGB_WHITE,
 			/* Disabled */ RGB_LIGHTGRAY
 		};
-		TEXTALIGN Align{ TEXTALIGN_HCENTER | TEXTALIGN_VCENTER };
-	};
-	static Property DefaultProps;
+		TEXTALIGN Align{ TEXTALIGN_CENTER };
+	} static DefaultProps;
+
 private:
 	Property Props;
-	TString text;
-	GUI_DRAW_BASE *apDrawObj[3] = { 0 };
+	GUI_STRING text;
+	GUI_DRAW aDrawObj[3];
 
 private:
 	void _Pressed();
 	void _Released(int Notification);
-private:
+
 	void _OnPaint() const;
 	void _OnTouch(const PID_STATE *);
-	void _OnPidStateChange(const PID_CHANGED_STATE *pState);
+	void _OnPidStateChange(const PID_CHANGED_STATE *);
 	bool _OnKey(const KEY_STATE *);
 
-	static WM_RESULT _Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc);
+	static WM_RESULT _Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc);
 
 public:
-	Button(int x0, int y0, int xsize, int ysize,
-		   WObj *pParent, uint16_t Id = 0,
-		   WM_CF Flags = WC_HIDE,
+	Button(const SRect &rc = {},
+		   PWObj pParent = nullptr, uint16_t Id = 0,
+		   WM_CF Flags = WC_HIDE, WC_EX FlagsEx = 0,
 		   const char *pText = nullptr);
-	Button(const WM_CREATESTRUCT &wc) :
-		Button(wc.x, wc.y, wc.xsize, wc.ysize,
-			   wc.pParent, wc.Id,
-			   wc.Flags, wc.pCaption) {}
+	Button(const WM_CREATESTRUCT &wc) : Button(
+		wc.rect(),
+		wc.pParent, wc.Id,
+		wc.Flags, wc.FlagsEx,
+		wc.pCaption) {}
 protected:
-	~Button();
+	~Button() = default;
 
 #pragma region Properties
 public: // Property - Font
@@ -72,14 +75,12 @@ public: // Property - BkColor
 public: // Property - TextColor
 	/* R */ inline auto TextColor(BUTTON_CI Index) { return Props.aTextColor[Index]; }
 public: // Property - SelfDraw
-	/* W */ inline void SelfDraw(BUTTON_BI Index, GUI_DRAW_BASE *pDrawObj) {
-		GUI_MEM_Free(apDrawObj[Index]);
-		apDrawObj[Index] = pDrawObj;
+	/* W */ inline void SelfDraw(BUTTON_BI Index, GUI_DRAW_CB *pDrawCb) { SelfDraw(Index, (GUI_DRAW)pDrawCb); }
+	/* W */ inline void SelfDraw(BUTTON_BI Index, const GUI_DRAW &DrawObj) {
+		aDrawObj[Index] = DrawObj;
 		Invalidate();
 	}
-	/* W */ inline void SelfDraw(BUTTON_BI Index, GUI_DRAW_CB *pDrawCb) { SelfDraw(Index, GUI_DRAW_SELF::Create(pDrawCb)); }
-	/* W */ inline void SelfDraw(BUTTON_BI Index, CBitmap *pBitmap) { SelfDraw(Index, GUI_DRAW_BMP::Create(pBitmap)); }
-	/* R */ inline auto SelfDraw(BUTTON_BI Index) const { return apDrawObj[Index]; }
+//	/* R */ inline auto SelfDraw(BUTTON_BI Index) const { return DrawObj[Index]; }
 public: // Property - TextAlign
 	/* R */ inline auto TextAlign() const { return Props.Align; }
 	/* W */ inline void TextAlign(TEXTALIGN Align) {

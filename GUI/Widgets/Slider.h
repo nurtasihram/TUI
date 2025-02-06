@@ -1,8 +1,10 @@
 #pragma once
 #include "WM.h"
 
-#define SLIDER_STATE_PRESSED WC_USER(0)
-#define SLIDER_CF_VERTICAL WC_EX_VERTICAL
+using		SLIDER_CF = WC_EX;
+constexpr	SLIDER_CF 
+			SLIDER_CF__PRESSED = WC_EX_USER(0),
+			SLIDER_CF_VERTICAL = WC_EX_VERTICAL;
 
 class Slider : public Widget {
 public:
@@ -23,17 +25,17 @@ private:
 	void _OnTouch(const PID_STATE *pState);
 	void _OnKey(const KEY_STATE *pKeyInfo);
 	
-	static WM_RESULT _Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc);
+	static WM_RESULT _Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc);
 
 public:
-	Slider(int x0, int y0, int xsize, int ysize,
-		   WObj *pParent, uint16_t Id,
-		   WM_CF Flags, uint16_t ExFlags,
+	Slider(const SRect &rc = {},
+		   PWObj pParent = nullptr, uint16_t Id = 0,
+		   WM_CF Flags = WC_HIDE, SLIDER_CF FlagsEx = 0,
 		   int16_t Min = 0, int16_t Max = 100, int16_t v = 0, int16_t nTicks = -1);
 	Slider(const WM_CREATESTRUCT &wc) :
-		Slider(wc.x, wc.y, wc.xsize, wc.ysize,
+		Slider(wc.rect(),
 			   wc.pParent, wc.Id,
-			   wc.Flags, wc.ExFlags,
+			   wc.Flags, wc.FlagsEx,
 			   wc.Para.i16_4[0], wc.Para.i16_4[1], wc.Para.i16_4[2], wc.Para.i16_4[3]) {}
 
 public:

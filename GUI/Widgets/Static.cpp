@@ -9,7 +9,7 @@ void Static::_OnPaint() const {
 	GUI.TextAlign(Props.Align);
 	GUI.DispString(text, ClientRect());
 }
-WM_RESULT Static::_Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc) {
+WM_RESULT Static::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 	auto pObj = (Static *)pWin;
 	if (!pObj->HandleActive(MsgId, Param))
 		return Param;
@@ -24,13 +24,13 @@ WM_RESULT Static::_Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc) {
 	return DefCallback(pObj, MsgId, Param, pSrc);
 }
 
-Static::Static(int x0, int y0, int xsize, int ysize,
-			   WObj *pParent, uint16_t Id,
-			   WM_CF Flags, uint16_t ExFlags,
+Static::Static(const SRect &rc,
+			   PWObj pParent, uint16_t Id,
+			   WM_CF Flags, STATIC_CF FlagsEx,
 			   const char *pText) :
-	Widget(x0, y0, xsize, ysize,
+	Widget(rc,
 		   _Callback,
 		   pParent, Id,
 		   Flags),
 	text(pText)
-{ Props.Align = (TEXTALIGN)ExFlags; }
+{ Props.Align = (TEXTALIGN)FlagsEx; }

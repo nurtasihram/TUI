@@ -693,7 +693,8 @@ using	  DRAWMODE = uint8_t;
 constexpr DRAWMODE
 		  DRAWMODE_NORMAL (0 << 1),
 		  DRAWMODE_TRANS  (1 << 1);
-using		ALIGN = uint8_t;
+
+using		ALIGN = uint8_t; /* take only 4-btis */
 constexpr   ALIGN
 			ALIGN_LEFT		(1 << 0),
 			ALIGN_RIGHT		(2 << 0),
@@ -701,11 +702,12 @@ constexpr   ALIGN
 			ALIGN_TOP		(1 << 2),
 			ALIGN_BOTTOM	(2 << 2),
 			ALIGN_VCENTER	(3 << 2);
+
 using	  TEXTALIGN = uint8_t;
-constexpr TEXTALIGN TEXTALIGN_LEFT		(0 << 0),
-					TEXTALIGN_RIGHT		(1 << 0),
-					TEXTALIGN_HCENTER	(2 << 0),
-					TEXTALIGN_HORIZONTAL(3 << 0),
-					TEXTALIGN_TOP		(0 << 2),
-					TEXTALIGN_BOTTOM	(1 << 2),
-					TEXTALIGN_VCENTER	(3 << 2);
+constexpr TEXTALIGN TEXTALIGN_LEFT		(ALIGN_LEFT),
+					TEXTALIGN_RIGHT		(ALIGN_RIGHT),
+					TEXTALIGN_HCENTER	(ALIGN_HCENTER),
+					TEXTALIGN_TOP		(ALIGN_TOP),
+					TEXTALIGN_BOTTOM	(ALIGN_BOTTOM),
+					TEXTALIGN_VCENTER	(ALIGN_VCENTER);
+constexpr TEXTALIGN TEXTALIGN_CENTER	(TEXTALIGN_HCENTER | TEXTALIGN_VCENTER);

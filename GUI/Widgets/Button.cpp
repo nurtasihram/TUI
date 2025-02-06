@@ -2,7 +2,6 @@
 
 Button::Property Button::DefaultProps;
 
-#pragma region Callbacks
 void Button::_Pressed() {
 	if (!(StatusEx & BUTTON_STATE_PRESSED)) {
 		StatusEx |= BUTTON_STATE_PRESSED;
@@ -38,12 +37,9 @@ void Button::_OnPaint() const {
 	auto &&rInside = rClient / EffectSize;
 	WObj::UserClip(&rInside);
 	GUI.Clear();
-	if (auto pDraw =
-		apDrawObj[ColorIndex < 2 ?
-			apDrawObj[BUTTON_BI_PRESSED] && bPressed ? BUTTON_BI_PRESSED : BUTTON_BI_UNPRESSED :
-			apDrawObj[BUTTON_BI_DISABLED] ? BUTTON_BI_DISABLED : BUTTON_BI_UNPRESSED
-		])
-		pDraw->Draw(InsideRectAbs());
+	aDrawObj[ColorIndex < 2 ?
+		aDrawObj[BUTTON_BI_PRESSED] && bPressed ? BUTTON_BI_PRESSED : BUTTON_BI_UNPRESSED :
+		aDrawObj[BUTTON_BI_DISABLED] ? BUTTON_BI_DISABLED : BUTTON_BI_UNPRESSED].Draw(InsideRect());
 	if (text) {
 		GUI.Font(Props.pFont);
 		GUI.TextAlign(Props.Align);
@@ -55,7 +51,7 @@ void Button::_OnPaint() const {
 		GUI.PenColor(RGB_BLACK);
 		if (bPressed)
 			rClient += EffectSize;
-		GUI.OutlineFocus(rClient, 2);
+		GUI.DrawFocus(rClient, 2);
 	}
 	WObj::UserClip(nullptr);
 }
@@ -95,7 +91,7 @@ bool Button::_OnKey(const KEY_STATE *pKi) {
 	return false;
 }
 
-WM_RESULT Button::_Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc) {
+WM_RESULT Button::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 	auto pObj = (Button *)pWin;
 	if (!pObj->HandleActive(MsgId, Param))
 		return Param;
@@ -103,23 +99,32 @@ WM_RESULT Button::_Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc) {
 		case WM_PAINT:
 			pObj->_OnPaint();
 			return 0;
-		case WM_PID_STATE_CHANGED:
-			pObj->_OnPidStateChange(Param);
-			return 0;
 		case WM_TOUCH:
 			pObj->_OnTouch(Param);
-			return 0;
-		case WM_DELETE:
-			pObj->~Button();
 			return 0;
 		case WM_KEY:
 			if (!pObj->_OnKey(Param))
 				break;
 			return 0;
+		case WM_PID_STATE_CHANGED:
+			pObj->_OnPidStateChange(Param);
+			return 0;
+		case WM_DELETE:
+			pObj->~Button();
+			return 0;
 	}
 	return DefCallback(pObj, MsgId, Param, pSrc);
 }
-#pragma endregion
+
+Button::Button(const SRect &rc,
+			   PWObj pParent, uint16_t Id,
+			   WM_CF Flags, WC_EX FlagsEx,
+			   const char *pText) :
+	Widget(rc,
+		   _Callback,
+		   pParent, Id,
+		   Flags | WC_FOCUSSABLE, FlagsEx),
+	text(pText) {}
 
 void Button::Pressed(bool bPressed) {
 	auto StatusEx = this->StatusEx;
@@ -142,23 +147,4 @@ void Button::Focussable(bool bFocussable) {
 		return;
 	this->StatusEx = StatusEx;
 	Invalidate();
-}
-
-Button::Button(int x0, int y0, int xsize, int ysize,
-			   WObj *pParent, uint16_t Id,
-			   WM_CF Flags,
-			   const char *pText) :
-	Widget(x0, y0, xsize, ysize,
-		   _Callback,
-		   pParent, Id,
-		   Flags | WC_FOCUSSABLE),
-	text(pText) {}
-
-Button::~Button() {
-	GUI_MEM_Free(apDrawObj[0]);
-	apDrawObj[0] = nullptr;
-	GUI_MEM_Free(apDrawObj[1]);
-	apDrawObj[1] = nullptr;
-	GUI_MEM_Free(apDrawObj[2]);
-	apDrawObj[2] = nullptr;
 }

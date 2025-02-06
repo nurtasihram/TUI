@@ -8,6 +8,13 @@ static void _DrawTriangleDown(int x, int y, int Size) {
 		GUI.DrawLineH(x - Size, y, x + Size);
 }
 
+void DropDown::_AdjustHeight() {
+	auto Height = textHeight;
+	if (!Height)
+		Height = Props.pFont->YDist;
+	Height += EffectSize() + 2 * Props.TextBorderSize;
+	SizeY(Height);
+}
 void DropDown::_SelectByKey(int Key) {
 	Key = _Tolower(Key);
 	for (int i = 0, NumItems = Handles.NumItems(); i < NumItems; ++i) {
@@ -16,14 +23,6 @@ void DropDown::_SelectByKey(int Key) {
 			Sel(i);
 			break;
 		}
-	}
-}
-
-DropDown::~DropDown() {
-	Handles.Delete();
-	if (pListbox) {
-		delete pListbox;
-		pListbox = nullptr;
 	}
 }
 
@@ -47,7 +46,8 @@ void DropDown::_OnPaint() const {
 		r.x0 += TextBorderSize;
 		r.x1 -= TextBorderSize;
 		GUI.PenColor(Props.aTextColor[ColorIndex]);
-		GUI.DispString(Handles[sel], r, Props.Align);
+		GUI.TextAlign(Props.Align);
+		GUI.DispString(Handles[sel], r);
 	}
 	/* Draw arrow */
 	r = ClientRect() / Border;
@@ -75,14 +75,7 @@ bool DropDown::_OnKey(const KEY_STATE *pKi) {
 	return false;
 }
 
-void DropDown::_AdjustHeight() {
-	auto Height = textHeight;
-	if (!Height)
-		Height = Props.pFont->YDist;
-	Height += EffectSize() + 2 * Props.TextBorderSize;
-	SizeY(Height);
-}
-WM_RESULT DropDown::_Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc) {
+WM_RESULT DropDown::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 	auto pObj = (DropDown *)pWin;
 	bool IsExpandedBeforeMsg = pObj->pListbox;
 	if (!pObj->HandleActive(MsgId, Param))
@@ -90,6 +83,22 @@ WM_RESULT DropDown::_Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc)
 	switch (MsgId) {
 		case WM_PAINT:
 			pObj->_OnPaint();
+			return 0;
+		case WM_TOUCH:
+			pObj->_OnTouch(Param);
+			return 0;
+		case WM_KEY:
+			if (!pObj->_OnKey(Param))
+				return 0;
+			break;
+		case WM_PID_STATE_CHANGED:
+			if (!IsExpandedBeforeMsg) /* Make sure we do not react a second time */
+				if (const PID_CHANGED_STATE *pInfo = Param)
+					if (pInfo->Pressed)
+						pObj->Expand();
+			break;
+		case WM_DELETE:
+			pObj->~DropDown();
 			return 0;
 		case WM_NOTIFY_PARENT:
 			switch ((int)Param) {
@@ -105,36 +114,27 @@ WM_RESULT DropDown::_Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc)
 				break;
 			}
 			break;
-		case WM_PID_STATE_CHANGED:
-			if (!IsExpandedBeforeMsg) /* Make sure we do not react a second time */
-				if (const PID_CHANGED_STATE *pInfo = Param)
-					if (pInfo->Pressed)
-						pObj->Expand();
-			break;
-		case WM_TOUCH:
-			pObj->_OnTouch(Param);
-			return 0;
-		case WM_DELETE:
-			pObj->~DropDown();
-			return 0;
-		case WM_KEY:
-			if (!pObj->_OnKey(Param))
-				return 0;
-			break;
 	}
 	return DefCallback(pObj, MsgId, Param, pSrc);
 }
 
-DropDown::DropDown(int x0, int y0, int xsize, int ysize,
-				   WObj *pParent, uint16_t Id,
-				   WM_CF Flags, uint8_t ExFlags) :
-	Widget(x0, y0, xsize, -1,
+DropDown::DropDown(const SRect &rc,
+				   PWObj pParent, uint16_t Id,
+				   WM_CF Flags, DROPDOWN_CF FlagsEx) :
+	Widget(rc,
 		   _Callback,
 		   pParent, Id,
 		   Flags | WC_FOCUSSABLE),
-	Flags(ExFlags),
-	ySizeEx(ysize)
+	Flags(FlagsEx),
+	ySizeEx(rc.ysize())
 { _AdjustHeight(); }
+DropDown::~DropDown() {
+	Handles.Delete();
+	if (pListbox) {
+		pListbox->Destroy();
+		pListbox = nullptr;
+	}
+}
 
 void DropDown::Collapse() {
 	if (pListbox) {
@@ -150,11 +150,11 @@ void DropDown::Expand() {
 		r.y0 -= ySizeEx;
 	else
 		r.y0 = r.y1;
-	pListbox = new ListBox(
-		r.x0, r.y0,
-		SizeX(), ySizeEx,
-		WM_UNATTACHED, 0,
-		WC_VISIBLE | WC_STAYONTOP, 0, NumItems());
+	//pListbox = new ListBox(
+	//	r.x0, r.y0,
+	//	SizeX(), ySizeEx,
+	//	WM_UNATTACHED, 0,
+	//	WC_VISIBLE | WC_STAYONTOP, 0, NumItems());
 	if (Flags & DROPDOWN_CF_AUTOSCROLLBAR) {
 		pListbox->ScrollBarWidth(ScrollbarWidth);
 		pListbox->AutoScrollV(true);
@@ -188,7 +188,7 @@ bool DropDown::AddKey(int Key) {
 	return false;
 }
 
-void DropDown::InsertString(uint16_t Index, const char *s) {
+void DropDown::Insert(uint16_t Index, const char *s) {
 	if (!s) return;
 	auto NumItems = this->NumItems();
 	if (Index >= NumItems) {

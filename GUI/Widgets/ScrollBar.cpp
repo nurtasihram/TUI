@@ -6,6 +6,8 @@ static int _DivideRound(int a, int b) { return b ? (a + b / 2) / b : 0; }
 
 int ScrollBar::_GetArrowSize() const {
 	auto size = Size();
+	if (StatusEx & SCROLLBAR_CF_VERTICAL)
+		size = ~size;
 	auto r = size.y / 2 + 5;
 	return r > size.x - 5 ? size.x - 5 : r;
 }
@@ -66,15 +68,23 @@ void ScrollBar::_DrawTriangle(int x, int y, int Size, int Inc) const {
 			GUI.DrawLineV(x, y - Size, y + Size);
 }
 void ScrollBar::_ScrollbarPressed() {
-	OrState(SCROLLBAR_STATE_PRESSED);
+	OrState(SCROLLBAR_CF__PRESSED);
 	if (Status & WC_VISIBLE)
 		NotifyParent(WN_CLICKED);
 }
 void ScrollBar::_ScrollbarReleased() {
-	AndState(SCROLLBAR_STATE_PRESSED);
+	AndState(SCROLLBAR_CF__PRESSED);
 	if (Status & WC_VISIBLE)
 		NotifyParent(WN_RELEASED);
 }
+
+SRect ScrollBar::_AutoSize(PWObj pParent, uint16_t FlagsEx) const {
+	auto &&rcInside = pParent->InsideRect();
+	if (FlagsEx & SCROLLBAR_CF_VERTICAL)
+		return{ rcInside.x1 - DefaultWidth, rcInside.y0, rcInside.x1, rcInside.y1 };
+	return{ rcInside.x0, rcInside.y1 - DefaultWidth, rcInside.x1, rcInside.y1 };
+}
+
 void ScrollBar::_OnPaint() {
 	auto &&Pos = _CalcPositions();
 	auto &&rClient = ClientRect();
@@ -125,7 +135,7 @@ void ScrollBar::_OnTouch(const PID_STATE *pState) {
 	if (!pState)
 		return;
 	if (!pState->Pressed) {
-		if (StatusEx & SCROLLBAR_STATE_PRESSED)
+		if (StatusEx & SCROLLBAR_CF__PRESSED)
 			_ScrollbarReleased();
 		return;
 	}
@@ -149,7 +159,7 @@ void ScrollBar::_OnTouch(const PID_STATE *pState) {
 		Sel++;
 	Capture(true);
 	Value(Sel);
-	if (!(StatusEx & SCROLLBAR_STATE_PRESSED))
+	if (!(StatusEx & SCROLLBAR_CF__PRESSED))
 		_ScrollbarPressed();
 }
 void ScrollBar::_OnKey(const KEY_STATE *pKeyInfo) {
@@ -170,7 +180,7 @@ void ScrollBar::_OnKey(const KEY_STATE *pKeyInfo) {
 	}
 }
 
-WM_RESULT ScrollBar::_Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc) {
+WM_RESULT ScrollBar::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 	auto pObj = (ScrollBar *)pWin;
 	if (!pObj->HandleActive(MsgId, Param))
 		return Param;
@@ -178,40 +188,35 @@ WM_RESULT ScrollBar::_Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc
 	case WM_PAINT:
 		pObj->_OnPaint();
 		return 0;
-	case WM_DELETE:
-		pObj->_InvalidatePartner();
-		return 0;
 	case WM_TOUCH:
 		pObj->_OnTouch(Param);
 		return 0;
 	case WM_KEY:
 		pObj->_OnKey(Param);
 		return 0;
+	case WM_DELETE:
+		pObj->_InvalidatePartner();
+		return 0;
 	}
 	return DefCallback(pObj, MsgId, Param, pSrc);
 }
 
-SRect ScrollBar::_AutoSize(WObj *pParent, uint16_t ExFlags) const {
-	auto &&rect = pParent->InsideRect();
-	if (ExFlags & SCROLLBAR_CF_VERTICAL)
-		return{ rect.x1 - DefaultWidth, rect.y0, rect.x1, rect.y1 };
-	return{ rect.x0, rect.y1 - DefaultWidth, rect.x1, rect.y1 };
-}
-
-ScrollBar::ScrollBar(int x0, int y0, int xsize, int ysize,
-					 WObj *pParent, uint16_t Id,
-					 WM_CF Flags, uint16_t ExFlags) :
-	Widget((x0 | y0) ? SRect::left_top({ x0, y0 }, { xsize, ysize }) : _AutoSize(pParent, ExFlags),
-		   &_Callback,
+ScrollBar::ScrollBar(const SRect &rc,
+					 PWObj pParent, uint16_t Id,
+					 WM_CF Flags, SCROLLBAR_CF FlagsEx,
+					 SCROLL_STATE State) :
+	Widget(rc ? rc : _AutoSize(pParent, FlagsEx),
+		   _Callback,
 		   pParent, Id,
-		   Flags, ExFlags)
+		   Flags, FlagsEx),
+	state(State)
 { _InvalidatePartner(); }
-ScrollBar::ScrollBar(WObj *pParent, int SpecialFlags) :
-	ScrollBar(0, 0, 0, 0,
-			  pParent, SpecialFlags & SCROLLBAR_CF_VERTICAL ? GUI_ID_VSCROLL : GUI_ID_HSCROLL,
-			  ((SpecialFlags & SCROLLBAR_CF_VERTICAL) ? WC_ANCHOR_TOP : WC_ANCHOR_LEFT) |
-				(WC_VISIBLE | WC_STAYONTOP | WC_ANCHOR_RIGHT | WC_ANCHOR_BOTTOM),
-			  SpecialFlags)
+ScrollBar::ScrollBar(PWObj pParent, uint16_t Id) :
+	ScrollBar({},
+			  pParent, Id,
+			  (Id == GUI_ID_VSCROLL ? WC_ANCHOR_TOP : WC_ANCHOR_LEFT) |
+				(WC_STAYONTOP | WC_ANCHOR_RIGHT | WC_ANCHOR_BOTTOM),
+			  (Id == GUI_ID_VSCROLL ? SCROLLBAR_CF_VERTICAL : 0))
 { NotifyParent(WN_SCROLLBAR_ADDED); }
 
 ScrollBar *ScrollBar::Partner() {

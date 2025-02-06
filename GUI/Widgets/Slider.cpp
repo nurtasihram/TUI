@@ -3,12 +3,12 @@
 Slider::Property Slider::DefaultProps;
 
 void Slider::_SliderPressed() {
-	OrState(SLIDER_STATE_PRESSED);
+	OrState(SLIDER_CF__PRESSED);
 	if (Status & WC_VISIBLE)
 		NotifyParent(WN_CLICKED);
 }
 void Slider::_Released() {
-	AndState(SLIDER_STATE_PRESSED);
+	AndState(SLIDER_CF__PRESSED);
 	if (Status & WC_VISIBLE)
 		NotifyParent(WN_RELEASED);
 }
@@ -50,14 +50,14 @@ void Slider::_OnPaint() const {
 	DrawUp(rSlider);
 	if (Focussed()) {
 		GUI.PenColor(RGB_BLACK);
-		OutlineFocus(rFocus);
+		DrawFocus(rFocus);
 	}
 }
 void Slider::_OnTouch(const PID_STATE *pState) {
 	if (!pState)
 		return;
 	if (!pState->Pressed) {
-		if (StatusEx & SLIDER_STATE_PRESSED)
+		if (StatusEx & SLIDER_CF__PRESSED)
 			_Released();
 		return;
 	}
@@ -78,7 +78,7 @@ void Slider::_OnTouch(const PID_STATE *pState) {
 	Focus();
 	Capture(true);
 	Value(Sel);
-	if (!(StatusEx & SLIDER_STATE_PRESSED))
+	if (!(StatusEx & SLIDER_CF__PRESSED))
 		_SliderPressed();
 }
 void Slider::_OnKey(const KEY_STATE *pKeyInfo) {
@@ -97,7 +97,7 @@ void Slider::_OnKey(const KEY_STATE *pKeyInfo) {
 	}
 }
 
-WM_RESULT Slider::_Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc) {
+WM_RESULT Slider::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 	auto pObj = (Slider *)pWin;
 	if (!pObj->HandleActive(MsgId, Param))
 		return Param;
@@ -115,12 +115,12 @@ WM_RESULT Slider::_Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc) {
 	return DefCallback(pObj, MsgId, Param, pSrc);
 }
 
-Slider::Slider(int x0, int y0, int xsize, int ysize,
-			   WObj *pParent, uint16_t Id,
-			   WM_CF Flags, uint16_t ExFlags,
+Slider::Slider(const SRect &rc,
+			   PWObj pParent, uint16_t Id,
+			   WM_CF Flags, uint16_t FlagsEx,
 			   int16_t Min, int16_t Max, int16_t v, int16_t nTicks) :
-	Widget(x0, y0, xsize, ysize,
+	Widget(rc,
 		   _Callback,
 		   pParent, Id,
-		   Flags | WC_FOCUSSABLE, ExFlags),
+		   Flags | WC_FOCUSSABLE, FlagsEx),
 	Min(Min), Max(Max), v(v), nTicks(nTicks) {}

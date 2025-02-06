@@ -12,7 +12,7 @@ enum {
 };
 
 Frame *pFrm1, *pFrm2;
-WM_RESULT _cbFrame(WObj *pDlg, int MsgId, WM_PARAM Param, WObj *pSrc) {
+WM_RESULT _cbFrame(PWObj pDlg, int MsgId, WM_PARAM Param, PWObj pSrc) {
 	switch (MsgId) {
 		case WM_NOTIFY_PARENT:
 			switch ((int)Param) {
@@ -53,7 +53,7 @@ WM_RESULT _cbFrame(WObj *pDlg, int MsgId, WM_PARAM Param, WObj *pSrc) {
 }
 
 static const WM_CREATESTRUCT aDialogCreate[]{
-/*    Class             , x		, y		, xsize	, ysize	, Caption	 , Id			, Flags			, ExFlags			*/
+/*    Class             , x		, y		, xsize	, ysize	, Caption	 , Id			, Flags			, FlagsEx			*/
 	{ WCLS_FRAME		, 0		, 0		, 145	, 100	, "Align"	 , 0			, WC_VISIBLE , FRAME_CF_MOVEABLE	},
 	{ WCLS_BUTTON		, 5		, 5		, 40	, 30	, "Left"	 , ID_LEFT											},
 	{ WCLS_BUTTON		, 50	, 5		, 40	, 30	, "HCenter"	 , ID_HCENTER											},

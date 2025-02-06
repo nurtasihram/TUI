@@ -1,7 +1,7 @@
 #include "ProgBar.h"
 #include "Slider.h"
 
-WM_RESULT _cbDlg(WObj *pDlg, int MsgId, WM_PARAM Param, WObj *pSrc) {
+WM_RESULT _cbDlg(PWObj pDlg, int MsgId, WM_PARAM Param, PWObj pSrc) {
 	auto pPrg = ((ProgBar *)pDlg->DialogItem(GUI_ID_PROGBAR0));
 	auto pSlr = ((Slider *)pDlg->DialogItem(GUI_ID_SLIDER0));
 	switch (MsgId) {

@@ -22,7 +22,7 @@ void GUI_PANEL::Fill(SRect r) {
 	if (!r) return;
 	LCD_FillRect(r);
 }
-void GUI_PANEL::OutlineFocus(SRect r, int Dist) {
+void GUI_PANEL::DrawFocus(SRect r, int Dist) {
 	r /= Dist;
 	for (auto i = r.x0; i <= r.x1; i += 2) {
 		Fill(Point{ i, r.y0 });
@@ -49,29 +49,6 @@ void GUI_PANEL::DrawBitmap(CBitmap &bmp, Point Pos) {
 void GUI_LCD_SetBitmap(BitmapRect bc) {
 	if (bc &= GUI.rClip)
 		LCD_SetBitmap(bc);
-}
-#pragma endregion
-
-#pragma region LCD
-BitmapRect::BitmapRect(CBitmap &bmp, Point Pos) :
-	SRect(bmp.Rect(Pos)),
-	pData(const_cast<void *>(bmp.pData)),
-	pPalEntries(bmp.PalEntries()),
-	BytesPerLine(bmp.BytesPerLine),
-	BitsPerPixel(bmp.BitsPerPixel),
-	HasTrans(bmp.HasTrans) {}
-BitmapRect &BitmapRect::operator&=(const SRect &rClip) {
-	auto rNew = SRect::operator&(rClip);
-	auto off = rNew.left_top() - left_top();
-	if (off.x > 0) {
-		auto xoff_bits = off.x * BitsPerPixel;
-		BitsXOff = xoff_bits & 7;
-		(const uint8_t *&)pData += xoff_bits >> 3;
-	}
-	if (off.y > 0)
-		(const uint8_t *&)pData += off.y * BytesPerLine;
-	SRect::operator=(rNew);
-	return*this;
 }
 #pragma endregion
 
@@ -234,7 +211,7 @@ void GUI__SetText(char **ppText, const char *pText) {
 }
 #pragma endregion
 
-#pragma region String
+#pragma region GUI_DispString
 void GUI_DispString(const char *s) {
 	if (!s)
 		return;
@@ -246,7 +223,7 @@ void GUI_DispString(const char *s) {
 		auto LineNumChars = GUI__NumChars(s);
 		auto xLineSize = GUI.XDist(s, LineNumChars);
 		int xAdjust;
-		switch (GUI.TextAlign() & TEXTALIGN_HORIZONTAL) {
+		switch (GUI.TextAlign() & TEXTALIGN_HCENTER) {
 			case TEXTALIGN_HCENTER:
 				xAdjust = xLineSize / 2;
 				break;
@@ -259,7 +236,7 @@ void GUI_DispString(const char *s) {
 		GUI__DispLine(s, LineNumChars, { GUI.dispPos.x - xAdjust, GUI.dispPos.y });
 		s += LineNumChars;
 		if (*s == '\n' || *s == '\r') {
-			switch (GUI.TextAlign() & TEXTALIGN_HORIZONTAL) {
+			switch (GUI.TextAlign() & TEXTALIGN_HCENTER) {
 			case TEXTALIGN_HCENTER:
 			case TEXTALIGN_RIGHT:
 				GUI.dispPos.x = xOrg;
@@ -276,7 +253,7 @@ void GUI_DispString(const char *s) {
 			break;
 	}
 	GUI.dispPos.y += yAdjust;
-	GUI.TextAlign(GUI.TextAlign() & ~TEXTALIGN_HORIZONTAL);
+	GUI.TextAlign(GUI.TextAlign() & ~TEXTALIGN_HCENTER);
 }
 void GUI_DispStringAt(const char *s, Point Pos) {
 	GUI.DispPos(Pos);
@@ -291,57 +268,66 @@ void GUI_DispNextLine() {
 }
 int GUI_GetYAdjust() {
 	switch (GUI.TextAlign() & TEXTALIGN_VCENTER) {
-		case TEXTALIGN_BOTTOM:
-			return GUI.Font()->YSize - 1;
 		case TEXTALIGN_VCENTER:
 			return GUI.Font()->YSize / 2;
+		case TEXTALIGN_BOTTOM:
+			return GUI.Font()->YSize - 1;
 	}
 	return 0;
 }
 
 #include "WM.h"
-void GUI_PANEL::DispString(const char *s, SRect rText, int MaxNumChars) {
-	if (!s)
-		return;
+SRect GUI_PANEL::DispString(const char *s, SRect rText) {
+	if (!s) return {};
+	Point start;
 	auto pOldClipRect = WObj::UserClip(&rText);
 	if (pOldClipRect) {
 		auto &&r = rText & *pOldClipRect;
 		WObj::UserClip(&r);
 	}
-	rText += GUI.off;
+	rText += off;
+	uint16_t NumLines = GUI__NumLines(s);
+	uint16_t DistY = GUI__NumLines(s) * Font()->YSize;
 	switch (Props.TextAlign & TEXTALIGN_VCENTER) {
 		case TEXTALIGN_VCENTER:
-			GUI.dispPos.y = rText.y0 + (rText.dy() - GUI__NumLines(s) * GUI.Font()->YSize) / 2;
+			dispPos.y = rText.y0 + (rText.dy() - DistY) / 2;
 			break;
 		case TEXTALIGN_BOTTOM:
-			GUI.dispPos.y = rText.y1 - GUI__NumLines(s) * GUI.Font()->YSize;
+			dispPos.y = rText.y1 - DistY;
 			break;
 		default:
-			GUI.dispPos.y = rText.y0;
+			dispPos.y = rText.y0;
 	}
-	for (int NumCharsRem = MaxNumChars; NumCharsRem;) {
-		auto LineLen = GUI__NumCharsLine(s);
-		NumCharsRem -= LineLen;
-		switch (Props.TextAlign & TEXTALIGN_HORIZONTAL) {
+	start.y = dispPos.y;
+	uint16_t DistX = 0;
+	for (int i = 0; i < NumLines; ++i) {
+		auto NumCharsLine = GUI__NumCharsLine(s);
+		switch (Props.TextAlign & TEXTALIGN_HCENTER) {
 			case TEXTALIGN_HCENTER:
-				GUI.dispPos.x = rText.x0 + (rText.dx() - GUI.XDist(s, LineLen)) / 2;
+				dispPos.x = rText.x0 + (rText.dx() - XDist(s, NumCharsLine)) / 2;
 				break;
 			case TEXTALIGN_RIGHT:
-				GUI.dispPos.x = rText.x1 - GUI.XDist(s, LineLen);
+				dispPos.x = rText.x1 - XDist(s, NumCharsLine);
 				break;
 			default:
-				GUI.dispPos.x = rText.x0;
+				dispPos.x = rText.x0;
 		}
-		while (--LineLen)
-			GUI.Font()->DispChar(*s++);
+		uint16_t xDist = 0, dispX = dispPos.x;
+		while (--NumCharsLine)
+			xDist += Font()->DispChar(*s++);
+		if (DistX < xDist) {
+			DistX = xDist;
+			start.x = dispX;
+		}
 		auto ch = *s;
 		if (ch == '\0')
 			break;
 		else if (ch == '\n')
 			++s;
-		GUI.dispPos.y += GUI.Font()->YDist;
+		dispPos.y += Font()->YDist;
 	}
 	WObj::UserClip(pOldClipRect);
+	return SRect::left_top(start - off, { DistX, DistY });
 }
 void GUI_DispChar(uint16_t c) {
 	auto &&r = SRect::left_top(GUI.dispPos,
@@ -368,10 +354,21 @@ void GUI__DispLine(const char *s, int MaxNumChars, Point Off) {
 #pragma region Font
 int Font::XDist(const char *pString, int NumChars) const {
 	if (!pString) return 0;
-	int Dist = 0;
+	int DistX = 0;
 	for (; NumChars; --NumChars)
-		Dist += GUI.Font()->XDist(*pString++);
-	return Dist;
+		 DistX += GUI.Font()->XDist(*pString++);
+	return DistX;
+}
+Point Font::Size(const char *pText) const {
+	uint16_t DistX = 0;
+	auto NumLines = GUI__NumLines(pText);
+	for (int i = 0; i < NumLines; ++i) {
+		auto NumCharsLien = GUI__NumCharsLine(pText);
+		auto xDist = XDist(pText, NumCharsLien);
+		if (DistX < xDist)
+			DistX = xDist;
+	}
+	return{ DistX, NumLines * YDist };
 }
 #pragma region Proportional Font
 const FontProp::Prop *FontProp::_FindChar(uint16_t c) const {
@@ -380,10 +377,10 @@ const FontProp::Prop *FontProp::_FindChar(uint16_t c) const {
 			return pProp;
 	return nullptr;
 }
-void FontProp::DispChar(uint16_t c) const {
+int FontProp::DispChar(uint16_t c) const {
 	auto pProp = _FindChar(c);
 	if (!pProp)
-		return;
+		return 0;
 	auto &ci = pProp->paCharInfo[c - pProp->First];
 	auto &&Pal = GUI.Palette();
 	GUI_LCD_SetBitmap({ {
@@ -395,6 +392,7 @@ void FontProp::DispChar(uint16_t c) const {
 			/* Transparent */ GUI.BkColor() == RGB_INVALID_COLOR
 			}, GUI.dispPos });
 	GUI.dispPos.x += ci.XDist;
+	return ci.XDist;
 }
 int FontProp::XDist(uint16_t c) const {
 	auto pProp = _FindChar(c);
@@ -404,7 +402,7 @@ bool FontProp::IsInFont(uint16_t c) const
 { return _FindChar(c); }
 #pragma endregion
 #pragma region Monospace Font
-void FontMono::DispChar(uint16_t c) const {
+int FontMono::DispChar(uint16_t c) const {
 	int c0 = -1, c1 = -1;
 	const uint8_t *pd;
 	auto FirstChar = this->FirstChar;
@@ -423,28 +421,29 @@ void FontMono::DispChar(uint16_t c) const {
 			}
 		}
 	}
-	if (c0 != -1) {
-		auto BytesPerChar = YSize * BytesPerLine;
-		auto &&Pal = GUI.Palette();
+	if (c0 == -1)
+		return 0;
+	auto BytesPerChar = YSize * BytesPerLine;
+	auto &&Pal = GUI.Palette();
+	GUI_LCD_SetBitmap({ {
+			/* Size */ { xSize, YSize },
+			/* BytesPerLine */ BytesPerLine,
+			/* BitsPerPixel */ 1,
+			/* Bits */ pd + c0 * BytesPerChar,
+			/* Palette */ &Pal,
+			/* Transparent */ GUI.BkColor() == RGB_INVALID_COLOR
+		}, GUI.dispPos });
+	if (c1 != -1)
 		GUI_LCD_SetBitmap({ {
 				/* Size */ { xSize, YSize },
 				/* BytesPerLine */ BytesPerLine,
 				/* BitsPerPixel */ 1,
-				/* Bits */ pd + c0 * BytesPerChar,
+				/* Bits */ pd + c1 * BytesPerChar,
 				/* Palette */ &Pal,
-				/* Transparent */ GUI.BkColor() == RGB_INVALID_COLOR
+				/* Transparent */ true
 			}, GUI.dispPos });
-		if (c1 != -1)
-			GUI_LCD_SetBitmap({ {
-					/* Size */ { xSize, YSize },
-					/* BytesPerLine */ BytesPerLine,
-					/* BitsPerPixel */ 1,
-					/* Bits */ pd + c1 * BytesPerChar,
-					/* Palette */ &Pal,
-					/* Transparent */ true
-				}, GUI.dispPos });
-	}
 	GUI.dispPos.x += xDist;
+	return xDist;
 }
 int FontMono::XDist(uint16_t) const { return xDist; }
 bool FontMono::IsInFont(uint16_t c) const {
@@ -465,10 +464,14 @@ void GUI_PANEL::Init() {
 
 #pragma region GUI_DRAW_BASE Classes
 #include <memory>
-void GUI_DRAW_BMP::Draw(SRect r) { GUI.DrawBitmap(*pBitmap, r.left_top()); }
-GUI_DRAW_BMP *GUI_DRAW_BMP::Create(CBitmap *pBitmap) { return new(GUI_MEM_AllocZero(sizeof(GUI_DRAW_BMP))) GUI_DRAW_BMP(pBitmap); }
+void GUI_DRAW_BMP::Draw(SRect r) { GUI.DrawBitmap(bmp, r.left_top()); }
+GUI_DRAW_BMP *GUI_DRAW_BMP::Create(CBitmap &bmp) { return new(GUI_MEM_AllocZero(sizeof(GUI_DRAW_BMP))) GUI_DRAW_BMP(bmp); }
 void GUI_DRAW_SELF::Draw(SRect r) { pfDraw(r); }
-GUI_DRAW_SELF *GUI_DRAW_SELF::Create(GUI_DRAW_CB *pfDraw) { return new(GUI_MEM_AllocZero(sizeof(GUI_DRAW_SELF))) GUI_DRAW_SELF(pfDraw); }
+GUI_DRAW_SELF *GUI_DRAW_SELF::Create(GUI_DRAW_CB *pcb) { return new(GUI_MEM_AllocZero(sizeof(GUI_DRAW_SELF))) GUI_DRAW_SELF(pcb); }
+GUI_DRAW::~GUI_DRAW() {
+	GUI_MEM_Free(pDrawObj);
+	pDrawObj = nullptr;
+}
 #pragma endregion
 
 #pragma region Key
@@ -486,9 +489,6 @@ int GUI_GetKey() {
 void GUI_StoreKey(int Key) {
 	if (!_Key)
 		_Key = Key;
-}
-void GUI_ClearKeyBuffer() {
-	while (GUI_GetKey()) {}
 }
 void GUI_StoreKeyMsg(int Key, int PressedCnt) {
 	_KeyMsg.Key = Key;
@@ -511,26 +511,48 @@ void GUI_SendKeyMsg(int Key, int PressedCnt) {
 }
 #pragma endregion
 
+#pragma region LCD
+BitmapRect::BitmapRect(CBitmap &bmp, Point Pos) :
+	SRect(bmp.Rect(Pos)),
+	pData(const_cast<void *>(bmp.pData)),
+	pPalEntries(bmp.PalEntries()),
+	BytesPerLine(bmp.BytesPerLine),
+	BitsPerPixel(bmp.BitsPerPixel),
+	HasTrans(bmp.HasTrans) {}
+BitmapRect &BitmapRect::operator&=(const SRect &rClip) {
+	auto rNew = SRect::operator&(rClip);
+	auto off = rNew.left_top() - left_top();
+	if (off.x > 0) {
+		auto xoff_bits = off.x * BitsPerPixel;
+		BitsXOff = xoff_bits & 7;
+		(const uint8_t *&)pData += xoff_bits >> 3;
+	}
+	if (off.y > 0)
+		(const uint8_t *&)pData += off.y * BytesPerLine;
+	SRect::operator=(rNew);
+	return*this;
+}
 SRect &SRect::AlignTo(ALIGN a, const SRect &r2) {
 	if (a == ALIGN_HCENTER)
 		xmove((r2.x0 + r2.x1 - x0 - x1) / 2);
-	else if (a & ALIGN_LEFT) {
-		x1 += r2.x0 - x0;
-		x0 = r2.x0;
-	}
 	else if (a & ALIGN_RIGHT) {
 		x0 += r2.x1 - x1;
 		x1 = r2.x1;
 	}
+	else /* if (a & ALIGN_LEFT) */ {
+		x1 += r2.x0 - x0;
+		x0 = r2.x0;
+	}
 	if (a == ALIGN_VCENTER)
 		ymove((r2.y0 + r2.y1 - y0 - y1) / 2);
-	else if (a & ALIGN_TOP) {
-		y1 += r2.y0 - y0;
-		y0 = r2.y0;
-	}
 	else if (a & ALIGN_BOTTOM) {
 		y0 += r2.y1 - y1;
 		y1 = r2.y1;
 	}
+	else /* if (a & ALIGN_TOP) */ {
+		y1 += r2.y0 - y0;
+		y0 = r2.y0;
+	}
 	return*this;
 }
+#pragma endregion

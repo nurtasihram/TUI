@@ -2,21 +2,21 @@
 #include "GUI_Array.h"
 #include "WM.h"
 
-#define LISTBOX_ALL_ITEMS  -1
-
+using		LISTBOX_CF = WC_EX;
+constexpr	LISTBOX_CF
+			LISTBOX_CF_AUTOSCROLLBAR_H = WC_EX_USER(0),
+			LISTBOX_CF_AUTOSCROLLBAR_V = WC_EX_USER(1),
+			LISTBOX_CF_MULTISEL        = WC_EX_USER(2);
 enum LISTBOX_CI {
 	LISTBOX_CI_UNSEL = 0,
 	LISTBOX_CI_SEL,
 	LISTBOX_CI_SELFOCUS
 };
-
-#define LISTBOX_CF_AUTOSCROLLBAR_H   (1<<0)
-#define LISTBOX_CF_AUTOSCROLLBAR_V   (1<<1)
-#define LISTBOX_CF_MULTISEL          (1<<2)
-
-#define LISTBOX_NOTIFICATION_LOST_FOCUS (WN_WIDGET + 0)
+constexpr int LISTBOX_NOTIFICATION_LOST_FOCUS = WN_WIDGET;
+constexpr int16_t LISTBOX_ALL_ITEMS = -1;
 
 class ListBox : public Widget {
+
 public:
 	struct Property {
 		CFont *pFont{ &GUI_Font13_1 };
@@ -34,22 +34,21 @@ public:
 		};
 		uint16_t ScrollStepH{ 10 };
 	} static DefaultProps;
-	struct Item {
-		TString Text;
-		uint16_t xSize = 0, ySize = 0;
-		uint8_t Status = 0;
-		Item() {}
-	};
 
 private:
+	struct Item {
+		GUI_STRING Text;
+		uint16_t xSize = 0, ySize = 0;
+		uint8_t Status = 0;
+	};
 	Property Props;
 	GUI_Array<Item> ItemArray;
 	WIDGET_DRAW_ITEM_FUNC *pfDrawItem = nullptr;
+	PWObj pOwner = nullptr;
 	SCROLL_STATE scrollStateV, scrollStateH;
-	WObj *pOwner = nullptr;
-	uint8_t Flags = 0, ScrollbarWidth = 0;
 	int16_t sel = 0;
 	uint16_t ItemSpacing = 0;
+	uint8_t ScrollbarWidth = 0;
 
 private:
 	int _CallOwnerDraw(int Cmd, uint16_t ItemIndex);
@@ -73,27 +72,28 @@ private:
 	void _ToggleMultiSel(int sel);
 	int _GetItemFromPos(int x, int y);
 
-private:
 	void _OnPaint(SRect rClip);
 	void _OnTouch(const PID_STATE *pState);
 	void _OnMouseOver(const PID_STATE *pState);
 	
-	static WM_RESULT _Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc);
+	static WM_RESULT _Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc);
 
 public:
-	ListBox(int x0, int y0, int xsize, int ysize,
-			WObj *pParent, uint16_t Id,
-			WM_CF Flags, uint8_t ExFlags,
-			int NumItems);
-	ListBox(int x0, int y0, int xsize, int ysize,
-			WObj *pParent, uint16_t Id,
-			WM_CF Flags, uint8_t ExFlags,
-			const char *pItems);
-	ListBox(const WM_CREATESTRUCT &wc) :
-		ListBox(wc.x, wc.y, wc.xsize, wc.ysize,
-				wc.pParent, wc.Id,
-				wc.Flags, (uint8_t)wc.ExFlags,
-				wc.pCaption) {}
+	ListBox(const SRect &rc = {},
+			PWObj pParent = nullptr, uint16_t Id = 0,
+			WM_CF Flags = WC_HIDE, LISTBOX_CF FlagsEx = 0,
+			int NumItems = 0);
+	ListBox(const SRect &rc = {},
+			PWObj pParent = nullptr, uint16_t Id = 0,
+			WM_CF Flags = WC_HIDE, LISTBOX_CF FlagsEx = 0,
+			const char *pItems = nullptr);
+	ListBox(const WM_CREATESTRUCT &wc) : ListBox(
+		wc.rect(),
+		wc.pParent, wc.Id,
+		wc.Flags, wc.FlagsEx,
+		wc.pCaption) {}
+protected:
+	~ListBox() = default;
 
 public:
 	bool AddKey(int Key);
@@ -170,11 +170,11 @@ public: // Property - Sel
 	/* R */ inline auto Sel() const { return sel; }
 	/* W */ void Sel(int NewSel);
 public: // Property - MultiSel
-	/* R */ inline bool MultiSel() const { return Flags & LISTBOX_CF_MULTISEL; }
+	/* R */ inline bool MultiSel() const { return StatusEx & LISTBOX_CF_MULTISEL; }
 	/* W */ void MultiSel(bool bEnabled);
 public: // Property - Owner
 	/* R */ inline auto Owner() const { return pOwner; }
-	/* W */ inline void Owner(WObj *pOwner) {
+	/* W */ inline void Owner(PWObj pOwner) {
 		this->pOwner = pOwner;
 		_InvalidateInsideArea();
 	}

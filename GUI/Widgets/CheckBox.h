@@ -13,6 +13,7 @@ enum CHECKBOX_CI {
 };
 
 class CheckBox : public Widget {
+
 public:
 	static CBitmap abmCheck[4];
 	struct Property {
@@ -31,28 +32,31 @@ public:
 		RGBC TextColor{ RGB_BLACK };
 		TEXTALIGN Align{ TEXTALIGN_LEFT | TEXTALIGN_VCENTER };
 		uint8_t Spacing{ 4 };
+		uint8_t NumStates = 2;
 	} static DefaultProps;
+
 private:
-	Property Props = DefaultProps;
-	TString text;
-	uint8_t nStates = 2, CurrentState = 0;
+	Property Props;
+	GUI_STRING text;
+	uint8_t CurrentState = 0;
 
 private:
 	void _OnPaint();
 	void _OnTouch(const PID_STATE *pState);
 	bool _OnKey(const KEY_STATE *pKeyInfo);
 
-	static WM_RESULT _Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc);
+	static WM_RESULT _Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc);
 
 public:
-	CheckBox(int x0, int y0, int xsize, int ysize,
-			 WObj *pParent, uint16_t Id,
-			 WM_CF Flags,
-			 const char *pText);
-	CheckBox(const WM_CREATESTRUCT &wc) :
-		CheckBox(wc.x, wc.y, wc.xsize, wc.ysize,
-				 wc.pParent, wc.Id, wc.Flags,
-				 wc.pCaption) {}
+	CheckBox(const SRect &rc = {},
+			 PWObj pParent = nullptr, uint16_t Id = 0,
+			 WM_CF Flags = WC_HIDE, WC_EX FlagsEx = 0,
+			 const char *pText = nullptr);
+	CheckBox(const WM_CREATESTRUCT &wc) : CheckBox(
+		wc.rect(),
+		wc.pParent, wc.Id,
+		wc.Flags, wc.FlagsEx,
+		wc.pCaption) {}
 protected:
 	~CheckBox() = default;
 
@@ -109,18 +113,18 @@ public: // Property - Image
 public: // Property - CheckState
 	/* R */ inline uint8_t CheckState() const { return CurrentState; }
 	/* W */ inline void CheckState(uint8_t State) {
-		if (nStates >= State) {
+		if (Props.NumStates >= State) {
 			CurrentState = State;
 			Invalidate();
 		}
 	}
 public: // Property - NumStates
-	/* R */ inline auto NumStates() const { return nStates; }
+	/* R */ inline auto NumStates() const { return Props.NumStates; }
 	/* W */ inline void NumStates(uint8_t nStates) {
 		if (nStates == 2 || nStates == 3) {
 			Props.apBm[2] = DefaultProps.apBm[2];
 			Props.apBm[3] = DefaultProps.apBm[3];
-			this->nStates = nStates;
+			Props.NumStates = nStates;
 		}
 	}
 #pragma endregion

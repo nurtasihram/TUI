@@ -3,58 +3,10 @@
 
 Header::Property Header::DefaultProps;
 
-static int _DefaultBorderH = 0;
-static int _DefaultBorderV = 2;
+constexpr int16_t _DefaultBorderH = 0;
+constexpr int16_t _DefaultBorderV = 2;
 
-void Header::_OnPaint() {
-	int xPos = -scrollPos;
-	int EffectSize = this->EffectSize();
-	GUI.BkColor(Props.BkColor);
-	GUI.Font(Props.pFont);
-	GUI.Clear();
-	for (int i = 0, NumItems = Columns.NumItems(); i < NumItems; ++i) {
-		auto &Col = Columns[i];
-		auto &&rClient = ClientRect();
-		rClient.x0 = xPos;
-		rClient.x1 = rClient.x0 + Col.Width;
-		if (Col.pDrawObj) {
-			Point Off;
-			auto &&size = Col.pDrawObj->Size();
-			switch (Col.Align & TEXTALIGN_HORIZONTAL) {
-			case TEXTALIGN_RIGHT:
-				Off.x =  Col.Width - size.x;
-				break;
-			case TEXTALIGN_HCENTER:
-				Off.x = (Col.Width - size.x) / 2;
-				break;
-			}
-			switch (Col.Align & TEXTALIGN_VCENTER) {
-			case TEXTALIGN_BOTTOM:
-				Off.y =  rClient.ysize() - size.y;
-				break;
-			case TEXTALIGN_VCENTER:
-				Off.y = (rClient.ysize() - size.y) / 2;
-				break;
-			}
-			Off.x += xPos;
-			WObj::UserClip(&rClient);
-			Col.pDrawObj->Draw({ Off, 0 });
-			WObj::UserClip(nullptr);
-		}
-		DrawUp(rClient);
-		xPos += rClient.x1 - rClient.x0;
-		rClient.x0 += EffectSize + _DefaultBorderH;
-		rClient.y0 += EffectSize + _DefaultBorderV;
-		rClient.x1 -= EffectSize + _DefaultBorderH;
-		rClient.y1 -= EffectSize + _DefaultBorderV;
-		GUI.PenColor(Props.TextColor);
-		GUI.TextAlign(Col.Align);
-		GUI.DispString(Col.Text, rClient);
-	}
-	auto &&rClient = ClientRect();
-	rClient.x0 = xPos;
-	DrawUp(rClient);
-}
+
 int Header::_GetItemIndex(Point Pos) {
 	if (0 > Pos.y || Pos.y >= SizeY())
 		return -1;
@@ -69,7 +21,9 @@ int Header::_GetItemIndex(Point Pos) {
 	}
 	return -1;
 }
+
 void Header::_HandlePID(PID_STATE State) {
+	State.x += scrollPos;
 	int Hit = _GetItemIndex(State);
 	/* set capture position () */
 	if (State.Pressed == 1 && Hit >= 0 && CapturePosX == -1) {
@@ -120,7 +74,57 @@ bool Header::_HandleDrag(int MsgId, const PID_STATE *pState) {
 	return false;
 }
 
-WM_RESULT Header::_Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc) {
+void Header::_OnPaint() {
+	int xPos = -scrollPos;
+	int EffectSize = this->EffectSize();
+	GUI.BkColor(Props.BkColor);
+	GUI.Font(Props.pFont);
+	GUI.Clear();
+	for (int i = 0, NumItems = Columns.NumItems(); i < NumItems; ++i) {
+		auto &Col = Columns[i];
+		auto &&rClient = ClientRect();
+		rClient.x0 = xPos;
+		rClient.x1 = rClient.x0 + Col.Width;
+		if (Col.pDrawObj) {
+			Point Off;
+			auto &&size = Col.pDrawObj->Size();
+			switch (Col.Align & TEXTALIGN_HCENTER) {
+				case TEXTALIGN_HCENTER:
+					Off.x = (Col.Width - size.x) / 2;
+					break;
+				case TEXTALIGN_RIGHT:
+					Off.x =  Col.Width - size.x;
+					break;
+			}
+			switch (Col.Align & TEXTALIGN_VCENTER) {
+				case TEXTALIGN_VCENTER:
+					Off.y = (rClient.ysize() - size.y) / 2;
+					break;
+				case TEXTALIGN_BOTTOM:
+					Off.y =  rClient.ysize() - size.y;
+					break;
+			}
+			Off.x += xPos;
+			WObj::UserClip(&rClient);
+			Col.pDrawObj->Draw({ Off, 0 });
+			WObj::UserClip(nullptr);
+		}
+		DrawUp(rClient);
+		xPos += rClient.dx();
+		rClient.x0 += EffectSize + _DefaultBorderH;
+		rClient.y0 += EffectSize + _DefaultBorderV;
+		rClient.x1 -= EffectSize + _DefaultBorderH;
+		rClient.y1 -= EffectSize + _DefaultBorderV;
+		GUI.PenColor(Props.TextColor);
+		GUI.TextAlign(Col.Align);
+		GUI.DispString(Col.Text, rClient);
+	}
+	auto &&rClient = ClientRect();
+	rClient.x0 = xPos;
+	DrawUp(rClient);
+}
+
+WM_RESULT Header::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 	auto pObj = (Header *)pWin;
 	if (!pObj->HandleActive(MsgId, Param))
 		return Param;
@@ -137,29 +141,38 @@ WM_RESULT Header::_Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc) {
 	return DefCallback(pObj, MsgId, Param, pSrc);
 }
 
-Header::Header(int x0, int y0, int xsize, int ysize,
-			   WObj *pParent, uint16_t Id,
-			   WM_CF Flags, uint16_t ExFlags) :
-	Widget(x0, y0, xsize, ysize,
+Header::Header(const SRect &rc,
+			   PWObj pParent, uint16_t Id,
+			   WM_CF Flags, uint16_t FlagsEx,
+			   const char *pTexts,
+			   const uint16_t *pacWidth) :
+	Widget(rc,
 		   _Callback,
 		   pParent, Id,
-		   Flags | WC_ANCHOR_LEFT | WC_ANCHOR_RIGHT,
-		   ExFlags) {
-	if (x0 == 0 && y0 == 0)
+		   Flags | WC_ANCHOR_HORIZONTAL,
+		   FlagsEx) {
+	if (!rc.x0 || !rc.y0)
 		Move(Parent()->InsideRect().left_top());
-	if (xsize == 0)
+	if (rc.x1 <= rc.x0)
 		SizeX(Parent()->InsideRect().xsize());
-	if (ysize == 0)
+	if (rc.y1 <= rc.y0)
 		SizeY(Props.pFont->YDist +
-			2 * _DefaultBorderV +
-			2 * Effect()->EffectSize);
+			  2 * _DefaultBorderV +
+			  2 * Effect()->EffectSize);
+	if (auto NumItems = GUI__NumTexts(pTexts)) {
+		Columns.Resize(NumItems);
+		for (auto &&i : Columns) {
+			i.Text = pTexts;
+			i.Width = pacWidth ? *pacWidth++ : 0;
+			pTexts = GUI__NextText(pTexts);
+		}
+	}
 }
 
-void Header::Add(const char *pText, uint16_t Width, TEXTALIGN Align) {
-	if (!Width)
-		Width =
-			Props.pFont->XDist(pText, strlen(pText)) +
-			2 * (EffectSize() + _DefaultBorderH);
+void Header::Add(const char *pText, int Width, TEXTALIGN Align) {
+	if (Width < 0)
+		Width = Props.pFont->Size(pText).x +
+		2 * (EffectSize() + _DefaultBorderH);
 	auto &Col = Columns.Add();
 	Col.Width = Width;
 	Col.Align = Align;
@@ -168,7 +181,7 @@ void Header::Add(const char *pText, uint16_t Width, TEXTALIGN Align) {
 	Invalidate();
 	Parent()->Invalidate();
 }
-void Header::DeleteItem(unsigned Index) {
+void Header::Delete(unsigned Index) {
 	if (Index < Columns.NumItems()) {
 		Columns.Delete(Index);
 		Invalidate();
@@ -181,14 +194,16 @@ void Header::Height(uint16_t height) {
 	Parent()->Invalidate();
 }
 void Header::ItemWidth(uint16_t Index, int Width) {
-	if (Width < 0)
+	if (Index >= Columns.NumItems())
 		return;
-	if (Index < Columns.NumItems()) {
-		Columns[Index].Width = Width;
-		Invalidate();
-		Parent()->SendMessage(WM_NOTIFY_CLIENTCHANGE);
-		Parent()->Invalidate();
-	}
+	auto &Item = Columns[Index];
+	if (Width < 0)
+		Width = Props.pFont->Size(Item).x +
+			2 * (EffectSize() + _DefaultBorderH);
+	Item.Width = Width;
+	Invalidate();
+	Parent()->SendMessage(WM_NOTIFY_CLIENTCHANGE);
+	Parent()->Invalidate();
 }
 
 //void Header::DrawObj(unsigned Index, GUI_DRAW_BASE * pDrawObj) {

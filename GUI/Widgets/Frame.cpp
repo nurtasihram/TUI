@@ -3,181 +3,30 @@
 
 Frame::Property Frame::DefaultProps;
 
-static int16_t FRAME__MinVisibility = 5;
+void Frame::_InvalidateButton(uint16_t Id) {
+	if (auto pButton = DialogItem(Id))
+		pButton->Invalidate();
+}
+void Frame::_RestoreMinimized() {
+	if (!(StatusEx & FRAME_CF_MINIMIZED))
+		return;
+	StatusEx &= ~FRAME_CF_MINIMIZED;
+	SizeY(rRestore.ysize());
+	pClient->Visible(true);
+	if (pMenu) pMenu->Visible(true);
+	_UpdatePositions();
+	_InvalidateButton(GUI_ID_MINIMIZE);
+}
+void Frame::_RestoreMaximized() {
+	if (!(StatusEx & FRAME_CF_MAXIMIZED))
+		return;
+	StatusEx &= ~FRAME_CF_MAXIMIZED;
+	Size(rRestore.size());
+	PositionScreen(rRestore.left_top());
+	_UpdatePositions();
+	_InvalidateButton(GUI_ID_MAXIMIZE);
+}
 
-void Frame::_OnTouch(const PID_STATE *pState) {
-	if (pState)
-		if (pState->Pressed) {
-			if (!(Flags & FRAME_CF_ACTIVE))
-				Focus();
-			BringToTop();
-			if (Flags & FRAME_CF_MOVEABLE)
-				CaptureMove(*pState, FRAME__MinVisibility);
-		}
-}
-void Frame::_OnPaint() const {
-	auto pWin = ActiveWindow();
-	auto &&size = pWin->Size() - 1;
-	auto BorderSize = Props.BorderSize;
-	auto &&Pos = _CalcPositions();
-	auto Index = Flags & FRAME_CF_ACTIVE ? 1 : 0;
-	SRect r{
-		Pos.rClient.x0,
-		Pos.rTitleText.y0,
-		Pos.rClient.x1,
-		Pos.rTitleText.y1
-	};
-	++Pos.rTitleText.y0;
-	++Pos.rTitleText.x0;
-	--Pos.rTitleText.x1;
-	GUI.Font(Props.pFont);
-	auto y0 = Pos.TitleHeight + BorderSize;
-	GUI.BkColor(Props.aBarColor[Index]);
-	GUI.PenColor(Props.aTextColor[Index]);
-	GUI.Clear(r);
-	GUI.TextAlign(Props.Align);
-	GUI.DispString(Title, Pos.rTitleText);
-	GUI.PenColor(Props.FrameColor);
-	GUI.Fill({ 0, 0, size.x, BorderSize - 1 });
-	GUI.Fill({ 0, 0, Pos.rClient.x0 - 1, size.y });
-	GUI.Fill({ Pos.rClient.x1 + 1, 0, size.x, size.y });
-	GUI.Fill({ 0, Pos.rClient.y1 + 1, size.x, size.y });
-	GUI.Fill({ 0, y0, size.x, y0 + Props.IBorderSize - 1 });
-	if (Props.BorderSize >= 2)
-		DrawUp();
-}
-void Frame::_OnChildHasFocus(const FOCUSED_STATE *pInfo) {
-	if (pInfo) {
-		if (pInfo->pNew) {
-			if (pInfo->pNew->IsAncestorOrSelf(this)) {
-				Active(true);
-				return;
-			}
-		}
-		Active(false);
-		if (pInfo->pOld)
-			if (pInfo->pOld->IsAncestor(this))
-				pFocussedChild = pInfo->pOld;
-	}
-}
-WM_RESULT Frame::_Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc) {
-	auto pObj = (Frame *)pWin;
-	if (pObj->Flags & FRAME_CF_RESIZEABLE)
-		if (pObj->_HandleResize(MsgId, Param))
-			return Param;
-	switch (MsgId) {
-		case WM_PAINT:
-			pObj->_OnPaint();
-			return 0;
-		case WM_DELETE:
-			pObj->~Frame();
-			return 0;
-		case WM_HANDLE_DIALOG_STATUS:
-			if (DIALOG_STATE *wds = Param)
-				pObj->pDialogStatus = wds;
-			else
-				return pObj->pDialogStatus;
-			return 0;
-		case WM_TOUCH:
-			pObj->_OnTouch(Param);
-			return 0;
-		case WM_GET_INSIDE_RECT:
-			return pObj->_CalcPositions().rClient;
-		case WM_GET_CLIENT_WINDOW:
-			return pObj->pClient;
-		case WM_NOTIFY_PARENT:
-			if ((int)Param == WN_RELEASED) {
-				pObj->SendMessage(WM_NOTIFY_PARENT_REFLECTION, Param, pObj);
-				if (WObj *pButton = Param)
-					switch (pSrc->ID()) {
-						case GUI_ID_CLOSE:
-							pObj->Destroy();
-							return 0;
-						case GUI_ID_MAXIMIZE:
-							if (pObj->Flags & FRAME_CF_MAXIMIZED)
-								pObj->Restore();
-							else
-								pObj->Maximize();
-							break;
-						case GUI_ID_MINIMIZE:
-							if (pObj->Flags & FRAME_CF_MINIMIZED)
-								pObj->Restore();
-							else
-								pObj->Minimize();
-							break;
-					}
-			}
-			return 0;
-		case WM_SET_FOCUS:
-			if (Param) {
-				if (IsWindow(pObj->pFocussedChild))
-					pObj->pFocussedChild->Focus();
-				else
-					pObj->pFocussedChild = pObj->pClient->FocusNextChild();
-				pObj->Active(true);
-			}
-			else
-				pObj->Active(false);
-			break;
-		case WM_TOUCH_CHILD:
-			if (!(pObj->Flags & FRAME_CF_ACTIVE))
-				if (const PID_STATE *pState = Param)
-					if (pState->Pressed)
-						pObj->Focus();
-			return 0;
-		case WM_NOTIFY_CHILD_HAS_FOCUS:
-			pObj->_OnChildHasFocus(Param);
-			return 0;
-	}
-	if (!pObj->HandleActive(MsgId, Param))
-		return Param;
-	return DefCallback(pObj, MsgId, Param, pSrc);
-}
-WM_RESULT Frame::_cbClient(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc) {
-	auto pObj = (Frame *)pWin->Parent();
-	auto cb = pObj->cb;
-	switch (MsgId) {
-		case WM_PAINT:
-			if (pObj->Props.ClientColor != RGB_INVALID_COLOR) {
-				GUI.BkColor(pObj->Props.ClientColor);
-				GUI.Clear();
-			}
-			if (cb)
-				cb(pWin, WM_PAINT, Param, nullptr);
-			return 0;
-		case WM_SET_FOCUS:
-			if (Param) {
-				if (pObj->pFocussedChild && (pObj->pFocussedChild != pWin))
-					pObj->pFocussedChild->Focus();
-				else
-					pObj->pFocussedChild = pWin->FocusNextChild();
-				return false;
-			}
-			return true;
-		case WM_GET_ACCEPT_FOCUS:
-			pObj->HandleActive(MsgId, Param);
-			return Param;
-		case WM_KEY:
-			if (const KEY_STATE *pKeyInfo = Param)
-				if (pKeyInfo->PressedCnt > 0) {
-					switch (pKeyInfo->Key) {
-						case GUI_KEY_TAB:
-							pObj->pFocussedChild = pWin->FocusNextChild();
-							return 0;
-					}
-				}
-			break;
-		case WM_GET_BKCOLOR:
-			return pObj->Props.ClientColor;
-		case WM_GET_INSIDE_RECT:
-		case WM_GET_ID:
-		case WM_GET_CLIENT_WINDOW:
-			return DefCallback(pObj, MsgId, Param, pSrc);
-	}
-	if (cb)
-		return cb(pObj, MsgId, Param, pSrc);
-	return DefCallback(pObj, MsgId, Param, pSrc);
-}
 uint16_t Frame::_CalcTitleHeight() const {
 	if (!(StatusEx & FRAME_CF_TITLEVIS))
 		return 0;
@@ -219,226 +68,13 @@ void Frame::_UpdatePositions() {
 		return;
 	auto &&Pos = _CalcPositions();
 	if (pClient) {
-		pClient->MoveChildTo(Pos.rClient.left_top());
+		pClient->Position(Pos.rClient.left_top());
 		pClient->Size(Pos.rClient.size());
 	}
 	if (pMenu) {
 		Pos.rClient.y0 -= Pos.MenuHeight;
-		pMenu->MoveChildTo(Pos.rClient.left_top());
+		pMenu->Position(Pos.rClient.left_top());
 	}
-}
-
-void Frame::_InvalidateButton(uint16_t Id) {
-	if (auto pButton = DialogItem(Id))
-		pButton->Invalidate();
-}
-void Frame::_RestoreMinimized() {
-	if (!(Flags & FRAME_CF_MINIMIZED))
-		return;
-	Flags &= ~FRAME_CF_MINIMIZED;
-	SizeY(rRestore.ysize());
-	pClient->Visible(true);
-	if (pMenu) pMenu->Visible(true);
-	_UpdatePositions();
-	_InvalidateButton(GUI_ID_MINIMIZE);
-}
-void Frame::_RestoreMaximized() {
-	if (!(Flags & FRAME_CF_MAXIMIZED))
-		return;
-	Flags &= ~FRAME_CF_MAXIMIZED;
-	Position(rRestore.left_top());
-	Size(rRestore.size());
-	_UpdatePositions();
-	_InvalidateButton(GUI_ID_MAXIMIZE);
-}
-void Frame::Minimize() {
-	_RestoreMaximized();
-	if (Flags & FRAME_CF_MINIMIZED)
-		return;
-	Flags |= FRAME_CF_MINIMIZED;
-	rRestore = Rect();
-	pClient->Visible(false);
-	if (pMenu) pMenu->Visible(false);
-	SizeY(_CalcTitleHeight() + EffectSize() * 2 + 1);
-	_UpdatePositions();
-	_InvalidateButton(GUI_ID_MINIMIZE);
-}
-void Frame::Maximize() {
-	_RestoreMinimized();
-	if (Flags & FRAME_CF_MAXIMIZED)
-		return;
-	Flags |= FRAME_CF_MAXIMIZED;
-	auto pParent = Parent();
-	auto rParent = pParent->Rect();
-	if (!pParent->Parent())
-		rParent = LCD_Rect();
-	rRestore = Rect();
-	Position(rParent.left_top());
-	Size(rParent.size());
-	_UpdatePositions();
-	_InvalidateButton(GUI_ID_MAXIMIZE);
-}
-void Frame::Restore() {
-	_RestoreMinimized();
-	_RestoreMaximized();
-}
-
-void Frame::Active(bool bActive) {
-	auto Flags = this->Flags;
-	if (bActive)
-		Flags |= FRAME_CF_ACTIVE;
-	else
-		Flags &= ~FRAME_CF_ACTIVE;
-	if (this->Flags == Flags)
-		return;
-	this->Flags = Flags;
-	Invalidate();
-}
-void Frame::BorderSize(int Size) {
-	if (Props.BorderSize != Size)
-		return;
-	auto OldHeight = _CalcTitleHeight();
-	auto OldSize = Props.BorderSize;
-	auto Diff = Size - OldSize;
-	for (auto pChild = FirstChild(); pChild; pChild = pChild->NextSibling()) {
-		auto &&r = pChild->Rect();
-		if (r.y0 > OldHeight)
-			continue;
-		if (r.ysize() == OldHeight) {
-			if (pChild->Styles() & WC_ANCHOR_RIGHT)
-				pChild->Move({ -Diff, Diff });
-			else
-				pChild->Move(Diff);
-		}
-	}
-	Props.BorderSize = Size;
-	_UpdatePositions();
-	Invalidate();
-}
-void Frame::Menu(::Menu *pMenu) {
-	auto IBorderSize = StatusEx & FRAME_CF_TITLEVIS ? Props.IBorderSize : 0;
-	auto BorderSize = Props.BorderSize;
-	this->pMenu = pMenu;
-	if (cb)
-		pMenu->Owner(pClient);
-	auto xSize = SizeX() - BorderSize * 2;
-	pMenu->Attach(this, { BorderSize, BorderSize + _CalcTitleHeight() + IBorderSize }, { xSize, 0 });
-	pMenu->Anchor(WC_ANCHOR_LEFT | WC_ANCHOR_RIGHT);
-	_UpdatePositions();
-	Invalidate();
-}
-
-constexpr uint16_t BUTTON_BORDER_OFFSET = 1;
-Button *Frame::AddButton(FRAME_BUTTON_CF Flags, int Off, uint16_t Id) {
-	if (auto pButton = DialogItem(Id)) return (Button *)pButton;
-	auto &&Pos = _CalcPositions();
-	auto Size = TitleHeight() - BUTTON_BORDER_OFFSET * 2;
-	auto x = 0;
-	if (Flags & FRAME_BUTTON_RIGHT)
-		x = Pos.rTitleText.x1 - (Size - 1) - Off;
-	else
-		x = Pos.rTitleText.x0 + Off;
-	auto pButton = new Button(
-		x, BorderSize() + BUTTON_BORDER_OFFSET,
-		Size, Size,
-		this, Id,
-		Flags);
-	pButton->Focussable(false);
-	return pButton;
-}
-Button *Frame::AddMinButton(FRAME_BUTTON_CF Flags, int Off) {
-	auto pButton = AddButton(Flags, Off, GUI_ID_MINIMIZE);
-	pButton->SelfDraw(BUTTON_BI_UNPRESSED, [](SRect r) {
-		int Size = r.xsize() / 2, Size2 = Size / 2;
-		auto pObj = (Frame *)ActiveWindow()->Parent();
-		if (pObj->Flags & FRAME_CF_MINIMIZED)
-			for (int i = 1; i < Size; ++i)
-				GUI.DrawLineH(r.x0 + i, r.y0 + i + Size2, r.x1 - i);
-		else
-			for (int i = 1; i < Size; ++i)
-				GUI.DrawLineH(r.x0 + i, r.y1 - i - Size2, r.x1 - i);
-	});
-	return pButton;
-}
-Button *Frame::AddMaxButton(FRAME_BUTTON_CF Flags, int Off) {
-	auto pButton = AddButton(Flags, Off, GUI_ID_MAXIMIZE);
-	pButton->SelfDraw(BUTTON_BI_UNPRESSED, [](SRect r) {
-		static auto _DrawMax = [](SRect r) {
-			GUI.DrawLineH(r.x0 + 1, r.y0 + 1, r.x1 - 1);
-			GUI.DrawLineH(r.x0 + 1, r.y0 + 2, r.x1 - 1);
-			GUI.DrawLineH(r.x0 + 1, r.y1 - 1, r.x1 - 1);
-			GUI.DrawLineV(r.x0 + 1, r.y0 + 1, r.y1 - 1);
-			GUI.DrawLineV(r.x1 - 1, r.y0 + 1, r.y1 - 1);
-		};
-		static auto _DrawRestore = [](SRect r) {
-			int Size = r.xsize() * 2 / 3;
-			GUI.DrawLineH(r.x1 - Size, r.y0 + 1, r.x1 - 1);
-			GUI.DrawLineH(r.x1 - Size, r.y0 + 2, r.x1 - 1);
-			GUI.DrawLineH(r.x0 + Size, r.y0 + Size, r.x1 - 1);
-			GUI.DrawLineV(r.x1 - Size, r.y0 + 1, r.y1 - Size);
-			GUI.DrawLineV(r.x1 - 1, r.y0 + 1, r.y0 + Size);
-			GUI.DrawLineH(r.x0 + 1, r.y1 - Size, r.x0 + Size);
-			GUI.DrawLineH(r.x0 + 1, r.y1 - Size + 1, r.x0 + Size);
-			GUI.DrawLineH(r.x0 + 1, r.y1 - 1, r.x0 + Size);
-			GUI.DrawLineV(r.x0 + 1, r.y1 - Size, r.y1 - 1);
-			GUI.DrawLineV(r.x0 + Size, r.y1 - Size, r.y1 - 1);
-		};
-		auto pObj = (Frame *)ActiveWindow()->Parent();
-		if (pObj->Flags & FRAME_CF_MAXIMIZED)
-			_DrawRestore(r);
-		else
-			_DrawMax(r);
-	});
-	return pButton;
-}
-Button *Frame::AddCloseButton(FRAME_BUTTON_CF Flags, int Off) {
-	auto pButton = AddButton(Flags, Off, GUI_ID_CLOSE);
-	pButton->SelfDraw(BUTTON_BI_UNPRESSED, [](SRect r) {
-		int Size = r.xsize() - 2;
-		for (int i = 2; i < Size; ++i) {
-			GUI.DrawLineH(r.x0 + i, r.y0 + i, r.x0 + i + 1);
-			GUI.DrawLineH(r.x1 - i - 1, r.y0 + i, r.x1 - i);
-		}
-	});
-	return pButton;
-}
-
-void Frame::TitleVis(bool bTitleVis) {
-	int StatusEx = this->StatusEx;
-	if (bTitleVis)
-		StatusEx |= FRAME_CF_TITLEVIS;
-	else
-		StatusEx &= ~FRAME_CF_TITLEVIS;
-	if (this->StatusEx == StatusEx)
-		return;
-	this->StatusEx = StatusEx;
-	_UpdatePositions();
-	auto TitleHeight = this->TitleHeight();
-	for (auto pChild = FirstChild(); pChild; pChild = pChild->NextSibling())
-		if (pChild->Rect().y0 <= TitleHeight)
-			if (pChild != pClient)
-				pChild->Visible(bTitleVis);
-	if (this->Flags & FRAME_CF_MINIMIZED)
-		Visible(bTitleVis);
-	Invalidate();
-}
-
-Frame::Frame(int x0, int y0, int xsize, int ysize,
-			 WObj *pParent, uint16_t Id,
-			 WM_CF Flags, FRAME_CF ExFlags,
-			 const char *pTitle, WM_CB *cb) :
-	Widget(x0, y0, xsize, ysize,
-		   _Callback,
-		   pParent, Id,
-		   Flags | WC_FOCUSSABLE, FRAME_CF_TITLEVIS),
-	cb(cb),
-	pClient(new WObj(
-		_CalcPositions().rClient,
-		_cbClient,
-		this, 0,
-		WC_ANCHOR_MASK | WC_VISIBLE)),
-	Flags(ExFlags) {
-	Text(pTitle);
 }
 
 #pragma region OnResize
@@ -450,7 +86,7 @@ void Frame::_SetCapture(Point Pos, uint8_t Mode) {
 	if (!(_CaptureFlags & SIZE_REPOS_Y))
 		_Capture.y = Pos.y;
 	if (!Mode) return;
-	if (!Captured()) 
+	if (!Captured())
 		Capture(false);
 	if (auto pCursor = CursorCtl::GetResizeCursor(Mode))
 		GUI.Cursor(pCursor);
@@ -534,11 +170,11 @@ bool Frame::_OnTouchResize(const PID_STATE *pState) {
 	}
 	return false;
 }
-bool Frame::_ForwardMouseOverMsg(int MsgId, const PID_STATE *pState) {
-	auto State = *pState + Position();
-	if (auto pBelow = WObj::ScreenToWin(State)) {
+bool Frame::_ForwardMouseOverMsg(int MsgId, PID_STATE State) {
+	State = Client2Screen(State);
+	if (auto pBelow = WObj::FindOnScreen(State)) {
 		if (pBelow == this) return false;
-		State -= pBelow->Position();
+		State = pBelow->Screen2Client(State);
 		pBelow->SendMessage(MsgId, &State);
 		return true;
 	}
@@ -555,7 +191,7 @@ bool Frame::_HandleResize(int MsgId, const PID_STATE *pState) {
 		case WM_MOUSEOVER:
 			if (pState) {
 				if (auto Mode = _CheckReactBorder(*pState)) {
-					if (!_ForwardMouseOverMsg(MsgId, pState))
+					if (!_ForwardMouseOverMsg(MsgId, *pState))
 						_SetCapture(*pState, Mode | SIZE_MOUSEOVER);
 					return true;
 				}
@@ -564,7 +200,7 @@ bool Frame::_HandleResize(int MsgId, const PID_STATE *pState) {
 				if (_CaptureFlags & SIZE_RESIZE)
 					return true;
 				CaptureRelease();
-				_ForwardMouseOverMsg(MsgId, pState);
+				_ForwardMouseOverMsg(MsgId, *pState);
 				return true;
 			}
 			return false;
@@ -575,3 +211,373 @@ bool Frame::_HandleResize(int MsgId, const PID_STATE *pState) {
 	return false;
 }
 #pragma endregion
+
+constexpr int16_t FRAME__MinVisibility = 5;
+void Frame::_OnTouch(const PID_STATE *pState) {
+	if (pState)
+		if (pState->Pressed) {
+			if (!(StatusEx & FRAME_CF_ACTIVE))
+				Focus();
+			BringToTop();
+			if (StatusEx & FRAME_CF_MOVEABLE)
+				CaptureMove(*pState, FRAME__MinVisibility);
+		}
+}
+void Frame::_OnPaint() const {
+	auto pWin = ActiveWindow();
+	auto &&size = pWin->Size() - 1;
+	auto BorderSize = Props.BorderSize;
+	auto &&Pos = _CalcPositions();
+	auto Index = StatusEx & FRAME_CF_ACTIVE ? 1 : 0;
+	SRect r{
+		Pos.rClient.x0,
+		Pos.rTitleText.y0,
+		Pos.rClient.x1,
+		Pos.rTitleText.y1
+	};
+	++Pos.rTitleText.y0;
+	++Pos.rTitleText.x0;
+	--Pos.rTitleText.x1;
+	GUI.Font(Props.pFont);
+	auto y0 = Pos.TitleHeight + BorderSize;
+	GUI.BkColor(Props.aBarColor[Index]);
+	GUI.PenColor(Props.aTextColor[Index]);
+	GUI.Clear(r);
+	GUI.TextAlign(Props.Align);
+	GUI.DispString(Title, Pos.rTitleText);
+	GUI.PenColor(Props.FrameColor);
+	GUI.Fill({ 0, 0, size.x, BorderSize - 1 });
+	GUI.Fill({ 0, 0, Pos.rClient.x0 - 1, size.y });
+	GUI.Fill({ Pos.rClient.x1 + 1, 0, size.x, size.y });
+	GUI.Fill({ 0, Pos.rClient.y1 + 1, size.x, size.y });
+	GUI.Fill({ 0, y0, size.x, y0 + Props.IBorderSize - 1 });
+	if (Props.BorderSize >= 2)
+		DrawUp();
+}
+void Frame::_OnChildHasFocus(const FOCUSED_STATE *pInfo) {
+	if (pInfo) {
+		if (pInfo->pNew) {
+			if (pInfo->pNew->IsAncestorOrSelf(this)) {
+				Active(true);
+				return;
+			}
+		}
+		Active(false);
+		if (pInfo->pOld)
+			if (pInfo->pOld->IsAncestor(this))
+				pFocussedChild = pInfo->pOld;
+	}
+}
+
+WM_RESULT Frame::_cbClient(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
+	auto pParent = (Frame *)pWin->Parent();
+	auto cb = pParent->cb;
+	switch (MsgId) {
+		case WM_PAINT:
+			if (pParent->Props.ClientColor != RGB_INVALID_COLOR) {
+				GUI.BkColor(pParent->Props.ClientColor);
+				GUI.Clear();
+			}
+			if (cb)
+				cb(pWin, WM_PAINT, Param, nullptr);
+			return 0;
+		case WM_KEY:
+			if (const KEY_STATE *pKeyInfo = Param)
+				if (pKeyInfo->PressedCnt > 0) {
+					switch (pKeyInfo->Key) {
+						case GUI_KEY_TAB:
+							pParent->pFocussedChild = pWin->FocusNextChild();
+							return 0;
+					}
+				}
+			break;
+		case WM_SET_FOCUS:
+			if (Param) {
+				if (pParent->pFocussedChild && (pParent->pFocussedChild != pWin))
+					pParent->pFocussedChild->Focus();
+				else
+					pParent->pFocussedChild = pWin->FocusNextChild();
+				return false;
+			}
+			return true;
+		case WM_GET_ACCEPT_FOCUS:
+			pParent->HandleActive(MsgId, Param);
+			return Param;
+		case WM_GET_BKCOLOR:
+			return pParent->Props.ClientColor;
+		case WM_GET_INSIDE_RECT:
+		case WM_GET_ID:
+		case WM_GET_CLIENT_WINDOW:
+			return DefCallback(pWin, MsgId, Param, pSrc);
+	}
+	if (cb)
+		return cb(pWin, MsgId, Param, pSrc);
+	return DefCallback(pWin, MsgId, Param, pSrc);
+}
+WM_RESULT Frame::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
+	auto pObj = (Frame *)pWin;
+	if (pObj->StatusEx & FRAME_CF_RESIZEABLE)
+		if (pObj->_HandleResize(MsgId, Param))
+			return Param;
+	switch (MsgId) {
+		case WM_PAINT:
+			pObj->_OnPaint();
+			return 0;
+		case WM_TOUCH:
+			pObj->_OnTouch(Param);
+			return 0;
+		case WM_TOUCH_CHILD:
+			if (!(pObj->StatusEx & FRAME_CF_ACTIVE))
+				if (const PID_STATE *pState = Param)
+					if (pState->Pressed)
+						pObj->Focus();
+			return 0;
+		case WM_DELETE:
+			pObj->~Frame();
+			return 0;
+		case WM_HANDLE_DIALOG_STATUS:
+			if (DIALOG_STATE *wds = Param)
+				pObj->pDialogStatus = wds;
+			else
+				return pObj->pDialogStatus;
+			return 0;
+		case WM_GET_INSIDE_RECT:
+			return pObj->_CalcPositions().rClient;
+		case WM_GET_CLIENT_WINDOW:
+			return pObj->pClient;
+		case WM_GET_SERVE_RECT:
+			return pObj->pClient->ServeRect();
+		case WM_NOTIFY_PARENT:
+			switch ((int)Param) {
+				case WN_RELEASED:
+					pObj->SendMessage(WM_NOTIFY_PARENT_REFLECTION, Param, pObj);
+					if (PWObj pButton = Param)
+						if (pSrc)
+							switch (pSrc->ID()) {
+								case GUI_ID_CLOSE:
+									pObj->Destroy();
+									return 0;
+								case GUI_ID_MAXIMIZE:
+									if (pObj->StatusEx & FRAME_CF_MAXIMIZED)
+										pObj->Restore();
+									else
+										pObj->Maximize();
+									break;
+								case GUI_ID_MINIMIZE:
+									if (pObj->StatusEx & FRAME_CF_MINIMIZED)
+										pObj->Restore();
+									else
+										pObj->Minimize();
+									break;
+						}
+					break;
+			}
+			return 0;
+		case WM_SET_FOCUS:
+			if (Param) {
+				if (IsWindow(pObj->pFocussedChild))
+					pObj->pFocussedChild->Focus();
+				else
+					pObj->pFocussedChild = pObj->pClient->FocusNextChild();
+				pObj->Active(true);
+			}
+			else
+				pObj->Active(false);
+			break;
+		case WM_NOTIFY_CHILD_HAS_FOCUS:
+			pObj->_OnChildHasFocus(Param);
+			return 0;
+	}
+	if (!pObj->HandleActive(MsgId, Param))
+		return Param;
+	return DefCallback(pObj, MsgId, Param, pSrc);
+}
+
+Frame::Frame(const SRect &rc,
+			 PWObj pParent, uint16_t Id,
+			 WM_CF Flags, FRAME_CF FlagsEx,
+			 const char *pTitle, WM_CB cb) :
+	Widget(rc,
+		   _Callback,
+		   pParent, Id,
+		   Flags | WC_FOCUSSABLE, FlagsEx | FRAME_CF_TITLEVIS),
+	cb(cb),
+	pClient(new WObj(
+		_CalcPositions().rClient,
+		_cbClient,
+		this, 0,
+		WC_ANCHOR_MASK | WC_VISIBLE)) {
+	Text(pTitle);
+}
+
+void Frame::Minimize() {
+	_RestoreMaximized();
+	if (StatusEx & FRAME_CF_MINIMIZED)
+		return;
+	StatusEx |= FRAME_CF_MINIMIZED;
+	rRestore = Rect();
+	pClient->Visible(false);
+	if (pMenu) pMenu->Visible(false);
+	SizeY(_CalcTitleHeight() + EffectSize() * 2 + 1);
+	_UpdatePositions();
+	_InvalidateButton(GUI_ID_MINIMIZE);
+}
+void Frame::Maximize() {
+	_RestoreMinimized();
+	if (StatusEx & FRAME_CF_MAXIMIZED)
+		return;
+	StatusEx |= FRAME_CF_MAXIMIZED;
+	auto pParent = Parent();
+	auto rParent = pParent->Rect();
+	if (!pParent->Parent())
+		rParent = LCD_Rect();
+	rRestore = Rect();
+	PositionScreen(rParent.left_top());
+	Size(rParent.size());
+	_UpdatePositions();
+	_InvalidateButton(GUI_ID_MAXIMIZE);
+}
+void Frame::Restore() {
+	_RestoreMinimized();
+	_RestoreMaximized();
+}
+
+constexpr uint16_t BUTTON_BORDER_OFFSET = 1;
+Button *Frame::AddButton(FRAME_BUTTON Flags, int Off, uint16_t Id) {
+	if (auto pButton = DialogItem(Id)) return (Button *)pButton;
+	auto &&Pos = _CalcPositions();
+	auto Size = TitleHeight() - BUTTON_BORDER_OFFSET * 2;
+	auto x = 0;
+	if (Flags & FRAME_BUTTON_RIGHT)
+		x = Pos.rTitleText.x1 - (Size - 1) - Off;
+	else
+		x = Pos.rTitleText.x0 + Off;
+	auto pButton = new Button({
+		{ x, BorderSize() + BUTTON_BORDER_OFFSET },
+		  x + Size },
+		this, Id,
+		Flags);
+	pButton->Focussable(false);
+	return pButton;
+}
+Button *Frame::AddMinButton(FRAME_BUTTON Flags, int Off) {
+	auto pButton = AddButton(Flags, Off, GUI_ID_MINIMIZE);
+	pButton->SelfDraw(BUTTON_BI_UNPRESSED, [](SRect r) {
+		int Size = r.xsize() / 2, Size2 = Size / 2;
+		auto pObj = (Frame *)ActiveWindow()->Parent();
+		if (pObj->StatusEx & FRAME_CF_MINIMIZED)
+			for (int i = 1; i < Size; ++i)
+				GUI.DrawLineH(r.x0 + i, r.y0 + i + Size2, r.x1 - i);
+		else
+			for (int i = 1; i < Size; ++i)
+				GUI.DrawLineH(r.x0 + i, r.y1 - i - Size2, r.x1 - i);
+	});
+	return pButton;
+}
+Button *Frame::AddMaxButton(FRAME_BUTTON Flags, int Off) {
+	auto pButton = AddButton(Flags, Off, GUI_ID_MAXIMIZE);
+	pButton->SelfDraw(BUTTON_BI_UNPRESSED, [](SRect r) {
+		static auto _DrawMax = [](SRect r) {
+			GUI.DrawLineH(r.x0 + 1, r.y0 + 1, r.x1 - 1);
+			GUI.DrawLineH(r.x0 + 1, r.y0 + 2, r.x1 - 1);
+			GUI.DrawLineH(r.x0 + 1, r.y1 - 1, r.x1 - 1);
+			GUI.DrawLineV(r.x0 + 1, r.y0 + 1, r.y1 - 1);
+			GUI.DrawLineV(r.x1 - 1, r.y0 + 1, r.y1 - 1);
+		};
+		static auto _DrawRestore = [](SRect r) {
+			int Size = r.xsize() * 2 / 3;
+			GUI.DrawLineH(r.x1 - Size, r.y0 + 1, r.x1 - 1);
+			GUI.DrawLineH(r.x1 - Size, r.y0 + 2, r.x1 - 1);
+			GUI.DrawLineH(r.x0 + Size, r.y0 + Size, r.x1 - 1);
+			GUI.DrawLineV(r.x1 - Size, r.y0 + 1, r.y1 - Size);
+			GUI.DrawLineV(r.x1 - 1, r.y0 + 1, r.y0 + Size);
+			GUI.DrawLineH(r.x0 + 1, r.y1 - Size, r.x0 + Size);
+			GUI.DrawLineH(r.x0 + 1, r.y1 - Size + 1, r.x0 + Size);
+			GUI.DrawLineH(r.x0 + 1, r.y1 - 1, r.x0 + Size);
+			GUI.DrawLineV(r.x0 + 1, r.y1 - Size, r.y1 - 1);
+			GUI.DrawLineV(r.x0 + Size, r.y1 - Size, r.y1 - 1);
+		};
+		auto pObj = (Frame *)ActiveWindow()->Parent();
+		if (pObj->StatusEx & FRAME_CF_MAXIMIZED)
+			_DrawRestore(r);
+		else
+			_DrawMax(r);
+	});
+	return pButton;
+}
+Button *Frame::AddCloseButton(FRAME_BUTTON Flags, int Off) {
+	auto pButton = AddButton(Flags, Off, GUI_ID_CLOSE);
+	pButton->SelfDraw(BUTTON_BI_UNPRESSED, [](SRect r) {
+		int Size = r.xsize() - 2;
+		for (int i = 2; i < Size; ++i) {
+			GUI.DrawLineH(r.x0 + i, r.y0 + i, r.x0 + i + 1);
+			GUI.DrawLineH(r.x1 - i - 1, r.y0 + i, r.x1 - i);
+		}
+	});
+	return pButton;
+}
+
+void Frame::TitleVis(bool bTitleVis) {
+	int StatusEx = this->StatusEx;
+	if (bTitleVis)
+		StatusEx |= FRAME_CF_TITLEVIS;
+	else
+		StatusEx &= ~FRAME_CF_TITLEVIS;
+	if (this->StatusEx == StatusEx)
+		return;
+	this->StatusEx = StatusEx;
+	_UpdatePositions();
+	auto TitleHeight = this->TitleHeight();
+	for (auto pChild = FirstChild(); pChild; pChild = pChild->NextSibling())
+		if (pChild->Rect().y0 <= TitleHeight)
+			if (pChild != pClient)
+				pChild->Visible(bTitleVis);
+	if (this->StatusEx & FRAME_CF_MINIMIZED)
+		Visible(bTitleVis);
+	Invalidate();
+}
+
+void Frame::Active(bool bActive) {
+	auto StatusEx = this->StatusEx;
+	if (bActive)
+		StatusEx |= FRAME_CF_ACTIVE;
+	else
+		StatusEx &= ~FRAME_CF_ACTIVE;
+	if (this->StatusEx == StatusEx)
+		return;
+	this->StatusEx = StatusEx;
+	Invalidate();
+}
+void Frame::BorderSize(int Size) {
+	if (Props.BorderSize != Size)
+		return;
+	auto OldHeight = _CalcTitleHeight();
+	auto OldSize = Props.BorderSize;
+	auto Diff = Size - OldSize;
+	for (auto pChild = FirstChild(); pChild; pChild = pChild->NextSibling()) {
+		auto &&r = pChild->Rect();
+		if (r.y0 > OldHeight)
+			continue;
+		if (r.ysize() == OldHeight) {
+			if (pChild->Styles() & WC_ANCHOR_RIGHT)
+				pChild->Move({ -Diff, Diff });
+			else
+				pChild->Move(Diff);
+		}
+	}
+	Props.BorderSize = Size;
+	_UpdatePositions();
+	Invalidate();
+}
+void Frame::Menu(::Menu *pMenu) {
+	auto IBorderSize = StatusEx & FRAME_CF_TITLEVIS ? Props.IBorderSize : 0;
+	auto BorderSize = Props.BorderSize;
+	this->pMenu = pMenu;
+	if (cb)
+		pMenu->Owner(pClient);
+	auto xSize = SizeX() - BorderSize * 2;
+	pMenu->Attach(this, { BorderSize, BorderSize + _CalcTitleHeight() + IBorderSize }, { xSize, 0 });
+	pMenu->Anchor(WC_ANCHOR_LEFT | WC_ANCHOR_RIGHT);
+	_UpdatePositions();
+	Invalidate();
+}

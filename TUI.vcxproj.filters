@@ -16,6 +16,12 @@
     <Filter Include="GUI\Widgets">
       <UniqueIdentifier>{ae0b581c-15b7-4d6b-ae36-0f243ef12aab}</UniqueIdentifier>
     </Filter>
+    <Filter Include="duktape">
+      <UniqueIdentifier>{08cf5063-1624-4551-b5c6-825d3976d25d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GUI_X_JS">
+      <UniqueIdentifier>{cf5685d3-5e25-4b9f-8ea3-9d0d30a3fe5c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GUI_X\GUI_X_LCD.cpp">
@@ -106,6 +112,15 @@
     <ClCompile Include="GUI\Widgets\Header.cpp">
       <Filter>GUI\Widgets</Filter>
     </ClCompile>
+    <ClCompile Include="GUI\Widgets\MultiPage.cc">
+      <Filter>GUI\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="duktape\duktape.c">
+      <Filter>duktape</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI_X_JS\GUI_X_JS.cpp">
+      <Filter>GUI_X_JS</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GUI\GUI.h">
@@ -156,6 +171,18 @@
     </ClInclude>
     <ClInclude Include="GUI\Widgets\Header.h">
       <Filter>GUI\Widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\Widgets\MultiPage.h">
+      <Filter>GUI\Widgets</Filter>
+    </ClInclude>
+    <ClInclude Include="duktape\duktape.h">
+      <Filter>duktape</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI_X_JS\duk_config.h">
+      <Filter>GUI_X_JS</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI_X_JS\GUI_X_JS.h">
+      <Filter>GUI_X_JS</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

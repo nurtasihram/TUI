@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="duktape">
+      <UniqueIdentifier>{67048042-7420-4432-83b8-caab4ea4fee5}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\duktape.c">
+      <Filter>duktape</Filter>
+    </ClCompile>
+    <ClCompile Include="duktape_test.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\duktape.h">
+      <Filter>duktape</Filter>
+    </ClInclude>
+    <ClInclude Include="duk_config.h" />
+  </ItemGroup>
+</Project>

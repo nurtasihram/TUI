@@ -3,15 +3,15 @@
 #include "WM.h"
 
 enum RADIO_BI {
-	 RADIO_BI_INACTIV = 0,
-	 RADIO_BI_ACTIV,
-	 RADIO_BI_CHECK
+	RADIO_BI_INACTIV = 0,
+	RADIO_BI_ACTIV,
+	RADIO_BI_CHECK
 };
-
 #define RADIO_TEXTPOS_RIGHT 0
-#define RADIO_TEXTPOS_LEFT  WC_USER(0)  /* Not implemented, TBD */
+#define RADIO_TEXTPOS_LEFT  WC_EX_USER(0)  /* Not implemented, TBD */
 
 class Radio : public Widget {
+
 public:
 	static CBitmap abmRadio[3];
 	struct Property {
@@ -25,9 +25,10 @@ public:
 		RGBC TextColor{ RGB_BLACK };
 		uint8_t Border{ 2 };
 	} static DefaultProps;
+
 private:
 	Property Props;
-	GUI_Array<TString> TextArray;
+	GUI_Array<GUI_STRING> TextArray;
 	uint16_t height, spacing;
 	int16_t sel = 0;
 	uint8_t groupId = 0;
@@ -41,22 +42,24 @@ private:
 	void _OnTouch(const PID_STATE *pState);
 	bool _OnKey(const KEY_STATE *pKeyInfo);
 
-	static WM_RESULT _Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc);
+	static WM_RESULT _Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc);
 
 public:
-	Radio(int x0, int y0, int xSize, int ySize,
-		  WObj *pParent, uint16_t Id,
-		  WM_CF Flags, uint16_t ExFlags,
+	Radio(const SRect &rc,
+		  PWObj pParent, uint16_t Id,
+		  WM_CF Flags, uint16_t FlagsEx,
 		  int NumItems, int Spacing);
-	Radio(int x0, int y0, int xSize, int ySize,
-		  WObj *pParent, uint16_t Id,
-		  WM_CF Flags, uint16_t ExFlags,
+	Radio(const SRect &rc,
+		  PWObj pParent, uint16_t Id,
+		  WM_CF Flags, uint16_t FlagsEx,
 		  const char *pItems, int Spacing = 0);
 	Radio(const WM_CREATESTRUCT &wc) :
-		Radio(wc.x, wc.y, wc.xsize, wc.ysize,
+		Radio(wc.rect(),
 			  wc.pParent, wc.Id,
-			  wc.Flags, wc.ExFlags,
+			  wc.Flags, wc.FlagsEx,
 			  wc.Para.pString) {}
+protected:
+	~Radio() = default;
 
 public:
 	inline void Add(int d) { Sel(sel + d); }

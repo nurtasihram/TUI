@@ -2,12 +2,23 @@
 #include "GUI_Array.h"
 #include "WM.h"
 
-constexpr WC_EX HEADER_CF_DRAG = WC_USER(0);
+using		HEADER_CF = WC_EX;
+constexpr	HEADER_CF
+			HEADER_CF_DRAG = WC_EX_USER(0);
 
 class Header : public Widget {
+
+public:
+	struct Property {
+		CFont *pFont{ &GUI_Font13_1 };
+		RGBC BkColor{ RGBC_GRAY(0xAA) };
+		RGBC TextColor{ RGB_BLACK };
+	} static DefaultProps;
+
+private:
 	struct Column {
 		GUI_DRAW_BASE *pDrawObj = nullptr;
-		TString Text;
+		GUI_STRING Text;
 		uint16_t Width = 0;
 		TEXTALIGN Align = TEXTALIGN_LEFT;
 		Column() {}
@@ -15,37 +26,39 @@ class Header : public Widget {
 			GUI_MEM_Free(pDrawObj);
 			pDrawObj = nullptr;
 		}
+		inline operator const char *() const {
+			return Text;
+		}
 	};
-public:
-	struct Property {
-		CFont *pFont{ &GUI_Font13_1 };
-		RGBC BkColor{ RGBC_GRAY(0xAA) };
-		RGBC TextColor{ RGB_BLACK };
-	} static DefaultProps;
-private:
 	GUI_Array<Column> Columns;
 	Property Props;
 	int16_t CapturePosX = -1;
 	int16_t CaptureItem = -1;
 	uint16_t scrollPos = 0;
+
 private:
 	int _GetItemIndex(Point Pos);
+
 	void _HandlePID(PID_STATE State);
 	bool _HandleDrag(int MsgId, const PID_STATE *pState);
 
 	void _OnPaint();
 
-	static WM_RESULT _Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc);
+	static WM_RESULT _Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc);
 
 public:
-	Header(int x0, int y0, int xsize, int ysize,
-		   WObj *pParent, uint16_t Id,
-		   uint16_t Flags, uint16_t ExFlags = 0);
+	Header(const SRect &rc,
+		   PWObj pParent, uint16_t Id,
+		   WM_CF Flags, HEADER_CF FlagsEx = 0,
+		   const char *pTexts = nullptr,
+		   const uint16_t *pacWidth = nullptr);
+protected:
+	~Header() = default;
 
 public:
-	void Add(const char *pText, uint16_t Width = 0, TEXTALIGN Align= TEXTALIGN_LEFT);
+	void Add(const char *pText, int Width = -1, TEXTALIGN Align = TEXTALIGN_LEFT);
 
-	void DeleteItem(unsigned Index);
+	void Delete(unsigned Index);
 
 #pragma region Properties
 public: // Property - Font

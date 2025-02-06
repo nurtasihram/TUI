@@ -40,18 +40,19 @@ SRect ProgBar::_GetTextRect(const char *pText) const {
 		TextHeight = GUI.Font()->YSize,
 		EffectSize = this->EffectSize();
 	Point p0{ Off.x, (size.y - TextHeight) / 2 };
-	switch (Props.Align & TEXTALIGN_HORIZONTAL) {
-	case TEXTALIGN_HCENTER:
-		p0.x += (size.x - TextWidth) / 2;
-		break;
-	case TEXTALIGN_RIGHT:
-		p0.x += size.x - TextWidth - EffectSize - 1;
-		break;
-	default:
-		p0.x += EffectSize;
+	switch (Props.Align & TEXTALIGN_HCENTER) {
+		case TEXTALIGN_HCENTER:
+			p0.x += (size.x - TextWidth) / 2;
+			break;
+		case TEXTALIGN_RIGHT:
+			p0.x += size.x - TextWidth - EffectSize - 1;
+			break;
+		default:
+			p0.x += EffectSize;
 	}
 	return SRect::left_top(p0, { TextWidth - 1, TextHeight - 1 });
 }
+
 void ProgBar::_OnPaint() const {
 	auto &&rClient = ClientRect();
 	auto xPos = _Value2X(v);
@@ -71,7 +72,7 @@ void ProgBar::_OnPaint() const {
 	WObj::UserClip(nullptr);
 	DrawDown(rClient);
 }
-WM_RESULT ProgBar::_Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc) {
+WM_RESULT ProgBar::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 	auto pObj = (ProgBar *)pWin;
 	if (!pObj->HandleActive(MsgId, Param))
 		return Param;
@@ -86,15 +87,15 @@ WM_RESULT ProgBar::_Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc) 
 	return DefCallback(pObj, MsgId, Param, pSrc);
 }
 
-ProgBar::ProgBar(int x0, int y0, int xsize, int ysize,
-				 WObj *pParent, uint16_t Id,
-				 WM_CF Flags,
+ProgBar::ProgBar(const SRect &rc,
+				 PWObj pParent, uint16_t Id,
+				 WM_CF Flags, WC_EX FlagsEx,
 				 int16_t Min, int16_t Max, int16_t v,
 				 const char *s) :
-	Widget(x0, y0, xsize, ysize,
+	Widget(rc,
 		   _Callback,
 		   pParent, Id,
-		   Flags),
+		   Flags, FlagsEx),
 	text(s),
 	Min(Min), Max(Max), v(v) {}
 

@@ -1,16 +1,18 @@
 #pragma once
 #include "ListBox.h"
 
+using		DROPDOWN_CF = WC_EX;
+constexpr	DROPDOWN_CF
+			DROPDOWN_CF_UP				= WC_EX_USER(0),
+			DROPDOWN_CF_AUTOSCROLLBAR	= LISTBOX_CF_AUTOSCROLLBAR_V;
 enum DROPDOWN_CI {
 	DROPDOWN_CI_UNSEL = 0,
 	DROPDOWN_CI_SEL,
 	DROPDOWN_CI_SELFOCUS
 };
 
-#define DROPDOWN_CF_AUTOSCROLLBAR   LISTBOX_CF_AUTOSCROLLBAR_V
-#define DROPDOWN_CF_UP              (1 << 2)
-
 struct DropDown : public Widget {
+
 public:
 	struct Property {
 		CFont *pFont{ &GUI_Font13_1 };
@@ -27,8 +29,9 @@ public:
 		int16_t TextBorderSize{ 2 };
 		TEXTALIGN Align{ TEXTALIGN_LEFT };
 	} static DefaultProps;
+
 private:
-	GUI_Array<TString> Handles;
+	GUI_Array<GUI_STRING> Handles;
 	Property Props;
 	ListBox *pListbox = nullptr;
 	SCROLL_STATE ScrollState;
@@ -47,16 +50,16 @@ private:
 	bool _OnTouch(const PID_STATE *pState);
 	bool _OnKey(const KEY_STATE *pKi);
 
-	static WM_RESULT _Callback(WObj *pWin, int MsgId, WM_PARAM Param, WObj *pSrc);
+	static WM_RESULT _Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc);
 
 public:
-	DropDown(int x0, int y0, int xsize, int ysize,
-			 WObj *pParent, uint16_t Id,
-			 WM_CF Flags, uint8_t ExFlags);
+	DropDown(const SRect &rc = {},
+			 PWObj pParent = nullptr, uint16_t Id = 0,
+			 WM_CF Flags = WC_HIDE, DROPDOWN_CF FlagsEx = 0);
 	DropDown(const WM_CREATESTRUCT &wc) :
-		DropDown(wc.x, wc.y, wc.xsize, wc.ysize,
+		DropDown(wc.rect(),
 				 wc.pParent, wc.Id,
-				 wc.Flags, (uint8_t)wc.ExFlags) {}
+				 wc.Flags, wc.FlagsEx) {}
 protected:
 	~DropDown();
 
@@ -73,7 +76,7 @@ public:
 		Handles.Add() = s;
 		Invalidate();
 	}
-	void InsertString(uint16_t Index, const char *s);
+	void Insert(uint16_t Index, const char *s);
 	void Delete(uint16_t Index);
 
 #pragma region Properties
@@ -114,4 +117,5 @@ public: // Property - TextHeight
 		Invalidate();
 	}
 #pragma endregion
+
 };

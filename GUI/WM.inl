@@ -16,6 +16,7 @@ enum WM_MESSSAGES : int {
 	 WM_GET_ID,
 	 WM_SET_ID,
 	 WM_GET_CLIENT_WINDOW,
+	 WM_GET_SERVE_RECT,
 	 WM_CAPTURE_RELEASED,
 	 WM_INIT_DIALOG,
 	 WM_SET_FOCUS,
@@ -33,6 +34,9 @@ enum WM_MESSSAGES : int {
 	 WM_WIDGET = 0x0300,
 	 WM_USER = 0x0400
 };
+enum WM_WIDGET : int {
+	WM_WIDGET_SET_EFFECT = WM_WIDGET + 0
+};
 enum WM_NOTIFICATIONS : int {
 	 WN_NULL,
 	 WN_CLICKED,
@@ -49,24 +53,30 @@ enum WM_NOTIFICATIONS : int {
 	 WN_USER = 16
 };
 
-using	  WM_CF = uint16_t;
-constexpr WM_CF	WC_HIDE              = 0,
-				WC_VISIBLE           = 1 << 0,
-				WC_STAYONTOP         = 1 << 1,
-				WC_DISABLED          = 1 << 2,
-				WC_ACTIVATE          = 1 << 3,
-				WC_NOACTIVATE        = 1 << 4,
-				WC_FOCUSSABLE        = 1 << 5,
-				WC_ANCHOR_RIGHT      = 1 << 7,
-				WC_ANCHOR_BOTTOM     = 1 << 8,
-				WC_ANCHOR_LEFT       = 1 << 9,
-				WC_ANCHOR_TOP        = 1 << 10;
-constexpr WM_CF WC_ANCHOR_MASK =
-				WC_ANCHOR_TOP |
-				WC_ANCHOR_BOTTOM |
-				WC_ANCHOR_LEFT |
-				WC_ANCHOR_RIGHT;
+using		WM_CF = uint16_t;
+constexpr	WM_CF
+			WC_HIDE              = 0,
+			WC_VISIBLE           = 1 << 0,
+			WC_STAYONTOP         = 1 << 1,
+			WC_DISABLED          = 1 << 2,
+			WC_ACTIVATE          = 1 << 3,
+			WC_NOACTIVATE        = 1 << 4,
+			WC_FOCUSSABLE        = 1 << 5,
+			WC_ANCHOR_LEFT       = 1 << 6,
+			WC_ANCHOR_RIGHT      = 1 << 7,
+			WC_ANCHOR_TOP        = 1 << 8,
+			WC_ANCHOR_BOTTOM     = 1 << 9,
+			WC_AUTOSCROLL_H      = 1 << 10,
+			WC_AUTOSCROLL_V      = 1 << 11;
+constexpr	WM_CF
+			WC_AUTOSCROLL		 = WC_AUTOSCROLL_H | WC_AUTOSCROLL_V;
+constexpr	WM_CF
+			WC_ANCHOR_HORIZONTAL = WC_ANCHOR_LEFT | WC_ANCHOR_RIGHT;
+constexpr	WM_CF
+			WC_ANCHOR_VERTICAL	 = WC_ANCHOR_TOP | WC_ANCHOR_BOTTOM;
+constexpr	WM_CF
+			WC_ANCHOR_MASK		 = WC_ANCHOR_HORIZONTAL | WC_ANCHOR_VERTICAL;
 
 using	  WC_EX = uint16_t;
 constexpr WC_EX WC_EX_VERTICAL = 1 << 0;
-constexpr WC_EX WC_USER(uint8_t x) { return 1 << (1 + x); }
+constexpr WC_EX WC_EX_USER(uint8_t x) { return 1 << (1 + x); }
