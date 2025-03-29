@@ -1,12 +1,9 @@
-#define USE_AYXANDAR
-#include "SimDisp.h"
+#include "GUI_X_LCD.h"
 
-#include "GUI.h"
+volatile int a__ = 0;
 
-Ayxandar SimDisp::Ayx;
-
-static inline void LCD_SetPixel(Point p, RGBC Color) {
-	SimDisp::Ayx.Dot({ p.x, p.y }, Color);
+static inline void LCD_SetPixel(uint16_t x, uint16_t y, RGBC Color) {
+	a__ = x * y *Color;
 }
 
 #pragma region LCD_SetBitmap
@@ -25,10 +22,10 @@ static void _LCD_BMP_1BPP(
 			auto Index = Pix & 1;
 			if constexpr (HasTrans) {
 				if (Index)
-					LCD_SetPixel({ x, y }, C1);
+					LCD_SetPixel(x, y, C1);
 			}
 			else
-				LCD_SetPixel({ x, y }, Index ? C1 : C0);
+				LCD_SetPixel(x, y, Index ? C1 : C0);
 			Pix >>= 1;
 			if (++diff >= 8) {
 				diff = 0;
@@ -52,10 +49,10 @@ static void _LCD_BMP_2BPP(
 			auto Index = Pix & 3;
 			if constexpr (HasTrans) {
 				if (Index)
-					LCD_SetPixel({ x, y }, pTrans[Index]);
+					LCD_SetPixel(x, y, pTrans[Index]);
 			}
 			else
-				LCD_SetPixel({ x, y }, pTrans[Index]);
+				LCD_SetPixel(x, y, pTrans[Index]);
 			Pix >>= 2;
 			if (++diff >= 4) {
 				diff = 0;
@@ -65,6 +62,8 @@ static void _LCD_BMP_2BPP(
 		pData += BytesPerLine;
 	}
 }
+#pragma endregion
+
 void LCD_SetBitmap(const BitmapRect &br) {
 	switch (br.BitsPerPixel) {
 		case 1:
@@ -86,17 +85,17 @@ void LCD_SetBitmap(const BitmapRect &br) {
 		case 16:
 			break;
 		case 24:
-			SimDisp::Ayx.SetRect({ br.x0, br.y0, br.x1, br.y1 }, (uint32_t *)br.pData, br.BytesPerLine);
+			//GUI_X_SIM::SetBitmap(br.x0, br.y0, br.x1, br.y1, (const uint32_t *)br.pData, br.BytesPerLine);
 			break;
 	}
 }
-#pragma endregion
 void LCD_GetBitmap(BitmapRect &br) {
-	SimDisp::Ayx.GetRect({ br.x0, br.y0, br.x1, br.y1 }, (uint32_t *)br.pData, br.BytesPerLine);
+	a__ = br.x0 * br.y0 * br.x1 * br.y1;
 }
 void LCD_FillRect(const SRect &r) {
-	SimDisp::Ayx.Fill(GUI.PenColor(), { r.x0, r.y0, r.x1, r.y1 });
+	a__ = r.x0 * r.y0 * r.x1 * r.y1;
 }
+
 BitmapRect LCD_AllocBitmap(const SRect &r) {
 	BitmapRect br = r;
 	br.BytesPerLine = br.xsize() * 4;
@@ -109,4 +108,11 @@ void LCD_FreeBitmap(BitmapRect &br) {
 		GUI_MEM_Free(br.pData);
 		br.pData = nullptr;
 	}
+}
+
+static uint16_t xSizeDisp = 800, ySizeDisp = 480;
+SRect LCD_Rect() {
+	return { 0, 0, xSizeDisp, ySizeDisp };
+}
+void GUI_X_LCD_Init() {
 }

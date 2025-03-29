@@ -114,6 +114,8 @@ WM_RESULT DropDown::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc)
 				break;
 			}
 			break;
+		case WM_GET_CLASS:
+			return ClassNames[WCLS_DROPDOWN];
 	}
 	return DefCallback(pObj, MsgId, Param, pSrc);
 }

@@ -197,6 +197,8 @@ WM_RESULT ScrollBar::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc
 	case WM_DELETE:
 		pObj->_InvalidatePartner();
 		return 0;
+	case WM_GET_CLASS:
+		return ClassNames[WCLS_SCROLLBAR];
 	}
 	return DefCallback(pObj, MsgId, Param, pSrc);
 }

@@ -3,16 +3,16 @@
 Button::Property Button::DefaultProps;
 
 void Button::_Pressed() {
-	if (!(StatusEx & BUTTON_STATE_PRESSED)) {
-		StatusEx |= BUTTON_STATE_PRESSED;
+	if (!(StatusEx & _BUTTON_STATE_PRESSED)) {
+		StatusEx |= _BUTTON_STATE_PRESSED;
 		Invalidate();
 	}
 	if (Status & WC_VISIBLE)
 		NotifyParent(WN_CLICKED);
 }
 void Button::_Released(int Notification) {
-	if (StatusEx & BUTTON_STATE_PRESSED) {
-		StatusEx &= ~BUTTON_STATE_PRESSED;
+	if (StatusEx & _BUTTON_STATE_PRESSED) {
+		StatusEx &= ~_BUTTON_STATE_PRESSED;
 		Invalidate();
 	}
 	if (Status & WC_VISIBLE)
@@ -22,7 +22,7 @@ void Button::_Released(int Notification) {
 }
 
 void Button::_OnPaint() const {
-	bool bPressed = StatusEx & BUTTON_STATE_PRESSED;
+	bool bPressed = StatusEx & _BUTTON_STATE_PRESSED;
 	auto &&rClient = ClientRect();
 	int EffectSize = 1;
 	if (bPressed)
@@ -58,10 +58,10 @@ void Button::_OnPaint() const {
 void Button::_OnTouch(const PID_STATE *pState) {
 	if (pState) {
 		if (pState->Pressed) {
-			if (!(StatusEx & BUTTON_STATE_PRESSED))
+			if (!(StatusEx & _BUTTON_STATE_PRESSED))
 				_Pressed();
 		}
-		else if (StatusEx & BUTTON_STATE_PRESSED)
+		else if (StatusEx & _BUTTON_STATE_PRESSED)
 			_Released(WN_RELEASED);
 	}
 	else
@@ -69,11 +69,11 @@ void Button::_OnTouch(const PID_STATE *pState) {
 }
 void Button::_OnPidStateChange(const PID_CHANGED_STATE *pState) {
 	if ((pState->StatePrev == 0) && (pState->Pressed == 1)) {
-		if (!(StatusEx & BUTTON_STATE_PRESSED))
+		if (!(StatusEx & _BUTTON_STATE_PRESSED))
 			_Pressed();
 	}
 	else if ((pState->StatePrev == 1) && (pState->Pressed == 0)) {
-		if (StatusEx & BUTTON_STATE_PRESSED)
+		if (StatusEx & _BUTTON_STATE_PRESSED)
 			_Released(WN_RELEASED);
 	}
 }
@@ -112,6 +112,8 @@ WM_RESULT Button::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 		case WM_DELETE:
 			pObj->~Button();
 			return 0;
+		case WM_GET_CLASS:
+			return ClassNames[WCLS_BUTTON];
 	}
 	return DefCallback(pObj, MsgId, Param, pSrc);
 }
@@ -129,20 +131,9 @@ Button::Button(const SRect &rc,
 void Button::Pressed(bool bPressed) {
 	auto StatusEx = this->StatusEx;
 	if (bPressed)
-		StatusEx |= BUTTON_STATE_PRESSED;
+		StatusEx |= _BUTTON_STATE_PRESSED;
 	else
-		StatusEx &= ~BUTTON_STATE_PRESSED;
-	if (this->StatusEx == StatusEx)
-		return;
-	this->StatusEx = StatusEx;
-	Invalidate();
-}
-void Button::Focussable(bool bFocussable) {
-	auto StatusEx = this->StatusEx;
-	if (bFocussable)
-		StatusEx |= WC_FOCUSSABLE;
-	else
-		StatusEx &= ~WC_FOCUSSABLE;
+		StatusEx &= ~_BUTTON_STATE_PRESSED;
 	if (this->StatusEx == StatusEx)
 		return;
 	this->StatusEx = StatusEx;

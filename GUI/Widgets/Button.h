@@ -1,10 +1,10 @@
 #pragma once
 #include "WM.h"
 
-using		BUTTON_STATE = WC_EX;
-constexpr	BUTTON_STATE
-			BUTTON_STATE_HASFOCUS = 0,
-			BUTTON_STATE_PRESSED  = WC_EX_USER(0);
+using		_BUTTON_STATE = WC_EX;
+constexpr	_BUTTON_STATE
+			_BUTTON_STATE_HASFOCUS = 0,
+			_BUTTON_STATE_PRESSED  = WC_EX_USER(0);
 enum BUTTON_BI {
 	BUTTON_BI_UNPRESSED = 0,
 	BUTTON_BI_PRESSED,
@@ -88,11 +88,8 @@ public: // Property - TextAlign
 		Invalidate();
 	}
 public: // Property - Pressed
-	/* R */ inline bool Pressed() const { return StatusEx & BUTTON_STATE_PRESSED; }
+	/* R */ inline bool Pressed() const { return StatusEx & _BUTTON_STATE_PRESSED; }
 	/* W */ void Pressed(bool bPressed);
-public: // Property - Focussable
-	/* R */ inline bool Focussable() const { return StatusEx & WC_FOCUSSABLE; }
-	/* W */ void Focussable(bool bFocussable);
 public: // Property - Text
 	/* R */ inline const char *Text() const { return text; }
 	/* W */ inline void Text(const char *pText) {

@@ -480,6 +480,8 @@ WM_RESULT Menu::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 		case WM_MENU:
 			pObj->_OnMenu(Param);
 			return 0;
+		case WM_GET_CLASS:
+			return ClassNames[WCLS_MENU];
 	}
 	return DefCallback(pObj, MsgId, Param, pSrc);
 }

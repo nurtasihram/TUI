@@ -387,6 +387,8 @@ WM_RESULT Frame::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 		case WM_NOTIFY_CHILD_HAS_FOCUS:
 			pObj->_OnChildHasFocus(Param);
 			return 0;
+		case WM_GET_CLASS:
+			return ClassNames[WCLS_FRAME];
 	}
 	if (!pObj->HandleActive(MsgId, Param))
 		return Param;

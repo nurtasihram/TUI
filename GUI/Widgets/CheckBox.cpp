@@ -84,6 +84,8 @@ WM_RESULT CheckBox::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc)
 		case WM_DELETE:
 			pObj->~CheckBox();
 			return 0;
+		case WM_GET_CLASS:
+			return ClassNames[WCLS_CHECKBOX];
 	}
 	return DefCallback(pObj, MsgId, Param, pSrc);
 }

@@ -124,7 +124,8 @@ void WObj::Destroy() {
 		pWinFocus = nullptr;
 	if (pWinCapture == this)
 		pWinCapture = nullptr;
-	CriticalHandles::pFirst->Check(this);
+	if (CriticalHandles::pFirst)
+		CriticalHandles::pFirst->Check(this);
 	NotifyParent(WN_CHILD_DELETED);
 	for (auto pChild = pFirstChild; pChild; ) {
 		auto pNext = pChild->pNext;
@@ -407,6 +408,8 @@ WM_RESULT WObj::DefCallback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 		case WM_NOTIFY_ENABLE:
 			pWin->Invalidate();
 			return 0;
+		case WM_GET_CLASS:
+			return "Window";
 	}
 	return 0;
 }
@@ -530,6 +533,17 @@ void WObj::Enable(bool bEnable) {
 		return;
 	this->Status = Status;
 	this->SendMessage(WM_NOTIFY_ENABLE, bEnable);
+}
+void WObj::Focussable(bool bFocussable) {
+	auto StatusEx = this->StatusEx;
+	if (bFocussable)
+		StatusEx |= WC_FOCUSSABLE;
+	else
+		StatusEx &= ~WC_FOCUSSABLE;
+	if (this->StatusEx == StatusEx)
+		return;
+	this->StatusEx = StatusEx;
+	Invalidate();
 }
 void WObj::Visible(bool bVisible) {
 	auto Status = this->Status;
@@ -960,6 +974,27 @@ int WObj::DialogExec() {
 #include "Slider.h"
 #include "Static.h"
 #include "Frame.h"
+
+
+const char *ClassNames[]{
+	"",
+	"BUTTON",
+	"CHECKBOX",
+	"DROPDOWN",
+	"EDIT",
+	"HEADER",
+	"LISTBOX",
+	"LISTVIEW",
+	"MENU",
+	"MULTIEDIT",
+	"MULTIPAGE",
+	"PROGBAR",
+	"RADIO",
+	"SCROLLBAR",
+	"SLIDER",
+	"STATIC",
+	"FRAME"
+};
 
 PWObj WM_CREATESTRUCT::Create() const {
 	switch (Class) {

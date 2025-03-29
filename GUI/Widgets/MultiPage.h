@@ -68,7 +68,7 @@ private:
 public:
 	MultiPage(const SRect &rc,
 			  PWObj pParent, uint16_t Id,
-			  WM_CF Flags, uint16_t FlagsEx = 0);
+			  WM_CF Flags, WC_EX FlagsEx = 0);
 protected:
 	~MultiPage() = default;
 

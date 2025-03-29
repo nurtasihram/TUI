@@ -253,6 +253,8 @@ WM_PARAM MultiPage::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc)
 	case WM_DELETE:
 		pObj->Handles.Delete();
 		return 0;
+	case WM_GET_CLASS:
+		return ClassNames[WCLS_MULTIPAGE];
 	}
 	if (Handled)
 		return DefCallback(pObj, MsgId, Param, pSrc);
@@ -262,7 +264,7 @@ WM_PARAM MultiPage::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc)
 MultiPage::MultiPage(
 	const SRect &rc,
 	PWObj pParent, uint16_t Id,
-	WM_CF Flags, uint16_t FlagsEx) :
+	WM_CF Flags, WC_EX FlagsEx) :
 	Widget(rc,
 		   _Callback,
 		   pParent, Id,

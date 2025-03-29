@@ -2,7 +2,6 @@
 // Microsoft Visual C++ 產生的 Include 檔案。
 // 由 TUI.rc 使用
 //
-#define IDD_DIALOG1                     101
 
 // Next default values for new objects
 // 

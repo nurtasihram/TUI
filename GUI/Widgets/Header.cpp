@@ -3,9 +3,9 @@
 
 Header::Property Header::DefaultProps;
 
-constexpr int16_t _DefaultBorderH = 0;
-constexpr int16_t _DefaultBorderV = 2;
-
+constexpr int16_t
+	_DefaultBorderH = 0,
+	_DefaultBorderV = 2;
 
 int Header::_GetItemIndex(Point Pos) {
 	if (0 > Pos.y || Pos.y >= SizeY())
@@ -137,6 +137,8 @@ WM_RESULT Header::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 		case WM_DELETE:
 			pObj->~Header();
 			return 0;
+		case WM_GET_CLASS:
+			return ClassNames[WCLS_HEADER];
 	}
 	return DefCallback(pObj, MsgId, Param, pSrc);
 }

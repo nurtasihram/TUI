@@ -20,6 +20,8 @@ WM_RESULT Static::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 		case WM_DELETE:
 			pObj->~Static();
 			return 0;
+		case WM_GET_CLASS:
+			return ClassNames[WCLS_STATIC];
 	}
 	return DefCallback(pObj, MsgId, Param, pSrc);
 }

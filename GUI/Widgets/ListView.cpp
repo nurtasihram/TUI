@@ -243,6 +243,8 @@ WM_RESULT  ListView::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc
 			}
 			return rInside;
 		}
+		case WM_GET_CLASS:
+			return ClassNames[WCLS_LISTVIEW];
 	}
 	if (!pObj->HandleActive(MsgId, Param))
 		return Param;

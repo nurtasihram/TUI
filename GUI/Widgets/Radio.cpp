@@ -166,6 +166,8 @@ WM_RESULT Radio::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 		return 0;
 	case WM_GET_RADIOGROUP:
 		return pObj->groupId;
+	case WM_GET_CLASS:
+		return ClassNames[WCLS_RADIO];
 	}
 	return DefCallback(pObj, MsgId, Param, pSrc);
 }

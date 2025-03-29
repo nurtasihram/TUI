@@ -111,6 +111,8 @@ WM_RESULT Slider::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 	case WM_KEY:
 		pObj->_OnKey(Param);
 		break;
+	case WM_GET_CLASS:
+		return ClassNames[WCLS_SLIDER];
 	}
 	return DefCallback(pObj, MsgId, Param, pSrc);
 }

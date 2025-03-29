@@ -7,8 +7,6 @@ enum RADIO_BI {
 	RADIO_BI_ACTIV,
 	RADIO_BI_CHECK
 };
-#define RADIO_TEXTPOS_RIGHT 0
-#define RADIO_TEXTPOS_LEFT  WC_EX_USER(0)  /* Not implemented, TBD */
 
 class Radio : public Widget {
 

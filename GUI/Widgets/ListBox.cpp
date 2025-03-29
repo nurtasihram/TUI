@@ -316,6 +316,8 @@ WM_RESULT ListBox::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) 
 			pObj->_UpdateScrollers();
 			pObj->Invalidate();
 			break;
+		case WM_GET_CLASS:
+			return ClassNames[WCLS_LISTBOX];
 	}
 	return DefCallback(pObj, MsgId, Param, pSrc);
 }

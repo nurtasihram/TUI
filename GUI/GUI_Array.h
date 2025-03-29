@@ -1,8 +1,8 @@
 #pragma once
 
 #include <stdint.h>
+#include <string.h>
 #include <memory>
-#include <memory.h>
 
 #include "GUI.h"
 

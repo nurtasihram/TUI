@@ -116,6 +116,14 @@ public: // Property - Height
 	/* W */ void Height(uint16_t height);
 public: // Property - NumItems
 	/* R */ inline auto NumItems() const { return Columns.NumItems(); }
+public: // Property - Drag
+	/* R */ inline bool Drag() const { return StatusEx & HEADER_CF_DRAG; }
+	/* W */ inline void Drag(bool bDrag) {
+		if (bDrag)
+			StatusEx |= HEADER_CF_DRAG;
+		else
+			StatusEx &= ~HEADER_CF_DRAG;
+	}
 #pragma endregion
 
 };

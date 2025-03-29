@@ -87,7 +87,7 @@ public: // Property - BkColorBox
 	}
 public: // Property - Spacing
 	/* R */ inline auto Spacing() const { return Props.Spacing; }
-	/* W */ inline void Spacing(unsigned Spacing) {
+	/* W */ inline void Spacing(uint8_t Spacing) {
 		Props.Spacing = Spacing;
 		Invalidate();
 	}

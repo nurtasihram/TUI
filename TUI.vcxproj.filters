@@ -24,10 +24,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="GUI_X\GUI_X_LCD.cpp">
-      <Filter>GUI_X_LCD</Filter>
-    </ClCompile>
-    <ClCompile Include="main.cc" />
+    <ClCompile Include="main.c" />
     <ClCompile Include="tests\test_listbox_dropdown.cpp">
       <Filter>tests</Filter>
     </ClCompile>
@@ -112,13 +109,23 @@
     <ClCompile Include="GUI\Widgets\Header.cpp">
       <Filter>GUI\Widgets</Filter>
     </ClCompile>
-    <ClCompile Include="GUI\Widgets\MultiPage.cc">
+    <ClCompile Include="GUI\Widgets\MultiPage.cpp">
       <Filter>GUI\Widgets</Filter>
     </ClCompile>
     <ClCompile Include="duktape\duktape.c">
       <Filter>duktape</Filter>
     </ClCompile>
-    <ClCompile Include="GUI_X_JS\GUI_X_JS.cpp">
+    <ClCompile Include="GUI_X_JS\GUI_X_JS_Symbols.cpp">
+      <Filter>GUI_X_JS</Filter>
+    </ClCompile>
+    <ClCompile Include="tests\test_js.cpp">
+      <Filter>tests</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI_X_LCD\GUI_X_LCD_SIM.cpp">
+      <Filter>GUI_X_LCD</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI_Main.cpp" />
+    <ClCompile Include="GUI_X_JS\GUI_X_JS_SIM.cpp">
       <Filter>GUI_X_JS</Filter>
     </ClCompile>
   </ItemGroup>
@@ -184,6 +191,10 @@
     <ClInclude Include="GUI_X_JS\GUI_X_JS.h">
       <Filter>GUI_X_JS</Filter>
     </ClInclude>
+    <ClInclude Include="GUI_X_LCD\GUI_X_LCD.h">
+      <Filter>GUI_X_LCD</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI_Main.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="GUI\GUI.inl">

@@ -296,7 +296,6 @@ public:
 	/* S */ inline bool Focussed() const { return this == pWinFocus; }
 	/* S */ inline PWObj FocussedChild() { return pWinFocus ? pWinFocus->IsChildOf(this) ? pWinFocus : nullptr : nullptr; }
 	/* A */ PWObj FocusNextChild();
-	/* S */ inline bool Focussable() const { return const_cast<PWObj>(this)->SendMessage(WM_GET_ACCEPT_FOCUS); }
 #pragma endregion
 
 #pragma region Capture
@@ -381,6 +380,9 @@ public: // Property - Anchor
 public: // Property - Enable
 	/* R */ inline bool Enable() const { return !(Status & WC_DISABLED); }
 	/* W */ void Enable(bool bEnable);
+public: // Property - Focussable
+	/* R */ inline bool Focussable() const { return const_cast<PWObj>(this)->SendMessage(WM_GET_ACCEPT_FOCUS); }
+	/* W */ void Focussable(bool bFocussable);
 public: // Property - StayOnTop
 	/* R */ inline bool StayOnTop() const { return Status & WC_STAYONTOP; }
 	/* W */ void StayOnTop(bool bEnable);
@@ -443,6 +445,8 @@ public: // Property - PrevSibling
 public: // Property - ID
 	/* R */ inline uint16_t ID() const { return const_cast<PWObj>(this)->SendMessage(WM_GET_ID); }
 	/* W */ inline void ID(uint16_t id) { this->SendMessage(WM_SET_ID, id); }
+public: // Property - ClassName
+	/* R */ inline const char *ClassName() const { return const_cast<PWObj>(this)->SendMessage(WM_GET_CLASS); }
 public: // Property - DialogItem
 	/* R */ PWObj DialogItem(uint16_t Id);
 	/* R */ inline PWObj DialogItem(uint16_t Id) const { return const_cast<PWObj>(this)->DialogItem(Id); }
@@ -543,6 +547,7 @@ public: // Property - DefaultEffect
 	static auto DefaultEffect() { return pEffectDefault; }
 #pragma endregion
 
+protected:
 	inline void OrState(uint16_t nState) {
 		if (StatusEx != (StatusEx & nState)) {
 			StatusEx |= nState;
@@ -605,4 +610,5 @@ enum WIDGET_CLASSES : uint16_t {
 	WCLS_STATIC,
 	WCLS_FRAME
 };
+extern const char *ClassNames[];
 #pragma endregion
