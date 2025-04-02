@@ -27,7 +27,7 @@ CCursor GUI_CursorArrow{
 		/* Size */ { 12, 20 },
 		/* BytesPerLine */ 3,
 		/* Bits */ GUI_Pixels_ArrowM,
-		/* Palette */ &GUI_CursorPal,
+		/* Palette */ &GUI_PalCursor,
 		/* Transparent */ true
 	}
 };
@@ -36,7 +36,7 @@ CCursor GUI_CursorArrowI{
 		/* Size */ { 12, 20 },
 		/* BytesPerLine */ 3,
 		/* Bits */ GUI_Pixels_ArrowM,
-		/* Palette */ &GUI_CursorPalI,
+		/* Palette */ &GUI_PalCursorI,
 		/* Transparent */ true
 	}
 };

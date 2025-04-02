@@ -107,7 +107,7 @@ void CtlEdit::_SetCapture(Point Pos, uint8_t Mode) {
 	if (!Mode) return;
 	if (!Captured())
 		Capture(false);
-	if (auto pCursor = CursorCtl::GetResizeCursor(Mode))
+	if (auto pCursor = CursorCtl::ResizeCursor(Mode))
 		GUI.Cursor(pCursor);
 	if (Mode & SIZE_MOUSEOVER)
 		Mode = 0;
@@ -242,7 +242,8 @@ CtlEdit::CtlEdit(Widget *pWidget) :
 		   WC_VISIBLE, WC_FOCUSSABLE),
 	pWidget(pWidget) {
 	pWidget->Anchor(WC_ANCHOR_MASK);
-	pWidget->Parent(this, 0);
+	pWidget->Parent(this);
+	pWidget->Position(0);
 }
 
 #include "GUI_X_LCD.h"
@@ -326,26 +327,26 @@ void MainTask() {
 	pListView->AddColumn("Col 1   ");
 	pListView->AddColumn("Col 2   ");
 	pListView->AddColumn("Col 3   ");
-	//pListView->AddRow(
-	//	"Col 1x1\0"
-	//	"Col 1x2\0"
-	//	"Col 1x3\0");
-	//pListView->AddRow(
-	//	"Col 2x1\0"
-	//	"Col 2x2\0"
-	//	"Col 2x3\0");
-	//pListView->AddRow(
-	//	"Col 3x1\0"
-	//	"Col 3x2\0"
-	//	"Col 3x3\0");
-	//pListView->AddRow(
-	//	"Col 4x1\0"
-	//	"Col 4x2\0"
-	//	"Col 4x3\0");
-	//pListView->AddRow(
-	//	"Col 5x1\0"
-	//	"Col 5x2\0"
-	//	"Col 5x3\0");
+	pListView->AddRow(
+		"Col 1x1\0"
+		"Col 1x2\0"
+		"Col 1x3\0");
+	pListView->AddRow(
+		"Col 2x1\0"
+		"Col 2x2\0"
+		"Col 2x3\0");
+	pListView->AddRow(
+		"Col 3x1\0"
+		"Col 3x2\0"
+		"Col 3x3\0");
+	pListView->AddRow(
+		"Col 4x1\0"
+		"Col 4x2\0"
+		"Col 4x3\0");
+	pListView->AddRow(
+		"Col 5x1\0"
+		"Col 5x2\0"
+		"Col 5x3\0");
 	new CtlEdit(pListView);
 	auto pPages = new MultiPage(
 		{ 240, 150, 345, 255 },

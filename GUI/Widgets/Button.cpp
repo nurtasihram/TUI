@@ -43,7 +43,7 @@ void Button::_OnPaint() const {
 	if (text) {
 		GUI.Font(Props.pFont);
 		GUI.TextAlign(Props.Align);
-		GUI.DispString(
+		GUI.DrawStringIn(
 			text,
 			bPressed ? rInside + Point(EffectSize) : rInside);
 	}

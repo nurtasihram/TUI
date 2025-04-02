@@ -116,7 +116,7 @@ void MultiPage::_DrawTextItem(const char *pText, unsigned Index,
 	Fill(r);
 	GUI.BkColor(Props.aBkColor[ColorIndex]);
 	GUI.PenColor(Props.aTextColor[ColorIndex]);
-	GUI_DispStringAt(pText, { r.x0 + 4, r.y0 + 3 });
+	GUI.DrawStringAt(pText, { r.x0 + 4, r.y0 + 3 });
 	if (Sel == Index)
 		GUI.DrawFocus(r);
 }

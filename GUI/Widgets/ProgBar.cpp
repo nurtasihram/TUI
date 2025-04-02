@@ -12,7 +12,7 @@ void ProgBar::_DrawPart(int Index, Point ptText, const char *pText) const {
 	GUI.BkColor(Props.aBkColor[Index]);
 	GUI.PenColor(Props.aTextColor[Index]);
 	GUI.Clear();
-	GUI_DispStringAt(pText, ptText);
+	GUI.DrawStringAt(pText, ptText);
 }
 const char *ProgBar::_GetText(char *pBuffer) const {
 	if (text) return text;

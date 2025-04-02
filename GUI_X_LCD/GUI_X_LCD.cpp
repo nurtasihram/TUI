@@ -100,7 +100,7 @@ BitmapRect LCD_AllocBitmap(const SRect &r) {
 	BitmapRect br = r;
 	br.BytesPerLine = br.xsize() * 4;
 	br.BitsPerPixel = 24;
-	br.pData = GUI_MEM_AllocZero(br.ysize() * br.BytesPerLine);
+	br.pData = GUI_MEM_Alloc(br.ysize() * br.BytesPerLine);
 	return br;
 }
 void LCD_FreeBitmap(BitmapRect &br) {

@@ -88,7 +88,7 @@ void Frame::_SetCapture(Point Pos, uint8_t Mode) {
 	if (!Mode) return;
 	if (!Captured())
 		Capture(false);
-	if (auto pCursor = CursorCtl::GetResizeCursor(Mode))
+	if (auto pCursor = CursorCtl::ResizeCursor(Mode))
 		GUI.Cursor(pCursor);
 	if (Mode & SIZE_MOUSEOVER)
 		Mode = 0;
@@ -244,7 +244,7 @@ void Frame::_OnPaint() const {
 	GUI.PenColor(Props.aTextColor[Index]);
 	GUI.Clear(r);
 	GUI.TextAlign(Props.Align);
-	GUI.DispString(Title, Pos.rTitleText);
+	GUI.DrawStringIn(Title, Pos.rTitleText);
 	GUI.PenColor(Props.FrameColor);
 	GUI.Fill({ 0, 0, size.x, BorderSize - 1 });
 	GUI.Fill({ 0, 0, Pos.rClient.x0 - 1, size.y });
@@ -292,14 +292,7 @@ WM_RESULT Frame::_cbClient(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 				}
 			break;
 		case WM_SET_FOCUS:
-			if (Param) {
-				if (pParent->pFocussedChild && (pParent->pFocussedChild != pWin))
-					pParent->pFocussedChild->Focus();
-				else
-					pParent->pFocussedChild = pWin->FocusNextChild();
-				return false;
-			}
-			return true;
+			return pParent->SendMessage(MsgId, Param, pSrc);
 		case WM_GET_ACCEPT_FOCUS:
 			pParent->HandleActive(MsgId, Param);
 			return Param;
@@ -454,9 +447,8 @@ Button *Frame::AddButton(FRAME_BUTTON Flags, int Off, uint16_t Id) {
 		x = Pos.rTitleText.x1 - (Size - 1) - Off;
 	else
 		x = Pos.rTitleText.x0 + Off;
-	auto pButton = new Button({
-		{ x, BorderSize() + BUTTON_BORDER_OFFSET },
-		  x + Size },
+	auto pButton = new Button(
+		SRect::left_top({ x, BorderSize() + BUTTON_BORDER_OFFSET }, Size),
 		this, Id,
 		Flags);
 	pButton->Focussable(false);

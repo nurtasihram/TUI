@@ -8,7 +8,7 @@ void Slider::_SliderPressed() {
 		NotifyParent(WN_CLICKED);
 }
 void Slider::_Released() {
-	AndState(SLIDER_CF__PRESSED);
+	MaskState(SLIDER_CF__PRESSED);
 	if (Status & WC_VISIBLE)
 		NotifyParent(WN_RELEASED);
 }

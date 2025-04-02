@@ -37,7 +37,7 @@ REG_FUNC(void, CreateDisplay, const wchar_t *lpTitle, uint16_t xSize, uint16_t y
 		*pMouseKey = mk.Left;
 	});
 	SetOnClose([] {
-		ExitProcess(0);
+		JS_CloseCommand();
 	});
 	SetOnResize([](uint16_t nSizeX, uint16_t nSizeY) -> BOOL {
 		*pSizeX = nSizeX;
@@ -96,6 +96,8 @@ struct BaseOf_Thread(JSCBox) {
 
 REG_FUNC(void, JS_Init, void) {
 	box.Run();
+	SimDisp::SetOnClose([] {
+	});
 }
 REG_FUNC(const char *, JS_NewCommand, void) {
 	if (!bExec) return O;
@@ -105,6 +107,13 @@ REG_FUNC(const char *, JS_NewCommand, void) {
 REG_FUNC(void, JS_NextCommand, void) {
 	evtExec.Set();
 	bExec = false;
+}
+REG_FUNC(void, JS_CloseCommand, void) {
+	if (box.StillActive()) {
+		box.Terminate();
+		SimDisp::ConsoleEnableShow(false);
+		SimDisp::ConsoleEnableShow(false);
+	}
 }
 REG_FUNC(void, JS_ErrorCommand, js_exception err) {
 	std::cout << "FATAL: " << err.MsgId << std::endl;

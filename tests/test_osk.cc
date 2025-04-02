@@ -155,7 +155,6 @@ static void _OSK_updateShiftCaps() {
 static int _OSK_ceil(float f) {
 	int i = (int)f;
 	return f - i > 0.f ? i + 1 : i;
-}
 
 const Point border = { 6, 24 };
 static void _OSK_createButtons(PWObj pWin, Point size) {

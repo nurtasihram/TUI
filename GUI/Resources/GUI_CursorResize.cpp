@@ -24,7 +24,7 @@ CCursor GUI_CursorHeader{
 		/* Size */ { 17, 17 },
 		/* BytesPerLine */ 5,
 		/* Bits */ _acCursorHeader,
-		/* Palette */ &GUI_CursorPal,
+		/* Palette */ &GUI_PalCursor,
 		/* Transparent */ true
 	}, { 8, 8 }
 };
@@ -53,7 +53,7 @@ CCursor GUI_CursorMove{
 		/* Size */ { 17, 17 },
 		/* BytesPerLine */ 5,
 		/* Bits */ _acCursorMove,
-		/* Palette */ &GUI_CursorPal,
+		/* Palette */ &GUI_PalCursor,
 		/* Transparent */ true
 	}, { 8, 8 }
 };
@@ -74,7 +74,7 @@ CCursor GUI_CursorResizeH{
 		/* Size */ { 17, 9 },
 		/* BytesPerLine */ 5,
 		/* Bits */ _acCursorResizeH,
-		/* Palette */ &GUI_CursorPal,
+		/* Palette */ &GUI_PalCursor,
 		/* Transparent */ true
 	}, { 8, 4 }
 };
@@ -103,7 +103,7 @@ CCursor GUI_CursorResizeV{
 		/* Size */ { 8, 17 },
 		/* BytesPerLine */ 3,
 		/* Bits */ _acCursorResizeV,
-		/* Palette */ &GUI_CursorPal,
+		/* Palette */ &GUI_PalCursor,
 		/* Transparent */ true
 	}, { 4, 8 }
 };
@@ -127,7 +127,7 @@ CCursor GUI_CursorResizeDD{ {
 		/* Size */ { 13, 13 },
 		/* BytesPerLine */ 4,
 		/* Bits */ _acCursorResizeDD,
-		/* Palette */ &GUI_CursorPal,
+		/* Palette */ &GUI_PalCursor,
 		/* Transparent */ true
 	}, { 6, 6 }
 };
@@ -152,7 +152,7 @@ CCursor GUI_CursorResizeDU{
 		/* Size */ { 13, 13 },
 		/* BytesPerLine */ 4,
 		/* Bits */ _acCursorResizeDU,
-		/* Palette */ &GUI_CursorPal,
+		/* Palette */ &GUI_PalCursor,
 		/* Transparent */ true
 	}, { 6, 6 }
 };

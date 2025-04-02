@@ -252,7 +252,7 @@ bool Menu::_ForwardMouseOverMsg(Point Pos) {
 	if (!pBelow || pBelow == this)
 		return false;
 	PID_STATE State = pBelow->Screen2Client(Pos);
-	pBelow->_SendMessage(WM_MOUSEOVER, &State);
+	pBelow->SendMessage(WM_MOUSEOVER, &State);
 	return true;
 }
 void Menu::_ForwardPIDMsgToOwner(int MsgId, PID_STATE *pState) {
@@ -264,10 +264,10 @@ void Menu::_ForwardPIDMsgToOwner(int MsgId, PID_STATE *pState) {
 	if (pState) {
 		PID_STATE State = *pState;
 		State += pOwner->Screen2Client(PositionScreen());
-		pOwner->_SendMessage(MsgId, &State);
+		pOwner->SendMessage(MsgId, &State);
 	}
 	else
-		pOwner->_SendMessage(MsgId);
+		pOwner->SendMessage(MsgId);
 }
 bool Menu::_HandlePID(const PID_STATE &State) {
 	bool bInside = 0;
@@ -337,7 +337,7 @@ WM_RESULT Menu::_OnMenu(const MSG_DAT *pMsgData) {
 		case MENU_ON_INITMENU:
 		case MENU_ON_INITSUBMENU: /* Forward message to owner. */
 			if (auto pOwner = this->pOwner ? this->pOwner : Parent())
-				return pOwner->_SendMessage(MENU_ON_INITSUBMENU, pMsgData, this);
+				return pOwner->SendMessage(MENU_ON_INITSUBMENU, pMsgData, this);
 			break;
 		case MENU_ON_OPEN:
 			Sel = -1;
@@ -415,7 +415,7 @@ void Menu::_OnPaint() {
 				rText.y0 = rFill.y0 + BorderTop;
 				rText.y1 = rText.y0 + FontHeight - 1;
 				GUI.Clear(rFill);
-				GUI.DispString(Item.text, rText);
+				GUI.DrawStringIn(Item.text, rText);
 			}
 			rFill.y0 += ItemHeight;
 		}
@@ -440,7 +440,7 @@ void Menu::_OnPaint() {
 				rText.x0 = rFill.x0 + BorderLeft;
 				rText.x1 = rText.x0 + Item.TextWidth - 1;
 				GUI.Clear(rFill);
-				GUI.DispString(Item.text, rText);
+				GUI.DrawStringIn(Item.text, rText);
 			}
 			rFill.x0 += ItemWidth;
 		}
@@ -538,7 +538,7 @@ size_t Menu::_SendMenuMessage(PWObj pDestWin, MENU_MSGID MsgType, uint16_t ItemI
 		pDestWin = Parent();
 	MSG_DAT MsgData{ MsgType, ItemId };
 	if (pDestWin)
-		return pDestWin->_SendMessage(WM_MENU, &MsgData, this);
+		return pDestWin->SendMessage(WM_MENU, &MsgData, this);
 	return 0;
 }
 

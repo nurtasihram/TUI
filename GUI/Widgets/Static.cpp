@@ -7,7 +7,7 @@ void Static::_OnPaint() const {
 	GUI.PenColor(Props.Color);
 	GUI.Font(Props.pFont);
 	GUI.TextAlign(Props.Align);
-	GUI.DispString(text, ClientRect());
+	GUI.DrawStringIn(text, ClientRect());
 }
 WM_RESULT Static::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 	auto pObj = (Static *)pWin;

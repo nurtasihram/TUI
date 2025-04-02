@@ -73,7 +73,7 @@ void ScrollBar::_ScrollbarPressed() {
 		NotifyParent(WN_CLICKED);
 }
 void ScrollBar::_ScrollbarReleased() {
-	AndState(SCROLLBAR_CF__PRESSED);
+	MaskState(SCROLLBAR_CF__PRESSED);
 	if (Status & WC_VISIBLE)
 		NotifyParent(WN_RELEASED);
 }

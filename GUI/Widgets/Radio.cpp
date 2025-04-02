@@ -92,7 +92,7 @@ void Radio::_OnPaint() const {
 		r.x1 = r.x0 + GUI.XDist(pText) - 2;
 		r.y0 -= SpaceAbove;
 		r += Point(0, y);
-		GUI.DispString(pText, r);
+		GUI.DrawStringIn(pText, r);
 		if (bFocussed && sel == i) {
 			r.y0 += SpaceAbove;
 			rFocus = r * FocusBorder;

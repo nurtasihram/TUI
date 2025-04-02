@@ -101,7 +101,7 @@ static int _OwnerDraw(const WIDGET_ITEM_DRAW_INFO *pDrawItemInfo) {
 			GUI.PenColor(aColor[ColorIndex]);
 			GUI.Clear();
 			auto FontDistY = GUI.Font()->YDist;
-			GUI_DispStringAt(pWin->ItemText(pDrawItemInfo->ItemIndex),
+			GUI.DrawString(pWin->ItemText(pDrawItemInfo->ItemIndex),
 							 { pDrawItemInfo->x0 + bmSmilie0.Size.x + 16,
 							   pDrawItemInfo->y0 + (YSize - FontDistY) / 2 });
 			auto pBm = bMultiSel ? bSelected ?

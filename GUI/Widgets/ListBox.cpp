@@ -457,7 +457,7 @@ int ListBox::OwnerDrawProc(const WIDGET_ITEM_DRAW_INFO *pDrawItemInfo) {
 			GUI.BkColor(pObj->Props.aBkColor[ColorIndex]);
 			GUI.PenColor(pObj->Props.aTextColor[ColorIndex]);
 			GUI.Clear();
-			GUI_DispStringAt(pObj->ItemArray[ItemIndex].Text, { pDrawItemInfo->x0 + 1, pDrawItemInfo->y0 });
+			GUI.DrawStringAt(pObj->ItemArray[ItemIndex].Text, { pDrawItemInfo->x0 + 1, pDrawItemInfo->y0 });
 			if (!(pObj->StatusEx & LISTBOX_CF_MULTISEL) || ItemIndex != pObj->sel)
 				return 0;
 			SRect rFocus;

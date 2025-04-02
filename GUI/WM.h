@@ -1,11 +1,8 @@
-#pragma once
+﻿#pragma once
 #include "GUI.h"
 
 #include "WM.inl"
 
-struct KEY_STATE {
-	uint16_t Key, PressedCnt;
-};
 struct SCROLL_STATE {
 	int16_t NumItems = 0, v = 0, PageSize = 0;
 	SCROLL_STATE(int16_t NumItems = 0,
@@ -14,28 +11,9 @@ struct SCROLL_STATE {
 		NumItems(NumItems),
 		v(v),
 		PageSize(PageSize) {}
-	inline void Bound() {
-		int Max = NumItems - PageSize;
-		if (Max < 0) Max = 0;
-		if (v < 0) v = 0;
-		if (v > Max) v = Max;
-	}
-	inline auto Pos(int Pos, int LowerDist = 0, int UpperDist = 0) {
-		int vOld = v;
-		auto PageSize = this->PageSize - 1;
-		if (v < Pos - PageSize)
-			v = Pos - PageSize + UpperDist;
-		if (v > Pos)
-			v = Pos - LowerDist;
-		Bound();
-		return v - vOld;
-	}
-	inline auto Value(int v) {
-		auto vOld = v;
-		this->v = v;
-		Bound();
-		return v - vOld;
-	}
+	void Bound();
+	int Pos(int Pos, int LowerDist = 0, int UpperDist = 0);
+	int Value(int v);
 	inline bool NeedScroll() const { return PageSize < NumItems; }
 	inline bool operator==(const SCROLL_STATE &s) const {
 		if (NumItems != s.NumItems) return false;
@@ -45,16 +23,15 @@ struct SCROLL_STATE {
 	}
 	inline bool operator!=(const SCROLL_STATE &s) const { return !(*this == s); }
 };
+struct KEY_STATE {
+	uint16_t Key = 0, PressedCnt = 0;
+};
 struct DIALOG_STATE {
 	int Done = 0, ReturnValue = 0;
 };
 struct PID_CHANGED_STATE : PID_STATE {
-	uint8_t StatePrev;
+	uint8_t StatePrev = 0;
 };
-
-class WObj;
-using PWObj = WObj *;
-using PCWObj = const WObj *;
 struct WM_PARAM {
 	uint64_t Data = 0;
 	WM_PARAM() {}
@@ -69,6 +46,9 @@ struct WM_PARAM {
 	}
 };
 using WM_RESULT = WM_PARAM;
+
+class WObj;
+using PWObj = WObj *;
 typedef WM_RESULT(*WM_CB)(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc);
 
 struct WM_CREATESTRUCT {
@@ -137,15 +117,13 @@ protected:
 
 private:
 	static uint16_t nWindows;
+	static PWObj pWinFirst;
+
 	void _InsertWindowIntoList(PWObj pParent);
 	void _RemoveWindowFromList();
 
-	static PWObj pWinFirst;
-	void _RemoveFromLinList();
 	void _AddToLinList();
-
-public:
-	operator bool() const;
+	void _RemoveFromLinList();
 
 public:
 	WObj(Point pos, Point size,
@@ -164,13 +142,19 @@ protected:
 	~WObj() {}
 
 public:
+
+	/// @brief 銷毀窗體
+	///		析構窗體類並釋放内存
 	void Destroy();
+
+	/// @brief 選中窗體
 	void Select();
 
+	operator bool() const;
 	inline void *operator new(size_t size) { return GUI_MEM_Alloc(size); }
 	inline void operator delete(void *pObj) { GUI_MEM_Free(pObj); }
 
-#pragma region Invalidate & Validate
+#pragma region Invalidate
 private:
 	static uint16_t nInvalidWindows;
 	bool _ClipAtParentBorders(SRect &) const;
@@ -181,7 +165,6 @@ public:
 	inline void Invalidate(const SRect &r) { _Invalidate(rsWin & Client2Screen(r)); }
 	inline void Invalidate() { _Invalidate(rsWin); }
 	void InvalidateDescs();
-	void Validate();
 #pragma endregion
 
 #pragma region Paint
@@ -191,7 +174,8 @@ private:
 	void _Paint1();
 	bool _OnPaint();
 public:
-	void Paint();
+	/// @brief 繼續繪製窗體
+	/// @return 是否有效執行繪製任務
 	static bool PaintNext();
 #pragma endregion
 
@@ -206,10 +190,13 @@ private:
 	static ContextIVR _ClipContext;
 	static void  _ActivateClipRect();
 	static bool _FindNextIVR();
-private:
 	static bool IVR_Next();
 	static bool IVR_Init(const SRect *pMaxRect = nullptr);
 public:
+
+	/// @brief 依圖層順序重繪窗體
+	/// @tparam AnyDo 繪圖方法類
+	/// @param Do 繪圖方法
 	template<class AnyDo>
 	static inline void IVR(const AnyDo &Do) {
 		if (WObj::IVR_Init())
@@ -217,6 +204,11 @@ public:
 				Do();
 			} while (WObj::IVR_Next());
 	}
+
+	/// @brief 依圖層順序重繪窗體
+	/// @tparam AnyDo 繪圖方法類
+	/// @param r 繪圖區域
+	/// @param Do 繪圖方法
 	template<class AnyDo>
 	static inline void IVR(const SRect &r, const AnyDo &Do) {
 		if (WObj::IVR_Init(&r))
@@ -226,22 +218,60 @@ public:
 	}
 #pragma endregion
 
+#pragma region Messager
 public:
+
+	/// @brief 發送消息
+	/// @param MsgId 消息ID
+	/// @param Param 參數
+	/// @param pSrc 數據源窗體
+	/// @return 返迴數據
 	inline WM_RESULT SendMessage(int MsgId, WM_PARAM Param = 0, PWObj pSrc = nullptr) {
 		if (cb)
 			return cb(this, MsgId, Param, pSrc);
 		return 0;
 	}
+
+	/// @brief 發送至父窗體
+	/// @param MsgId 消息ID
+	/// @param Param 參數
+	/// @return 返迴數據
 	inline WM_RESULT SendToParent(int MsgId, WM_PARAM Param) {
 		if (pParent)
 			return pParent->SendMessage(MsgId, Param, this);
 		return 0;
 	}
+
+	/// @brief 通知消息
+	/// @param Notification 通知ID
 	inline void NotifyParent(int Notification) { SendToParent(WM_NOTIFY_PARENT, Notification); }
 
-	WM_RESULT _SendMessage(int MsgId, WM_PARAM Param = 0, PWObj pSrc = nullptr);
+	static bool HandlePID();
+	static inline PID_STATE PrevPidState() { return _StateLast; }
+
+	/// @brief 鍵盤事件
+	/// @param Key 鍵位
+	/// @param Pressed 按下或釋放
+	/// @return 鍵位是否被處理
+	static bool OnKey(int Key, int Pressed);
+
+	/// @brief 默認窗體消息事件迴調
+	/// @param pWin 窗體對象
+	/// @param MsgId 消息ID
+	/// @param Param 消息參數
+	/// @param pSrc 消息原窗體
+	/// @return 消息返迴值
+	static WM_RESULT DefCallback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc);
+
+	/// @brief 初始化窗體管理器
+	static void Init();
+
+	/// @brief 執行窗體管理器
+	/// @return 是否活動
+	static bool Exec();
 
 private:
+	WM_RESULT _SendMessage(int MsgId, WM_PARAM Param = 0, PWObj pSrc = nullptr);
 	void _SendMessageIfEnabled(int MsgId, WM_PARAM Param, PWObj pSrc = nullptr);
 	void _SendTouchMessage(int MsgId, PID_STATE *pState);
 	bool _IsInModalArea();
@@ -259,43 +289,51 @@ private:
 		void Remove();
 		void Check(PWObj pWin);
 	};
+#pragma endregion
 
 public:
-	static bool HandlePID();
-	static inline PID_STATE PrevPidState() { return _StateLast; }
 
-	static bool OnKey(int Key, int Pressed);
-	static WM_RESULT DefCallback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc);
-
-	static void Init();
-
-	static bool Exec1();
-	static inline void Exec() { while (Exec1()) {} }
-
+	/// @brief 置頂窗體
 	void BringToTop();
+	/// @brief 置底窗體
 	void BringToBottom();
 
-	void Detach();
+	/// @brief 卸載父窗體
+	inline void Detach() { Parent(nullptr); }
 
 #pragma region Resize & Move
 private:
 	void _MoveDescendents(Point d);
-public:
-	void Move(Point dPos);
 protected:
 	void _UpdateChildPositions(SRect d);
 public:
+	/// @brief 重置窗體大小
+	/// @param dSize 大小增量
 	void Resize(Point dSize);
+	/// @brief 移動窗體
+	/// @param dPos 位置增量
+	void Move(Point dPos);
 #pragma endregion
 
 #pragma region Focus
 private:
 	static PWObj pWinFocus;
 public:
-	/* A */ PWObj Focus();
-	/* S */ inline bool Focussed() const { return this == pWinFocus; }
-	/* S */ inline PWObj FocussedChild() { return pWinFocus ? pWinFocus->IsChildOf(this) ? pWinFocus : nullptr : nullptr; }
-	/* A */ PWObj FocusNextChild();
+
+	/// @brief 對焦窗體
+	/// @return 對焦成功後則返迴焦點窗體
+	PWObj Focus();
+
+	/// @brief 是否為焦點窗體
+	inline bool Focussed() const { return this == pWinFocus; }
+
+	/// @brief 是否為焦點窗體的子窗體
+	/// @return 焦點窗體
+	PWObj FocussedChild();
+
+	/// @brief 聚焦到下一個子窗體
+	/// @return 焦點窗體
+	PWObj FocusNextChild();
 #pragma endregion
 
 #pragma region Capture
@@ -305,28 +343,47 @@ private:
 	static Point capturePoint;
 	static CCursor *pCursorCapture;
 public:
-	/* A */ void Capture(bool bAutoRelease);
-	/* A */ static void CaptureRelease();
-	/* A */ void CaptureMove(Point Pos, int MinVisibility = 0);
+
+	/// @brief 捕獲窗體
+	/// @param bAutoRelease 自動釋放
+	void Capture(bool bAutoRelease);
+
+	/// @brief 釋放捕獲
+	static void CaptureRelease();
+
+	/// @brief 移動捕獲窗體
+	/// @param Pos 捕獲點
+	/// @param MinVisibility 最小分辨率
+	void CaptureMove(Point Pos, int MinVisibility = 0);
+
+	/// @brief 是否被捕獲
+	inline bool Captured() const { return pWinCapture == this; }
+
+public: // Property - CapturePoint
 	/* W */ static inline void CapturePoint(Point Pos) { capturePoint = Pos; }
 	/* R */ static inline Point CapturePoint() { return capturePoint; }
-	/* S */ inline bool Captured() const { return pWinCapture == this; }
 #pragma endregion
 
 #pragma region Desktop
 private:
 	static PWObj pDesktop;
 	static RGBC clDesktop;
+public:
+
+	/// @brief 桌面窗體消息事件迴調
+	/// @param pWin 窗體對象
+	/// @param MsgId 消息ID
+	/// @param Param 消息參數
+	/// @param pSrc 消息原窗體
+	/// @return 消息返迴值
+	static WM_RESULT DesktopCallback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc);
+
 public: // Property - Desktop
 	/* R */ static inline PWObj Desktop() { return pDesktop; }
-public: // Property - DesktopCallback
-	static WM_RESULT DesktopCallback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc);
 public: // Property - DesktopColor
 	/* W */ static inline void DesktopColor(RGBC Color) {
-		if (clDesktop != Color) {
-			clDesktop = Color;
-			pDesktop->Invalidate();
-		}
+		clDesktop = Color;
+		pDesktop->Invalidate();
 	}
 	/* R */ static inline RGBC DesktopColor() { return clDesktop; }
 #pragma endregion
@@ -334,28 +391,78 @@ public: // Property - DesktopColor
 #pragma region Active
 private:
 	static PWObj pWinActive;
-public:
+public: // Property - ActiveWindow
 	/* R */ static inline PWObj ActiveWindow() { return pWinActive; }
 #pragma endregion
 
 #pragma region Rect
+private:
+	static const SRect *pUserClip;
+public:
+
+	/// @brief 用戶動態裁剪區域
+	/// @param pRect 矩形區域句柄
+	/// @return 矩形區域句柄
 	static const SRect *UserClip(const SRect *pRect);
 
+	/// @brief 獲取坐標點所在得頂層窗體
+	/// @param Pos 坐標點
+	/// @param pStop 停止窗體
+	/// @param pWin 起始窗體
+	/// @return 查找到得頂層窗體
 	static PWObj FindOnScreen(Point Pos, PWObj pStop = nullptr, PWObj pWin = pWinFirst);
 
+	/// @brief 客戶坐標點轉銀幕坐標點
+	/// @param ptc 客戶内坐標點
+	/// @return 銀幕内坐標點
 	inline Point Client2Screen(Point ptc) const { return ptc + rsWin.left_top(); }
+
+	/// @brief 客戶區域轉銀幕區域
+	/// @param rc 客戶内區域
+	/// @return 銀幕内區域
 	inline SRect Client2Screen(const SRect &rc) const { return rc + rsWin.left_top(); }
+
+	/// @brief 銀幕坐標點轉客戶坐標點
+	/// @param pts 客戶内坐標點
+	/// @return 銀幕内坐標點
 	inline Point Screen2Client(Point pts) const { return pts - rsWin.left_top(); }
+
+	/// @brief 銀幕區域轉客戶區域
+	/// @param rs 客戶内區域
+	/// @return 銀幕内區域
 	inline SRect Screen2Client(const SRect &rs) const { return rs - rsWin.left_top(); }
 
+	/// @brief 父窗體坐標點轉銀幕坐標點
+	/// @param ptc 父窗體内坐標點
+	/// @return 銀幕内坐標點
 	inline Point Parent2Screen(Point ptc) const { return pParent ? pParent->Client2Screen(ptc) : ptc; }
+
+	/// @brief 父窗體區域轉銀幕區域
+	/// @param rc 父窗體内區域
+	/// @return 銀幕内區域
 	inline SRect Parent2Screen(const SRect &rc) const { return pParent ? pParent->Client2Screen(rc) : rc; }
+
+	/// @brief 銀幕坐標點轉父窗體坐標點
+	/// @param ptc 父窗體内坐標點
+	/// @return 銀幕内坐標點
 	inline Point Screen2Parent(Point pts) const { return pParent ? pParent->Screen2Client(pts) : pts; }
+
+	/// @brief 銀幕區域轉父窗體區域
+	/// @param rs 父窗體内區域
+	/// @return 銀幕内區域
 	inline SRect Screen2Parent(const SRect &rs) const { return pParent ? pParent->Screen2Client(rs) : rs; }
 #pragma endregion
 
+	/// @brief 是否為子窗體
+	/// @param pParent 擬定的父窗體
 	inline bool IsChildOf(PWObj pParent) { return this->pParent == pParent; }
+
+	/// @brief 是否為孫窗體
+	/// @param pParent 擬定的父窗體
 	bool IsAncestor(PWObj pParent) const;
+
+	/// @brief 是否為孫窗體或自身
+	/// @param pParent 擬定的父窗體
 	bool IsAncestorOrSelf(PWObj pParent) const { return this == pParent ? true : IsAncestor(pParent); }
 
 #pragma region Dialog
@@ -363,8 +470,14 @@ public: // Property - DialogStatusPtr
 	/* R */ inline DIALOG_STATE *DialogStatusPtr() { return SendMessage(WM_HANDLE_DIALOG_STATUS); }
 	/* W */ inline void DialogStatusPtr(DIALOG_STATE *pDialogStatus) { SendMessage(WM_HANDLE_DIALOG_STATUS, pDialogStatus); }
 public:
+
+	/// @brief 執行對話框
+	/// @return 傳迴代碼
 	int DialogExec();
-	void DialogEnd(int);
+
+	/// @brief 結束對話框
+	/// @param code 傳迴代碼
+	void DialogEnd(int code);
 #pragma endregion
 
 #pragma region Properties
@@ -428,7 +541,10 @@ public: // Property - Client
 public: // Property - Parent
 	/* R */ inline PWObj Parent() const { return pParent; }
 	/* W */ void Parent(PWObj pParent);
-	/* W */ void Parent(PWObj pParent, Point ptcPosition);
+	/* W */ inline void Parent(PWObj pParent, Point ptcPosition) {
+		Parent(pParent);
+		Position(ptcPosition);
+	}
 public: // Property - FirstChild
 	/* R */ inline PWObj FirstChild() { return pFirstChild; }
 	/* R */ inline PWObj FirstChild() const { return pFirstChild; }
@@ -457,18 +573,16 @@ public: // Property - ScrollBarV
 	/* R */ class ScrollBar *ScrollBarV() { return (class ScrollBar *)DialogItem(GUI_ID_VSCROLL); }
 	/* W */ void ScrollBarV(bool bEnable);
 public: // Property - ScrollStateH
-	/* W */ void ScrollStateH(SCROLL_STATE);
+	/* R */ void ScrollStateH(SCROLL_STATE);
 	/* W */ SCROLL_STATE ScrollStateH() const;
 public: // Property - ScrollStateV
-	/* W */ void ScrollStateV(SCROLL_STATE);
+	/* R */ void ScrollStateV(SCROLL_STATE);
 	/* W */ SCROLL_STATE ScrollStateV() const;
 public: // Property - Callback
 	/* R */ inline WM_CB Callback() const { return cb; }
 	/* W */ inline void Callback(WM_CB cb) {
-		if (this->cb != cb) {
-			this->cb = cb;
-			Invalidate();
-		}
+		this->cb = cb;
+		Invalidate();
 	}
 #pragma endregion
 
@@ -548,18 +662,22 @@ public: // Property - DefaultEffect
 #pragma endregion
 
 protected:
-	inline void OrState(uint16_t nState) {
-		if (StatusEx != (StatusEx & nState)) {
-			StatusEx |= nState;
+	inline void OrState(uint16_t Flags) {
+		auto nState = StatusEx | Flags;
+		if (StatusEx != nState) {
+			StatusEx = nState;
 			Invalidate();
 		}
 	}
-	inline void AndState(uint16_t Mask) {
-		auto StateNew = StatusEx & ~Mask;
-		if (StatusEx != StateNew) {
-			StatusEx = StateNew;
+	inline void MaskState(uint16_t Mask) {
+		auto nState = StatusEx & ~Mask;
+		if (StatusEx != nState) {
+			StatusEx = nState;
 			Invalidate();
 		}
+	}
+	inline void EnableState(bool bEnable, uint16_t Flag) {
+
 	}
 
 #pragma region Properties

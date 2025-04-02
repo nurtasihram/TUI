@@ -127,7 +127,7 @@ void ListView::_OnPaint(SRect rClip) const {
 					rsWin.x0 += lBorder;
 					rsWin.x1 -= rBorder;
 					GUI.TextAlign(pHeader->ItemAlign(j));
-					GUI.DispString(item.Text, rsWin);
+					GUI.DrawStringIn(item.Text, rsWin);
 				}
 				xPos += Width;
 			}

@@ -11,4 +11,5 @@ REG_FUNC(void, GetBitmap, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, ui
 REG_FUNC(void, JS_Init, void);
 REG_FUNC(const char *, JS_NewCommand, void);
 REG_FUNC(void, JS_NextCommand, void);
+REG_FUNC(void, JS_CloseCommand, void);
 REG_FUNC(void, JS_ErrorCommand, js_exception err);

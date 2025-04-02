@@ -37,7 +37,6 @@
   <ItemGroup>
     <ClCompile Include="duktape\duktape.c" />
     <ClCompile Include="GUI\GUI.cpp" />
-    <ClCompile Include="GUI\GUI_Memory.cpp" />
     <ClCompile Include="GUI\Resources\GUI_CursorArrowM.cpp" />
     <ClCompile Include="GUI\Resources\GUI_CursorResize.cpp" />
     <ClCompile Include="GUI\Resources\GUI_Font13_1.cpp" />
@@ -63,6 +62,16 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="GUI\Widgets\Edit.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release LLVM|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release LLVM|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="GUI\Widgets\Frame.cpp" />
     <ClCompile Include="GUI\Widgets\Header.cpp" />
     <ClCompile Include="GUI\Widgets\ListBox.cpp" />
@@ -84,10 +93,11 @@
     <ClCompile Include="GUI\Widgets\Slider.cpp" />
     <ClCompile Include="GUI\Widgets\Static.cpp" />
     <ClCompile Include="GUI\WM.cpp" />
-    <ClCompile Include="GUI_Main.cpp" />
+    <ClCompile Include="GUI_MAIN_SIM.cpp" />
     <ClCompile Include="GUI_X_JS\GUI_X_JS_Symbols.cpp" />
     <ClCompile Include="GUI_X_JS\GUI_X_JS_SIM.cpp" />
     <ClCompile Include="GUI_X_LCD\GUI_X_LCD_SIM.cpp" />
+    <ClCompile Include="GUI_X_MEM\GUI_X_MEM_SIM.cpp" />
     <ClCompile Include="main.c" />
     <ClCompile Include="tests\test_ctl_edit.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -100,14 +110,14 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="tests\test_frame.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release LLVM|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release LLVM|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release LLVM|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release LLVM|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="tests\test_checkbox_radio.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -120,14 +130,14 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="tests\test_js.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release LLVM|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release LLVM|x64'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|x64'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release LLVM|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release LLVM|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="tests\test_listbox_dropdown.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -184,6 +194,7 @@
     <ClInclude Include="duktape\duktape.h" />
     <ClInclude Include="GUI\GUI.h" />
     <ClInclude Include="GUI\GUI_Array.h" />
+    <ClInclude Include="GUI\GUI_Types.h" />
     <ClInclude Include="GUI\Widgets\Button.h" />
     <ClInclude Include="GUI\Widgets\CheckBox.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
@@ -196,6 +207,16 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="GUI\Widgets\DropDown.h" />
+    <ClInclude Include="GUI\Widgets\Edit.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release LLVM|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release LLVM|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="GUI\Widgets\Frame.h" />
     <ClInclude Include="GUI\Widgets\Header.h" />
     <ClInclude Include="GUI\Widgets\ListBox.h" />
@@ -217,10 +238,12 @@
     <ClInclude Include="GUI\Widgets\Slider.h" />
     <ClInclude Include="GUI\Widgets\Static.h" />
     <ClInclude Include="GUI\WM.h" />
-    <ClInclude Include="GUI_Main.h" />
+    <ClInclude Include="GUI_MAIN.h" />
     <ClInclude Include="GUI_X_JS\duk_config.h" />
     <ClInclude Include="GUI_X_JS\GUI_X_JS.h" />
     <ClInclude Include="GUI_X_LCD\GUI_X_LCD.h" />
+    <ClInclude Include="GUI_X_MEM\GUI_X_MEM.h" />
+    <ClInclude Include="GUI_X_SIM\GUI_X_SIM.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
@@ -333,7 +356,7 @@
       <SDLCheck>false</SDLCheck>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)\GUI;$(SolutionDir)\GUI\Resources;$(SolutionDir)\GUI\Widgets;$(SolutionDir)\GUI_X_JS;$(SolutionDir)\GUI_X_LCD;$(SolutionDir)\GUI_X_SIM;$(SolutionDir)\duktape;$(SolutionDir)\SimDisp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\GUI;$(SolutionDir)\GUI\Resources;$(SolutionDir)\GUI\Widgets;$(SolutionDir)\GUI_X_JS;$(SolutionDir)\GUI_X_MEM;$(SolutionDir)\GUI_X_LCD;$(SolutionDir)\GUI_X_SIM;$(SolutionDir)\duktape;$(SolutionDir)\SimDisp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
@@ -350,7 +373,7 @@
       <SDLCheck>false</SDLCheck>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)\GUI;$(SolutionDir)\GUI\Resources;$(SolutionDir)\GUI\Widgets;$(SolutionDir)\GUI_X_JS;$(SolutionDir)\GUI_X_LCD;$(SolutionDir)\GUI_X_SIM;$(SolutionDir)\duktape;$(SolutionDir)\SimDisp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\GUI;$(SolutionDir)\GUI\Resources;$(SolutionDir)\GUI\Widgets;$(SolutionDir)\GUI_X_JS;$(SolutionDir)\GUI_X_MEM;$(SolutionDir)\GUI_X_LCD;$(SolutionDir)\GUI_X_SIM;$(SolutionDir)\duktape;$(SolutionDir)\SimDisp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
@@ -369,7 +392,7 @@
       <SDLCheck>false</SDLCheck>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)\GUI;$(SolutionDir)\GUI\Resources;$(SolutionDir)\GUI\Widgets;$(SolutionDir)\GUI_X_JS;$(SolutionDir)\GUI_X_LCD;$(SolutionDir)\GUI_X_SIM;$(SolutionDir)\duktape;$(SolutionDir)\SimDisp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\GUI;$(SolutionDir)\GUI\Resources;$(SolutionDir)\GUI\Widgets;$(SolutionDir)\GUI_X_JS;$(SolutionDir)\GUI_X_MEM;$(SolutionDir)\GUI_X_LCD;$(SolutionDir)\GUI_X_SIM;$(SolutionDir)\duktape;$(SolutionDir)\SimDisp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
@@ -386,7 +409,7 @@
       <SDLCheck>false</SDLCheck>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)\GUI;$(SolutionDir)\GUI\Resources;$(SolutionDir)\GUI\Widgets;$(SolutionDir)\GUI_X_JS;$(SolutionDir)\GUI_X_LCD;$(SolutionDir)\GUI_X_SIM;$(SolutionDir)\duktape;$(SolutionDir)\SimDisp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\GUI;$(SolutionDir)\GUI\Resources;$(SolutionDir)\GUI\Widgets;$(SolutionDir)\GUI_X_JS;$(SolutionDir)\GUI_X_MEM;$(SolutionDir)\GUI_X_LCD;$(SolutionDir)\GUI_X_SIM;$(SolutionDir)\duktape;$(SolutionDir)\SimDisp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <BrowseInformation>true</BrowseInformation>
@@ -407,7 +430,7 @@
       <SDLCheck>false</SDLCheck>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)\GUI;$(SolutionDir)\GUI\Resources;$(SolutionDir)\GUI\Widgets;$(SolutionDir)\GUI_X_JS;$(SolutionDir)\GUI_X_LCD;$(SolutionDir)\GUI_X_SIM;$(SolutionDir)\duktape;$(SolutionDir)\SimDisp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\GUI;$(SolutionDir)\GUI\Resources;$(SolutionDir)\GUI\Widgets;$(SolutionDir)\GUI_X_JS;$(SolutionDir)\GUI_X_MEM;$(SolutionDir)\GUI_X_LCD;$(SolutionDir)\GUI_X_SIM;$(SolutionDir)\duktape;$(SolutionDir)\SimDisp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
@@ -426,7 +449,7 @@
       <SDLCheck>false</SDLCheck>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)\GUI;$(SolutionDir)\GUI\Resources;$(SolutionDir)\GUI\Widgets;$(SolutionDir)\GUI_X_JS;$(SolutionDir)\GUI_X_LCD;$(SolutionDir)\GUI_X_SIM;$(SolutionDir)\duktape;$(SolutionDir)\SimDisp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\GUI;$(SolutionDir)\GUI\Resources;$(SolutionDir)\GUI\Widgets;$(SolutionDir)\GUI_X_JS;$(SolutionDir)\GUI_X_MEM;$(SolutionDir)\GUI_X_LCD;$(SolutionDir)\GUI_X_SIM;$(SolutionDir)\duktape;$(SolutionDir)\SimDisp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
@@ -439,7 +462,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(SolutionDir)\GUI;$(SolutionDir)\GUI\Resources;$(SolutionDir)\GUI\Widgets;$(SolutionDir)\GUI_X_JS;$(SolutionDir)\GUI_X_LCD;$(SolutionDir)\GUI_X_SIM;$(SolutionDir)\duktape;$(SolutionDir)\SimDisp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\GUI;$(SolutionDir)\GUI\Resources;$(SolutionDir)\GUI\Widgets;$(SolutionDir)\GUI_X_JS;$(SolutionDir)\GUI_X_MEM;$(SolutionDir)\GUI_X_LCD;$(SolutionDir)\GUI_X_SIM;$(SolutionDir)\duktape;$(SolutionDir)\SimDisp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
@@ -450,7 +473,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(SolutionDir)\GUI;$(SolutionDir)\GUI\Resources;$(SolutionDir)\GUI\Widgets;$(SolutionDir)\GUI_X_JS;$(SolutionDir)\GUI_X_LCD;$(SolutionDir)\GUI_X_SIM;$(SolutionDir)\duktape;$(SolutionDir)\SimDisp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\GUI;$(SolutionDir)\GUI\Resources;$(SolutionDir)\GUI\Widgets;$(SolutionDir)\GUI_X_JS;$(SolutionDir)\GUI_X_MEM;$(SolutionDir)\GUI_X_LCD;$(SolutionDir)\GUI_X_SIM;$(SolutionDir)\duktape;$(SolutionDir)\SimDisp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>

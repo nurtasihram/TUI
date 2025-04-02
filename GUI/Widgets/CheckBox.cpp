@@ -17,7 +17,7 @@ void CheckBox::_OnPaint() {
 		GUI.PenColor(Props.TextColor);
 		GUI.Font(Props.pFont);
 		GUI.TextAlign(Props.Align);
-		rText = GUI.DispString(text, rText);
+		rText = GUI.DrawStringIn(text, rText);
 		if (Focussed()) {
 			GUI.PenColor(RGB_BLACK);
 			GUI.DrawFocus(rText * 2);

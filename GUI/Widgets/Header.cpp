@@ -117,7 +117,7 @@ void Header::_OnPaint() {
 		rClient.y1 -= EffectSize + _DefaultBorderV;
 		GUI.PenColor(Props.TextColor);
 		GUI.TextAlign(Col.Align);
-		GUI.DispString(Col.Text, rClient);
+		GUI.DrawStringIn(Col.Text, rClient);
 	}
 	auto &&rClient = ClientRect();
 	rClient.x0 = xPos;

@@ -1,12 +1,8 @@
-#pragma once
+﻿#pragma once
 
-enum TEXTSTYLES {
-	TS_NORMAL = 0,
-	TS_UNDERLINE,
-	TS_STRIKETHRU,
-	TS_OVERLINE
-};
+#include <stdint.h>
 
+/// @brief 鍵位枚擧
 enum GUI_KEYS {
 	GUI_KEY_BACKSPACE         = 8,
 	GUI_KEY_TAB               = 9,
@@ -27,6 +23,7 @@ enum GUI_KEYS {
 	GUI_KEY_F2                = 41
 };
 
+/// @brief 控件樣本ID枚擧
 enum GUI_ID : int {
 	GUI_ID_OK                = 1,
 	GUI_ID_CANCEL            = 2,
@@ -128,6 +125,7 @@ enum GUI_ID : int {
 	GUI_ID_USER     = 0x800
 };
 
+/// @brief 位圖位元具象化枚擧（BPP=1）
 enum BPP1_DAT : uint8_t {
 	________________ = 0x00,
 	XX______________ = 0x01,
@@ -386,6 +384,8 @@ enum BPP1_DAT : uint8_t {
 	__XXXXXXXXXXXXXX = 0xFE,
 	XXXXXXXXXXXXXXXX = 0xFF
 };
+
+/// @brief 位圖位元具象化枚擧（BPP=2）
 enum BPP2_DAT : uint8_t {
 	________ = 0x00,
 	XX______ = 0x01,
@@ -646,12 +646,37 @@ enum BPP2_DAT : uint8_t {
 };
 
 #pragma region Colors
+/// @brief RGB色彩
 using RGBC = uint32_t;
-constexpr RGBC RGBC_B(uint8_t b) { return b; }
-constexpr RGBC RGBC_G(uint8_t g) { return g << 0x08; }
+
+/// @brief RGB紅階
+/// @param r 紅色深度
+/// @return RGB色彩值
 constexpr RGBC RGBC_R(uint8_t r) { return r << 0x10; }
+
+/// @brief RGB綠階
+/// @param g 綠色深度
+/// @return RGB色彩值
+constexpr RGBC RGBC_G(uint8_t g) { return g << 0x08; }
+
+/// @brief RGB藍階
+/// @param b 藍色深度
+/// @return RGB色彩值
+constexpr RGBC RGBC_B(uint8_t b) { return b; }
+
+/// @brief RGB調色
+/// @param r 紅色深度
+/// @param g 綠色深度
+/// @param b 藍色深度
+/// @return RGB色彩值
 constexpr RGBC RGBC_C(uint8_t r, uint8_t g, uint8_t b) { return RGBC_R(r) | RGBC_G(g) | RGBC_B(b); }
+
+/// @brief RGB灰階
+/// @param l 灰度
+/// @return RGB色彩值
 constexpr RGBC RGBC_GRAY(uint8_t l) { return RGBC_C(l, l, l); }
+
+/// @brief 樣本RGB色彩枚擧
 enum Color : RGBC {
 	RGB_BLACK              = RGBC_GRAY(0x00),
 	RGB_DARKGRAY           = RGBC_GRAY(0x40),
@@ -689,11 +714,6 @@ enum Color : RGBC {
 };
 #pragma endregion
 
-using	  DRAWMODE = uint8_t;
-constexpr DRAWMODE
-		  DRAWMODE_NORMAL (0 << 1),
-		  DRAWMODE_TRANS  (1 << 1);
-
 using		ALIGN = uint8_t; /* take only 4-btis */
 constexpr   ALIGN
 			ALIGN_LEFT		(1 << 0),
@@ -711,3 +731,23 @@ constexpr TEXTALIGN TEXTALIGN_LEFT		(ALIGN_LEFT),
 					TEXTALIGN_BOTTOM	(ALIGN_BOTTOM),
 					TEXTALIGN_VCENTER	(ALIGN_VCENTER);
 constexpr TEXTALIGN TEXTALIGN_CENTER	(TEXTALIGN_HCENTER | TEXTALIGN_VCENTER);
+
+static constexpr uint8_t
+	SIZE_RESIZE_X		= 1 << 0,
+	SIZE_RESIZE_Y		= 1 << 1,
+	SIZE_REPOS_X		= 1 << 2,
+	SIZE_REPOS_Y		= 1 << 3,
+	SIZE_MOUSEMOVE		= 1 << 4,
+	SIZE_MOUSEOVER		= 1 << 5;
+
+static constexpr uint8_t
+	SIZE_RESIZE =
+	SIZE_RESIZE_X | SIZE_RESIZE_Y |
+	SIZE_REPOS_X | SIZE_REPOS_Y |
+	SIZE_MOUSEMOVE;
+
+constexpr int16_t
+	GUI_XMIN = -4095,
+	GUI_XMAX = 4095,
+	GUI_YMIN = -4095,
+	GUI_YMAX = 4095;

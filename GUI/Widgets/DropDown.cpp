@@ -47,7 +47,7 @@ void DropDown::_OnPaint() const {
 		r.x1 -= TextBorderSize;
 		GUI.PenColor(Props.aTextColor[ColorIndex]);
 		GUI.TextAlign(Props.Align);
-		GUI.DispString(Handles[sel], r);
+		GUI.DrawStringIn(Handles[sel], r);
 	}
 	/* Draw arrow */
 	r = ClientRect() / Border;
