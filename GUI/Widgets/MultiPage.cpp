@@ -183,7 +183,7 @@ void MultiPage::_OnTouch(PID_STATE *pState) {
 				Pos = Client2Screen(Pos);
 				if (auto pBelow = WObj::FindOnScreen(Pos, this)) {
 					*pState = pBelow->Screen2Client(Pos);
-					pBelow->Callback()(pBelow, WM_TOUCH, pState, nullptr);
+					pBelow->Callback()(pBelow, WM_MOUSE_KEY, pState, nullptr);
 				}
 			}
 			Notification = WN_CLICKED;
@@ -204,7 +204,7 @@ WM_PARAM MultiPage::_ClientCb(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc)
 			GUI.BkColor(pObj->BkColor());
 			GUI.Clear();
 			return 0;
-		case WM_TOUCH:
+		case WM_MOUSE_KEY:
 			pParent->Focus();
 			pParent->BringToTop();
 			return 0;
@@ -224,10 +224,10 @@ WM_PARAM MultiPage::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc)
 	case WM_PAINT:
 		pObj->_OnPaint();
 		return 0;
-	case WM_TOUCH:
+	case WM_MOUSE_KEY:
 		pObj->_OnTouch(Param);
 		return 0;
-	case WM_NOTIFY_PARENT:
+	case WM_NOTIFY_CHILD:
 		switch ((int)Param) {
 			case WN_VALUE_CHANGED:
 				if (pSrc->ID() == GUI_ID_HSCROLL) {

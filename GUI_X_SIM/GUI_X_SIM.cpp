@@ -37,7 +37,6 @@ REG_FUNC(void, CreateDisplay, const wchar_t *lpTitle, uint16_t xSize, uint16_t y
 		*pMouseKey = mk.Left;
 	});
 	SetOnClose([] {
-		JS_CloseCommand();
 	});
 	SetOnResize([](uint16_t nSizeX, uint16_t nSizeY) -> BOOL {
 		*pSizeX = nSizeX;
@@ -62,62 +61,16 @@ REG_FUNC(void, GetBitmap, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, ui
 	SimDisp::Ayx.GetRect({ x0, y0, x1, y1 }, lpBits, BytesPerLine);
 }
 
-#include <iostream>
-#include "GUI_X_JS.h"
-
 using namespace WX;
-char acJscode[1024];
-Event evtExec;
-volatile bool bExec = false;
-struct BaseOf_Thread(JSCBox) {
-	inline void OnStart() {
-		auto wSimDisp = force_cast<Window>(SimDisp::GetHWND());
-		LSize szScreen{ GetSystemMetrics(SM_CXSCREEN) + 1, GetSystemMetrics(SM_CYSCREEN) + 1 };
-		auto &&rsSimDisp = wSimDisp.Rect();
-		wSimDisp.Position({ (szScreen.cx - rsSimDisp.xsize()) / 2, 0 } );
-		ConsoleCtl con;
-		con.Attach(SimDisp::ConsoleEnableShow(true));
-		con.Title(S("TUI - JS-CL"));
-		con.Select();
-		con.Reopen();
-		Window wCon = con;
-		wCon.Size({ wCon.Size().cx, szScreen.cy - rsSimDisp.ysize() });
-		SimDisp::ConsoleEnableShow(true);
-		evtExec = Event::Create().Preset();
-		for (;;) {
-			evtExec.WaitForSignal();
-			std::cout << "JavaScript > ";
-			std::cin.getline(acJscode, sizeof(acJscode));
-			bExec = true;
-		}
-	}
-	void Run() { assertl(Create()); }
-} box;
-
-REG_FUNC(void, JS_Init, void) {
-	box.Run();
-	SimDisp::SetOnClose([] {
-	});
+REG_FUNC(void, OpenConsole, void) {
+	Console.Attach(SimDisp::ConsoleEnableShow(true));
+	Console.Title(S("TUI - Console"));
+	Console.Select();
+	Console.Reopen();
+	SimDisp::ConsoleEnableShow(true);
 }
-REG_FUNC(const char *, JS_NewCommand, void) {
-	if (!bExec) return O;
-	evtExec.Reset();
-	return acJscode;
-}
-REG_FUNC(void, JS_NextCommand, void) {
-	evtExec.Set();
-	bExec = false;
-}
-REG_FUNC(void, JS_CloseCommand, void) {
-	if (box.StillActive()) {
-		box.Terminate();
-		SimDisp::ConsoleEnableShow(false);
-		SimDisp::ConsoleEnableShow(false);
-	}
-}
-REG_FUNC(void, JS_ErrorCommand, js_exception err) {
-	std::cout << "FATAL: " << err.MsgId << std::endl;
-	std::cout << "CODE:  " << err.code << std::endl;
+REG_FUNC(void, CloseConsole, void) {
+	Console.Free();
 }
 
 #pragma endregion

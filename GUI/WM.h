@@ -244,7 +244,7 @@ public:
 
 	/// @brief 通知消息
 	/// @param Notification 通知ID
-	inline void NotifyParent(int Notification) { SendToParent(WM_NOTIFY_PARENT, Notification); }
+	inline void NotifyParent(int Notification) { SendToParent(WM_NOTIFY_CHILD, Notification); }
 
 	static bool HandlePID();
 	static inline PID_STATE PrevPidState() { return _StateLast; }
@@ -494,7 +494,7 @@ public: // Property - Enable
 	/* R */ inline bool Enable() const { return !(Status & WC_DISABLED); }
 	/* W */ void Enable(bool bEnable);
 public: // Property - Focussable
-	/* R */ inline bool Focussable() const { return const_cast<PWObj>(this)->SendMessage(WM_GET_ACCEPT_FOCUS); }
+	/* R */ inline bool Focussable() const { return const_cast<PWObj>(this)->SendMessage(WM_FOCUSSABLE); }
 	/* W */ void Focussable(bool bFocussable);
 public: // Property - StayOnTop
 	/* R */ inline bool StayOnTop() const { return Status & WC_STAYONTOP; }
@@ -583,14 +583,14 @@ public: // Property - Callback
 	/* W */ inline void Callback(WM_CB cb) {
 		this->cb = cb;
 		Invalidate();
-	}
+	} 
 #pragma endregion
 
 };
 static inline bool IsWindow(PWObj pObj) { return pObj ? *pObj : false; }
 inline PWObj WM_UNATTACHED = reinterpret_cast<PWObj>(-1);
 
-struct FOCUSED_STATE {
+struct FOCUS_CHANGED_STATE {
 	PWObj pOld, pNew;
 };
 

@@ -135,7 +135,7 @@ bool CtlEdit::_HandleResize(int MsgId, const PID_STATE *pState) {
 	if (Captured() && _CaptureFlags == 0)
 		return false;
 	switch (MsgId) {
-		case WM_TOUCH:
+		case WM_MOUSE_KEY:
 			if (pState) {
 				Point Pos = *pState;
 				auto Mode = _CheckReactBorder(Pos);
@@ -163,7 +163,7 @@ bool CtlEdit::_HandleResize(int MsgId, const PID_STATE *pState) {
 				}
 			}
 			return false;
-		case WM_MOUSEOVER:
+		case WM_MOUSE_OVER:
 			if (pState) {
 				if (auto Mode = _CheckReactBorder(*pState)) {
 					_SetCapture(*pState, Mode | SIZE_MOUSEOVER);
@@ -204,9 +204,9 @@ WM_RESULT CtlEdit::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) 
 		case WM_PAINT:
 			pObj->_OnPaint();
 			return 0;
-		case WM_GET_ACCEPT_FOCUS:
+		case WM_FOCUSSABLE:
 			return !pWidget->Focussable();
-		case WM_NOTIFY_PARENT: {
+		case WM_NOTIFY_CHILD: {
 			switch ((int)Param) {
 				case WN_GOT_FOCUS:
 					pObj->_Expend(true);
@@ -217,10 +217,10 @@ WM_RESULT CtlEdit::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) 
 			}
 			break;
 		}
-		case WM_SET_FOCUS:
+		case WM_FOCUS:
 			pObj->_Expend(Param);
 			return true;
-		case WM_TOUCH_CHILD:
+		case WM_MOUSE_CHILD:
 			if (const PID_STATE *pState = Param)
 				if (pState->Pressed == 1) {
 					if (pWidget->Focussable())
@@ -255,13 +255,20 @@ void MainTask() {
 		WC_VISIBLE, 0,
 		"Static");
 	new CtlEdit(pStatic);
-	auto pButton = new Button(
+	auto pButton1 = new Button(
 		{ 10, 40, 55, 60 },
 		nullptr, 0,
 		WC_VISIBLE, 0,
 		"Button\n"
 		"Click me!");
-	new CtlEdit(pButton);
+	new CtlEdit(pButton1);
+	auto pButton2 = new Button(
+		{ 65, 40, 120, 60 },
+		nullptr, 0,
+		WC_VISIBLE, BUTTON_CF_SWITCH,
+		"Button\n"
+		"Click me!");
+	new CtlEdit(pButton2);
 	auto pCheckBox = new CheckBox(
 		{ 10, 70, 95, 90 },
 		nullptr, 0,

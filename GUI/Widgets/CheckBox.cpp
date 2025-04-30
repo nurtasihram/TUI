@@ -74,7 +74,7 @@ WM_RESULT CheckBox::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc)
 		case WM_PAINT:
 			pObj->_OnPaint();
 			return 0;
-		case WM_TOUCH:
+		case WM_MOUSE_KEY:
 			pObj->_OnTouch(Param);
 			return 0;
 		case WM_KEY:

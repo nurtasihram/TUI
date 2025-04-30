@@ -2,9 +2,12 @@
 #include "WM.h"
 
 using		_BUTTON_STATE = WC_EX;
+using		 BUTTON_CF = _BUTTON_STATE;
 constexpr	_BUTTON_STATE
-			_BUTTON_STATE_HASFOCUS = 0,
-			_BUTTON_STATE_PRESSED  = WC_EX_USER(0);
+			_BUTTON_STATE_HASFOCUS  = 0,
+			_BUTTON_STATE_PRESSED   = WC_EX_USER(0),
+			_BUTTON_STATE_SWITCHED  = WC_EX_USER(1),
+			BUTTON_CF_SWITCH		= WC_EX_USER(2);
 enum BUTTON_BI {
 	BUTTON_BI_UNPRESSED = 0,
 	BUTTON_BI_PRESSED,
@@ -53,7 +56,7 @@ private:
 public:
 	Button(const SRect &rc = {},
 		   PWObj pParent = nullptr, uint16_t Id = 0,
-		   WM_CF Flags = WC_HIDE, WC_EX FlagsEx = 0,
+		   WM_CF Flags = WC_HIDE, BUTTON_CF FlagsEx = 0,
 		   const char *pText = nullptr);
 	Button(const WM_CREATESTRUCT &wc) : Button(
 		wc.rect(),

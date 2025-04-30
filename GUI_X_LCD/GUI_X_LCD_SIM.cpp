@@ -116,6 +116,7 @@ static uint16_t xSizeDisp = 0, ySizeDisp = 0;
 SRect LCD_Rect() {
 	return { 0, 0, xSizeDisp, ySizeDisp };
 }
+
 void GUI_X_LCD_Init() {
 	GUI_X_SIM::LoadDll(_T("GUI_X_SIM.dll"));
 	GUI_X_SIM::BindSize(&xSizeDisp, &ySizeDisp);

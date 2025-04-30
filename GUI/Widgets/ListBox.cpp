@@ -89,7 +89,7 @@ uint16_t ListBox::_GetNumVisItems() {
 }
 void ListBox::_NotifyOwner(int Notification) {
 	auto pOwner = this->pOwner ? this->pOwner : Parent();
-	pOwner->SendMessage(WM_NOTIFY_PARENT, Notification, this);
+	pOwner->SendMessage(WM_NOTIFY_CHILD, Notification, this);
 }
 int ListBox::_UpdateScrollPos() {
 	int PrevScrollStateV = scrollStateV.v;
@@ -257,7 +257,7 @@ void ListBox::_OnMouseOver(const PID_STATE *pState) {
 WM_RESULT ListBox::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 	auto pObj = (ListBox *)pWin;
 	if (!pObj->HandleActive(MsgId, Param)) {
-		if (MsgId == WM_SET_FOCUS)
+		if (MsgId == WM_FOCUS)
 			if (!Param)
 				pObj->_NotifyOwner(LISTBOX_NOTIFICATION_LOST_FOCUS);
 		return Param;
@@ -266,10 +266,10 @@ WM_RESULT ListBox::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) 
 		case WM_PAINT:
 			pObj->_OnPaint(Param);
 			return 0;
-		case WM_TOUCH:
+		case WM_MOUSE_KEY:
 			pObj->_OnTouch(Param);
 			return 0;
-		case WM_PID_STATE_CHANGED:
+		case WM_MOUSE_CHANGED:
 			if (const PID_CHANGED_STATE *pInfo = Param) {
 				if (!pInfo->Pressed)
 					break;
@@ -281,7 +281,7 @@ WM_RESULT ListBox::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) 
 				pObj->_NotifyOwner(WN_CLICKED);
 				return 0;
 			}
-		case WM_MOUSEOVER:
+		case WM_MOUSE_OVER:
 			pObj->_OnMouseOver(Param);
 			return 0;
 		case WM_KEY:
@@ -293,7 +293,7 @@ WM_RESULT ListBox::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) 
 		case WM_DELETE:
 			pObj->~ListBox();
 			return 0;
-		case WM_NOTIFY_PARENT:
+		case WM_NOTIFY_CHILD:
 			switch ((int)Param) {
 				case WN_VALUE_CHANGED:
 					if (pSrc == pObj->ScrollBarV()) {
@@ -338,10 +338,10 @@ ListBox::ListBox(const SRect &rc,
 	ListBox(rc,
 			pParent, Id,
 			Flags, FlagsEx,
-			GUI__NumTexts(pItems)) {
+			GUI.NumTexts(pItems)) {
 	for (auto &t : ItemArray) {
 		t.Text = pItems;
-		pItems = GUI__NextText(pItems);
+		pItems = GUI.NextText(pItems);
 	}
 	_UpdateScrollers();
 }

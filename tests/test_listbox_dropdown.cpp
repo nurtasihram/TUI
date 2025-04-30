@@ -153,7 +153,7 @@ static WM_RESULT _cbFrame(PWObj pDlg, int MsgId, WM_PARAM Param, PWObj pSrc) {
 					break;
 			}
 			break;
-		case WM_TOUCH_CHILD:
+		case WM_MOUSE_CHILD:
 			//pListBox->Focus();
 			break;
 		case WM_NOTIFY_PARENT:

@@ -60,7 +60,7 @@ void ListView::_SelFromPos(Point Pos) {
 }
 void ListView::_NotifyOwner(int Notification) {
 	auto pOwner = this->pOwner ? this->pOwner : Parent();
-	pOwner->SendMessage(WM_NOTIFY_PARENT, Notification);
+	pOwner->SendMessage(WM_NOTIFY_CHILD, Notification);
 }
 
 int ListView::_UpdateScrollPos() {
@@ -194,7 +194,7 @@ WM_RESULT  ListView::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc
 		case WM_PAINT:
 			pObj->_OnPaint(Param);
 			return 0;
-		case WM_TOUCH:
+		case WM_MOUSE_KEY:
 			pObj->_OnTouch(Param);
 			return 0;
 		case WM_KEY:
@@ -206,11 +206,11 @@ WM_RESULT  ListView::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc
 		case WM_DELETE:
 			pObj->~ListView();
 			return 0;
-		case WM_NOTIFY_CLIENTCHANGE:
+		case WM_NOTIFY_CLIENT_CHANGE:
 		case WM_SIZE:
 			pObj->_UpdateScrollParas();
 			return 0;
-		case WM_NOTIFY_PARENT:
+		case WM_NOTIFY_CHILD:
 			switch ((int)Param) {
 				case WN_CHILD_DELETED:
 					if (pSrc == pObj->pHeader)
@@ -279,7 +279,7 @@ void ListView::AddRow(const char *pTexts) {
 	auto &Row = RowArray.Add();
 	for (int i = 0, NumColumns = this->NumColumns(); i < NumColumns; ++i) {
 		Row.Add().Text = pTexts;
-		pTexts = GUI__NextText(pTexts);
+		pTexts = GUI.NextText(pTexts);
 	}
 	_UpdateScrollParas();
 	_InvalidateRow(NumRows);

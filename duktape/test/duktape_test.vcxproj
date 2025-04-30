@@ -40,6 +40,7 @@
     <ProjectGuid>{95673050-bca0-4777-9768-57a7bb5d72b4}</ProjectGuid>
     <RootNamespace>duktapetest</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>duktape_test</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

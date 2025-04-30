@@ -52,7 +52,7 @@ bool Header::_HandleDrag(int MsgId, const PID_STATE *pState) {
 	if (!(StatusEx & HEADER_CF_DRAG))
 		return false;
 	switch (MsgId) {
-		case WM_TOUCH: {
+		case WM_MOUSE_KEY: {
 			int Notification;
 			if (pState) {
 				_HandlePID(*pState);
@@ -63,7 +63,7 @@ bool Header::_HandleDrag(int MsgId, const PID_STATE *pState) {
 			NotifyParent(Notification);
 			return true;
 		}
-		case WM_MOUSEOVER:
+		case WM_MOUSE_OVER:
 			if (pState)
 				_HandlePID({ *pState, -1 });
 			return true;
@@ -161,12 +161,12 @@ Header::Header(const SRect &rc,
 		SizeY(Props.pFont->YDist +
 			  2 * _DefaultBorderV +
 			  2 * Effect()->EffectSize);
-	if (auto NumItems = GUI__NumTexts(pTexts)) {
+	if (auto NumItems = GUI.NumTexts(pTexts)) {
 		Columns.Resize(NumItems);
 		for (auto &&i : Columns) {
 			i.Text = pTexts;
 			i.Width = pacWidth ? *pacWidth++ : 0;
-			pTexts = GUI__NextText(pTexts);
+			pTexts = GUI.NextText(pTexts);
 		}
 	}
 }
@@ -204,7 +204,7 @@ void Header::ItemWidth(uint16_t Index, int Width) {
 			2 * (EffectSize() + _DefaultBorderH);
 	Item.Width = Width;
 	Invalidate();
-	Parent()->SendMessage(WM_NOTIFY_CLIENTCHANGE);
+	Parent()->SendMessage(WM_NOTIFY_CLIENT_CHANGE);
 	Parent()->Invalidate();
 }
 

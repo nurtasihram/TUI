@@ -5,8 +5,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GUI_X_SIM.h" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="GUI_X_SIM.inl" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="GUI_X_SIM.rc" />
   </ItemGroup>
 </Project>

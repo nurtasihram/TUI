@@ -1,43 +1,103 @@
 #pragma once
 
-enum WM_MESSSAGES : int {
+enum WM_MESSSAGES : uint16_t {
 	 WM_NULL = 0,
+
+	 /// @brief 完成創建窗體後響應
 	 WM_CREATE,
-	 WM_MOVE,
-	 WM_SIZE,
+	 /// @brief 完成刪除窗體後響應
 	 WM_DELETE,
-	 WM_TOUCH,
-	 WM_TOUCH_CHILD,
-	 WM_KEY,
+	 /// @brief 繪製窗體前響應
+	 /// @param SRect rInvalid
 	 WM_PAINT,
-	 WM_MOUSEOVER,
-	 WM_PID_STATE_CHANGED,
-	 WM_GET_INSIDE_RECT,
-	 WM_GET_ID,
-	 WM_SET_ID,
-	 WM_GET_CLASS,
-	 WM_GET_CLIENT_WINDOW,
-	 WM_GET_SERVE_RECT,
+
+	 /// @brief 完成移動窗體後響應
+	 WM_MOVE,
+	 /// @brief 完成裁剪窗體後響應
+	 WM_SIZE,
+
+	 /// @brief 鍵盤在窗體内活躍時相應
+	 /// @param KEY_STATE 按鍵狀態
+	 WM_KEY,
+
+	 /// @brief 鼠鍵在窗體内活躍時相應
+	 /// @param PID_STATE PID相對狀態
+	 WM_MOUSE_KEY,
+	 /// @brief 鼠標在子窗體内活躍時相應
+	 /// @param PID_STATE PID相對狀態
+	 /// @param pSrc 子窗體
+	 WM_MOUSE_CHILD,
+	 /// @brief 鼠標在窗體内活躍時相應
+	 /// @param PID_STATE PID相對狀態
+	 WM_MOUSE_OVER,
+	 /// @brief 鼠標在窗體内
+	 /// @param PID_CHANGED_STATE PID相對改變狀態
+	 WM_MOUSE_CHANGED,
+
+	 /// @brief 窗體捕獲釋放後響應
 	 WM_CAPTURE_RELEASED,
-	 WM_INIT_DIALOG,
-	 WM_SET_FOCUS,
-	 WM_GET_ACCEPT_FOCUS,
-	 WM_NOTIFY_CHILD_HAS_FOCUS,
-	 WM_GET_BKCOLOR,
-	 WM_NOTIFY_CLIENTCHANGE,
-	 WM_NOTIFY_PARENT,
-	 WM_NOTIFY_PARENT_REFLECTION,
+
+	 /// @brief 收取窗體使能狀態改變通知
+	 /// @param bool 是否使能
 	 WM_NOTIFY_ENABLE,
-	 WM_NOTIFY_VIS_CHANGED,
-	 WM_HANDLE_DIALOG_STATUS,
-	 WM_GET_RADIOGROUP,
+	 /// @brief 收取窗體焦點狀態改變通知
+	 /// @param FOCUS_CHANGED_STATE 焦點狀態
+	 WM_NOTIFY_CHILD_HAS_FOCUS,
+	 /// @brief 收取客戶窗體改變通知
+	 WM_NOTIFY_CLIENT_CHANGE,
+	 /// @brief 收取子窗體訊息通知
+	 /// @param uint16_t 通知ID
+	 WM_NOTIFY_CHILD,
+	 /// @brief 收取子窗體訊息通知反射
+	 /// @param uint16_t 通知ID
+	 WM_NOTIFY_CHILD_REFLECT,
+
+	 /// @brief 獲取窗體類名
+	 /// @return 指向靜態只讀的窗體類名字串
+	 WM_GET_CLASS,
+	 /// @brief 獲取窗體客戶窗體
+	 /// @return WObj指針
+	 WM_GET_CLIENT_WINDOW,
+	 /// @brief 獲取窗體内部矩形
+	 /// @return SRect 8 bytes
+	 WM_GET_INSIDE_RECT,
+	 /// @brief 獲取窗體客戶矩形
+	 /// @return SRect 8 bytes
+	 WM_GET_SERVE_RECT,
+	 /// @brief 獲取窗體背景顏色
+	 /// @return uint32_t R8G8B8A8格式的色彩
+	 WM_GET_BKCOLOR,
+	 /// @brief 獲取窗體ID
+	 /// @return uint16_t ID
+	 WM_GET_ID,
+	 /// @brief 設置窗體ID
+	 /// @param uint16_t ID
+	 WM_SET_ID,
+	 /// @brief 窗體對焦
+	 /// @param bool 設置/重置焦點
+	 WM_FOCUS,
+	 /// @brief 獲取窗體是否能對焦
+	 /// @return bool 是否能對焦
+	 WM_FOCUSSABLE,
+
 	 WM_MENU,
-	 WM_WIDGET = 0x0300,
-	 WM_USER = 0x0400
+
+	 /// @brief 初始化對話框
+	 WM_INIT_DIALOG,
+	 /// @brief 指向對話框狀態
+	 /// @param DIALOG_STATE* 指向要設定的對話框狀態，若為NULL則返回當前狀態
+	 /// @return DIALOG_STATE* 指向當前對話框狀態
+	 WM_HANDLE_DIALOG_STATUS,
+
+	_WM_WIDGET_BEGIN = 0x0300,
+	WM_WIDGET_SET_EFFECT,
+	_WM_WIDGET_END,
+
+	_WM_USER = 0x0400
 };
-enum WM_WIDGET : int {
-	WM_WIDGET_SET_EFFECT = WM_WIDGET + 0
-};
+constexpr WM_MESSSAGES WM_USER(uint16_t idx) { return (WM_MESSSAGES)(_WM_USER + idx); }
+constexpr WM_MESSSAGES WM_WIDGET(uint16_t idx) { return (WM_MESSSAGES)(_WM_WIDGET_END + idx); }
+
 enum WM_NOTIFICATIONS : int {
 	 WN_NULL,
 	 WN_CLICKED,

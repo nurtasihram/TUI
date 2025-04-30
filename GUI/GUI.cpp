@@ -155,32 +155,34 @@ void GUI_PANEL::DrawBitmap(BitmapRect bc) {
 }
 #pragma endregion
 
-#pragma region String 
-uint16_t GUI__NumTexts(const char *pTexts) {
+#pragma region String
+uint16_t GUI_PANEL::NumTexts(const char *pTexts) {
 	uint16_t NumTexts = 0;
 	if (pTexts)
 		for (; *pTexts; ++NumTexts)
 			while (*pTexts++);
 	return NumTexts;
 }
-const char *GUI__NextText(const char *pTexts) {
+const char *GUI_PANEL::NextText(const char *pTexts) {
 	while (*pTexts++);
 	return pTexts;
 }
-uint16_t GUI__NumLines(const char *pText) {
+
+uint16_t GUI_PANEL::NumLines(const char *pText) {
 	uint16_t NumLines = 1;
 	for (; auto ch = *pText; ++pText)
 		if (ch == '\n')
 			++NumLines;
 	return NumLines;
 }
-const char *GUI__NextLines(const char *pText) {
+const char *GUI_PANEL::NextLines(const char *pText) {
 	for (; auto ch = *pText; ++pText)
 		if (ch == '\n')
 			return ++pText;
 	return pText;
 }
-uint16_t GUI__NumCharsLine(const char *pText) {
+
+uint16_t GUI_PANEL::NumCharsLine(const char *pText) {
 	uint16_t NumChars = 1;
 	for (; auto ch = *pText; ++pText)
 		if (ch == '\n')
@@ -189,19 +191,37 @@ uint16_t GUI__NumCharsLine(const char *pText) {
 			++NumChars;
 	return NumChars;
 }
-uint16_t GUI__NumChars(const char *pText) {
+
+uint16_t GUI_PANEL::NumChars(const char *pText) {
 	uint16_t NumChars = 0;
 	for (; auto ch = *pText; ++pText)
 		++NumChars;
 	return NumChars;
 }
-void GUI__SetText(char **ppText, const char *pText) {
+uint16_t GUI_PANEL::BytesChars(const char *pText) {
+	uint16_t NumChars = 0;
+	for (; auto ch = *pText; ++pText)
+		++NumChars;
+	return NumChars;
+}
+
+uint16_t GUI_PANEL::NextChar(const char *&pText) {
+	return *pText++;
+}
+const char *GUI_PANEL::NextChars(const char *pText, uint16_t NumChars) {
+	while (NumChars--)
+		if (!*pText++)
+			return nullptr;
+	return pText;
+}
+
+void GUI_PANEL::SetText(char **ppText, const char *pText) {
 	if (!pText) {
 		GUI_MEM_Free(*ppText);
 		*ppText = nullptr;
 		return;
 	}
-	auto pString = (char *)GUI_MEM_Alloc(GUI__NumChars(pText) + 1);
+	auto pString = (char *)GUI_MEM_Alloc(GUI.NumChars(pText) + 1);
 	GUI__strcpy(pString, pText);
 	GUI_MEM_Free(*ppText);
 	*ppText = pString;
@@ -226,7 +246,7 @@ void GUI_PANEL::DrawString(const char *s) {
 	auto yAdjust = GUI_GetYAdjust();
 	GUI.dispPos.y -= yAdjust;
 	for (; *s; s++) {
-		auto LineNumChars = GUI__NumChars(s);
+		auto LineNumChars = GUI.NumChars(s);
 		auto xLineSize = GUI.XDist(s, LineNumChars);
 		int xAdjust;
 		switch (GUI.TextAlign() & TEXTALIGN_HCENTER) {
@@ -274,8 +294,8 @@ SRect GUI_PANEL::DrawStringIn(const char *s, SRect rText) {
 		WObj::UserClip(&r);
 	}
 	rText += off;
-	uint16_t NumLines = GUI__NumLines(s);
-	uint16_t DistY = GUI__NumLines(s) * Font()->YSize;
+	uint16_t NumLines = GUI.NumLines(s);
+	uint16_t DistY = GUI.NumLines(s) * Font()->YSize;
 	switch (Props.TextAlign & TEXTALIGN_VCENTER) {
 		case TEXTALIGN_VCENTER:
 			dispPos.y = rText.y0 + (rText.dy() - DistY) / 2;
@@ -289,7 +309,7 @@ SRect GUI_PANEL::DrawStringIn(const char *s, SRect rText) {
 	start.y = dispPos.y;
 	uint16_t DistX = 0;
 	for (int i = 0; i < NumLines; ++i) {
-		auto NumCharsLine = GUI__NumCharsLine(s);
+		auto NumCharsLine = GUI.NumCharsLine(s);
 		switch (Props.TextAlign & TEXTALIGN_HCENTER) {
 			case TEXTALIGN_HCENTER:
 				dispPos.x = rText.x0 + (rText.dx() - XDist(s, NumCharsLine)) / 2;
@@ -332,9 +352,9 @@ int Font::XDist(const char *pString, int NumChars) const {
 }
 Point Font::Size(const char *pText) const {
 	uint16_t DistX = 0;
-	auto NumLines = GUI__NumLines(pText);
+	auto NumLines = GUI.NumLines(pText);
 	for (int i = 0; i < NumLines; ++i) {
-		auto NumCharsLien = GUI__NumCharsLine(pText);
+		auto NumCharsLien = GUI.NumCharsLine(pText);
 		auto xDist = XDist(pText, NumCharsLien);
 		if (DistX < xDist)
 			DistX = xDist;

@@ -1,13 +1,11 @@
 ﻿#include "Button.h"
 #include "Frame.h"
-#include "MultiEdit.h"
+//#include "MultiEdit.h"
 
 #pragma region OSK
 #define ID_BUTTON (GUI_ID_USER + 0)
 #define OSK_BTN_HOLD(btn, hold) btn->Pressed(hold)
-	//BUTTON_SetState(btn, hold ? \
-	//	BUTTON_STATE_PRESSED : BUTTON_STATE_HASFOCUS)
-typedef enum {
+enum KeyType {
 	K_CHAR,
 	K_ALFABET,
 	K_FN_CASE,
@@ -29,16 +27,16 @@ typedef enum {
 	K_DOWN = GUI_KEY_DOWN,
 	K_LEFT = GUI_KEY_LEFT,
 	K_RIGHT = GUI_KEY_RIGHT
-} KeyType;
-typedef struct {
+};
+struct ButtonInfo {
 	const char *acLabel1;
 	const char *acLabel2;
 	uint8_t id1, id2;
 	const KeyType type;
-	const float pxPos, pyPos;
-	const float pWidth, pHeight;
+	float x0, y0;
+	float cx, cy;
 	Button *pButton;
-} ButtonInfo;
+};
 static ButtonInfo _aButtonData[] = {
 	{ "Esc", nullptr, 0x39, 0x00, K_ESC, 0.f, 0.f, 0.0625f, 0.2f },
 	{ "1", "!\0F1", 0x1E, 0x3A, K_CHAR_FN, 0.125f, 0.f, 0.0625f, 0.2f },
@@ -107,7 +105,7 @@ static ButtonInfo _aButtonData[] = {
 	{ "<", nullptr, 0x50, 0x00, K_LEFT, 0.8125f, 0.8f, 0.0625f, 0.2f },
 	{ ">", nullptr, 0x4F, 0x00, K_RIGHT, 0.9375f, 0.8f, 0.0625f, 0.2f }
 };
-typedef struct {
+struct FnCase {
 	uint8_t LCtrl : 1;
 	uint8_t LShift : 1;
 	uint8_t LAlt : 1;
@@ -116,82 +114,86 @@ typedef struct {
 	uint8_t RShift : 1;
 	uint8_t RAlt : 1;
 	uint8_t RUI : 1;
-} FnCase;
+};
 static FnCase fn_keys;
 static uint8_t Caps = 0, FnSel = 0;
-static Button *hbCaps = nullptr, *hbFn = nullptr;
-static Button *hbShiftL = nullptr, *hbShiftR = nullptr;
-static Button *hbCtrlL = nullptr, *hbCtrlR = nullptr;
-static Button *hbAltL = nullptr, *hbAltR = nullptr;
+static Button *pbCaps = nullptr, *pbFn = nullptr;
+static Button *pbShiftL = nullptr, *pbShiftR = nullptr;
+static Button *pbCtrlL = nullptr, *pbCtrlR = nullptr;
+static Button *pbAltL = nullptr, *pbAltR = nullptr;
+
 static void _OSK_updateShiftCaps() {
 	uint8_t Shift = fn_keys.LShift | fn_keys.RShift;
-	OSK_BTN_HOLD(hbCaps, Caps);
-	OSK_BTN_HOLD(hbFn, FnSel);
-	OSK_BTN_HOLD(hbShiftL, Shift);
-	OSK_BTN_HOLD(hbShiftR, Shift);
-	OSK_BTN_HOLD(hbCtrlL, fn_keys.LCtrl);
-	OSK_BTN_HOLD(hbCtrlR, fn_keys.LCtrl);
-	OSK_BTN_HOLD(hbAltL, fn_keys.LAlt);
-	OSK_BTN_HOLD(hbAltR, fn_keys.LAlt);
-	uint8_t i, m, k = Shift ^ Caps;
-	for (i = 0; i < GUI_COUNTOF(_aButtonData); ++i) {
-		const ButtonInfo *inf = _aButtonData + i;
-		if (inf->type == K_CHAR)
+	pbCaps->Pressed(Caps);
+	pbFn->Pressed(FnSel);
+	pbShiftL->Pressed(Shift);
+	pbShiftR->Pressed(Shift);
+	pbCtrlL->Pressed(fn_keys.LCtrl);
+	pbCtrlR->Pressed(fn_keys.LCtrl);
+	pbAltL->Pressed(fn_keys.LAlt);
+	pbAltR->Pressed(fn_keys.LAlt);
+	auto Cap = Shift ^ Caps;
+	for (int i = 0; i < sizeof(_aButtonData) / sizeof(ButtonInfo); ++i) {
+		uint8_t m;
+		auto &inf = _aButtonData[i];
+		if (inf.type == K_CHAR)
 			m = Shift;
-		else if (inf->type == K_ALFABET)
-			m = k;
-		else if (inf->type == K_CHAR_FN) {
+		else if (inf.type == K_ALFABET)
+			m = Cap;
+		else if (inf.type == K_CHAR_FN) {
 			if (FnSel) {
-				inf->pButton->Text(inf->acLabel2 + 2);
+				inf.pButton->Text(inf.acLabel2 + 2);
 				continue;
 			}
 			m = Shift;
 		}
 		else
 			continue;
-		inf->pButton->Text(m ? inf->acLabel2 : inf->acLabel1);
+		inf.pButton->Text(m ? inf.acLabel2 : inf.acLabel1);
 	}
 }
 static int _OSK_ceil(float f) {
 	int i = (int)f;
 	return f - i > 0.f ? i + 1 : i;
+}
 
-const Point border = { 6, 24 };
 static void _OSK_createButtons(PWObj pWin, Point size) {
-	size -= border;
-	for (int i = 0; i < GUI_COUNTOF(_aButtonData); ++i) {
+	for (int i = 0; i < sizeof(_aButtonData) / sizeof(ButtonInfo); ++i) {
 		auto inf = _aButtonData + i;
 		auto pButton = inf->pButton = new Button(
-			_OSK_ceil(inf->pxPos * size.x), _OSK_ceil(inf->pyPos * size.y),
-			_OSK_ceil(inf->pWidth * size.x), _OSK_ceil(inf->pHeight * size.y),
-			pWin, ID_BUTTON + i, WC_VISIBLE, inf->acLabel1);
+			SRect::left_top(
+				{ _OSK_ceil(inf->x0 * size.x), _OSK_ceil(inf->y0 * size.y) },
+				{ _OSK_ceil(inf->cx * size.x), _OSK_ceil(inf->cy * size.y) }),
+			pWin, ID_BUTTON + i,
+			WC_VISIBLE, 0,
+			inf->acLabel1);
 		pButton->Focussable(false);
 		switch (inf->type) {
-		case K_CAPS: hbCaps = pButton; break;
-		case K_FN_CASE: hbFn = pButton; break;
-		case K_LSHIFT: hbShiftL = pButton; break;
-		case K_RSHIFT: hbShiftR = pButton; break;
-		case K_LCTRL: hbCtrlL = pButton; break;
-		case K_RCTRL: hbCtrlR = pButton; break;
-		case K_LALT: hbAltL = pButton; break;
-		case K_RALT: hbAltR = pButton; break;
+		case K_CAPS: pbCaps = pButton; break;
+		case K_FN_CASE: pbFn = pButton; break;
+		case K_LSHIFT: pbShiftL = pButton; break;
+		case K_RSHIFT: pbShiftR = pButton; break;
+		case K_LCTRL: pbCtrlL = pButton; break;
+		case K_RCTRL: pbCtrlR = pButton; break;
+		case K_LALT: pbAltL = pButton; break;
+		case K_RALT: pbAltR = pButton; break;
 		default: break;
 		}
 	}
 }
 static void _OSK_updateButtons(PWObj pWin, Point size) {
-	size -= border;
 	auto &&r = pWin->Rect();
-	for (int i = 0; i < GUI_COUNTOF(_aButtonData); ++i) {
+	for (int i = 0; i < sizeof(_aButtonData) / sizeof(ButtonInfo); ++i) {
 		auto inf = _aButtonData + i;
-		inf->pButton->Position({
-				  r.x0 + _OSK_ceil(inf->pxPos * size.x),
-				  r.y0 + _OSK_ceil(inf->pyPos * size.y) });
-		inf->pButton->Size({ _OSK_ceil(inf->pWidth * size.x),
-							 _OSK_ceil(inf->pHeight * size.y) });
+		inf->pButton->Position(
+			{ _OSK_ceil(inf->x0 * size.x),
+			  _OSK_ceil(inf->y0 * size.y) });
+		inf->pButton->Size(
+			{ _OSK_ceil(inf->cx * size.x),
+			  _OSK_ceil(inf->cy * size.y) });
 	}
 }
-static void _OSK_onKeyV(uint16_t Id) {
+static void _OSK_onKey(uint16_t Id, bool bPressed) {
 	auto inf = _aButtonData + Id - ID_BUTTON;
 	uint8_t ab = 0;
 	int c = 0;
@@ -243,29 +245,29 @@ static void _OSK_onKeyV(uint16_t Id) {
 		c = GUI_KEY_CONTROL;
 		break;
 	case K_RCTRL:
-		fn_keys.RCtrl = fn_keys.LCtrl = !fn_keys.LCtrl;
+		fn_keys.RCtrl = fn_keys.LCtrl = ~fn_keys.LCtrl;
 		_OSK_updateShiftCaps();
 		c = GUI_KEY_CONTROL;
 		break;
 	case K_LALT:
 		fn_keys.RAlt = 0;
-		fn_keys.LAlt = !fn_keys.LAlt;
+		fn_keys.LAlt = ~fn_keys.LAlt;
 		_OSK_updateShiftCaps();
 //		c = GUI_KEY_CONTROL;
 		break;
 	case K_RALT:
-		fn_keys.RAlt = fn_keys.LAlt = !fn_keys.LAlt;
+		fn_keys.RAlt = fn_keys.LAlt = ~fn_keys.LAlt;
 		_OSK_updateShiftCaps();
 //		c = GUI_KEY_CONTROL;
 		break;
 	case K_LSHIFT:
 		fn_keys.RShift = 0;
-		fn_keys.LShift = !fn_keys.LShift;
+		fn_keys.LShift = ~fn_keys.LShift;
 		_OSK_updateShiftCaps();
 		c = GUI_KEY_SHIFT;
 		return;
 	case K_RSHIFT:
-		fn_keys.RShift = fn_keys.LShift = !fn_keys.LShift;
+		fn_keys.RShift = fn_keys.LShift = ~fn_keys.LShift;
 		_OSK_updateShiftCaps();
 		c = GUI_KEY_SHIFT;
 		return;
@@ -278,106 +280,11 @@ static void _OSK_onKeyV(uint16_t Id) {
 	default:
 		;
 	}
-	GUI_StoreKeyMsg(c, 1);
-	GUI_PollKeyMsg();
-	GUI_StoreKeyMsg(c, 0);
+	GUI_StoreKeyMsg(c, bPressed);
 	GUI_PollKeyMsg();
 }
-static void _OSK_onKeyH(uint16_t Id) {
-	auto inf = _aButtonData + Id - ID_BUTTON;
-	uint8_t ab = 0;
-	int c = 0;
-	switch (inf->type) {
-	case K_CHAR_FN:
-		if (FnSel) {
-			c = inf->acLabel1[0];
-			switch (c) {
-			case '1':
-				c = GUI_KEY_F1;
-				break;
-			case '2':
-				c = GUI_KEY_F2;
-				break;
-			default:
-				;
-			}
-			FnSel = 0;
-			_OSK_updateShiftCaps();
-			break;
-		}
-		goto _K_CHAR;
-	case K_ALFABET:
-		ab = Caps;
-	case K_CHAR:
-	_K_CHAR:
-		c = ab ^ fn_keys.LShift ? inf->acLabel2[0] : inf->acLabel1[0];
-		if (fn_keys.LShift && !fn_keys.RShift) {
-			fn_keys.LShift = 0;
-			_OSK_updateShiftCaps();
-		}
-		break;
-	case K_BACKSPACE: c = GUI_KEY_BACKSPACE; break;
-	case K_TAB:       c = GUI_KEY_TAB;       break;
-	case K_ENTER:     c = GUI_KEY_ENTER;     break;
-	case K_ESC:       c = GUI_KEY_ESCAPE;    break;
-	case K_FN_CASE:
-		FnSel = !FnSel;
-		_OSK_updateShiftCaps();
-		return;
-	case K_CAPS:
-		Caps = !Caps;
-		_OSK_updateShiftCaps();
-		return;
-	case K_LCTRL:
-		fn_keys.RCtrl = 0;
-		fn_keys.LCtrl = !fn_keys.LCtrl;
-		_OSK_updateShiftCaps();
-		c = GUI_KEY_CONTROL;
-		break;
-	case K_RCTRL:
-		fn_keys.RCtrl = fn_keys.LCtrl = !fn_keys.LCtrl;
-		_OSK_updateShiftCaps();
-		c = GUI_KEY_CONTROL;
-		break;
-	case K_LALT:
-		fn_keys.RAlt = 0;
-		fn_keys.LAlt = !fn_keys.LAlt;
-		_OSK_updateShiftCaps();
-//		c = GUI_KEY_CONTROL;
-		break;
-	case K_RALT:
-		fn_keys.RAlt = fn_keys.LAlt = !fn_keys.LAlt;
-		_OSK_updateShiftCaps();
-//		c = GUI_KEY_CONTROL;
-		break;
-	case K_LSHIFT:
-		fn_keys.RShift = 0;
-		fn_keys.LShift = !fn_keys.LShift;
-		_OSK_updateShiftCaps();
-		c = GUI_KEY_SHIFT;
-		return;
-	case K_RSHIFT:
-		fn_keys.RShift = fn_keys.LShift = !fn_keys.LShift;
-		_OSK_updateShiftCaps();
-		c = GUI_KEY_SHIFT;
-		return;
-	case K_UP:
-	case K_DOWN:
-	case K_LEFT:
-	case K_RIGHT:
-		c = inf->type;
-		break;
-	default:
-		;
-	}
-	GUI_StoreKeyMsg(c, 1);
-	GUI_PollKeyMsg();
-	GUI_StoreKeyMsg(c, 0);
-	GUI_PollKeyMsg();
-}
-void (*_OSK_onKey)(uint16_t Id) = _OSK_onKeyV;
-static void _OSK_callback(int MsgId, WM_MSG *pMsg) {
-	auto pWin = pMsg->pWin;
+
+WM_RESULT _OSK_callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 	switch (MsgId) {
 	case WM_CREATE:
 		GUI.PenColor(RGB_GRAY);
@@ -386,28 +293,33 @@ static void _OSK_callback(int MsgId, WM_MSG *pMsg) {
 		GUI.PenColor(RGB_GRAY);
 		GUI.Fill(pWin->ClientRect());
 		break;
-	case WM_NOTIFY_PARENT:
-		switch ((int)pMsg->data) {
-		case WM_NOTIFICATION_RELEASED:
-			_OSK_onKey((int)pMsg->pSrc->ID());
+	case WM_NOTIFY_CHILD:
+		switch ((int)Param) {
+		case WN_CLICKED:
+			_OSK_onKey((int)pSrc->ID(), true);
+			break;
+		case WN_RELEASED:
+			_OSK_onKey((int)pSrc->ID(), false);
 			break;
 		}
 		break;
 	case WM_SIZE:
-		_OSK_updateButtons(pWin->Client(), pWin->Size());
+		_OSK_updateButtons(pWin->Client(), pWin->Client()->Size());
 		break;
 	}
+	return 0;
 }
 
 Frame *pKeypad = nullptr;
 void OSK_Show() {
 	pKeypad = new Frame(
-		0, 120, 320, 120,
+		{ 0, 0, 320, 180 },
 		WObj::Desktop(), 0,
-		WC_VISIBLE | WC_STAYONTOP | WC_NOACTIVATE,
-		0, "Keyboard",
+		WC_VISIBLE | WC_STAYONTOP | WC_NOACTIVATE, 0,
+		"Keyboard",
 		_OSK_callback);
-	_OSK_createButtons(pKeypad->Client(), pKeypad->Size());
+	_OSK_createButtons(pKeypad->Client(), pKeypad->Client()->Size());
+	pKeypad->Focussable(false);
 	pKeypad->Resizeable(true);
 	pKeypad->Moveable(true);
 	pKeypad->Visible(true);
@@ -416,21 +328,23 @@ void OSK_Show() {
 
 void Show_Keypad() {
 	auto pFrame = new Frame(
-		0, 0, 150, 150,
-		WObj::Desktop(), 0, WC_VISIBLE,
-		0, "Notepad");
-	auto pMult = new MultiEdit(
-		0, 0, 0, 0,
-		pFrame->Client(),
-		WC_VISIBLE, MULTIEDIT_CF_AUTOSCROLLBAR_H | MULTIEDIT_CF_AUTOSCROLLBAR_V,
-		GUI_ID_MULTIEDIT0, 100, nullptr);
-	pFrame->Moveable(true);
-	pFrame->Resizeable(true);
+		{ 0, 0, 320, 240 },
+		WObj::Desktop(), 0,
+		WC_VISIBLE, FRAME_CF_MOVEABLE | FRAME_CF_RESIZEABLE,
+		"Notepad");
 	pFrame->AddCloseButton(FRAME_BUTTON_RIGHT, 0);
 	pFrame->AddMaxButton(FRAME_BUTTON_RIGHT, 0);
 	pFrame->AddMinButton(FRAME_BUTTON_RIGHT, 0);
-	pMult->Text("123");
-	pMult->Focus();
+	new Button(
+		SRect::left_top({ 0, 0 }, { 40, 25 }),
+		pFrame->Client(), 0,
+		WC_VISIBLE, 0,
+		"Btn1");
+	auto a = new Button(
+		SRect::left_top({ 0, 30 }, { 40, 25 }),
+		pFrame->Client(), 0,
+		WC_VISIBLE, BUTTON_CF_SWITCH,
+		"Btn2");
 }
 
 void MainTask() {

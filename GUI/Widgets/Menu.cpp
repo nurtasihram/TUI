@@ -252,7 +252,7 @@ bool Menu::_ForwardMouseOverMsg(Point Pos) {
 	if (!pBelow || pBelow == this)
 		return false;
 	PID_STATE State = pBelow->Screen2Client(Pos);
-	pBelow->SendMessage(WM_MOUSEOVER, &State);
+	pBelow->SendMessage(WM_MOUSE_OVER, &State);
 	return true;
 }
 void Menu::_ForwardPIDMsgToOwner(int MsgId, PID_STATE *pState) {
@@ -458,7 +458,7 @@ void Menu::_OnPaint() {
 
 WM_RESULT Menu::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 	auto pObj = (Menu *)pWin;
-	if (MsgId != WM_PID_STATE_CHANGED)
+	if (MsgId != WM_MOUSE_CHANGED)
 		/* Let widget handle the standard messages */
 		if (!pObj->HandleActive(MsgId, Param))
 			return Param;
@@ -466,11 +466,11 @@ WM_RESULT Menu::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 		case WM_PAINT:
 			pObj->_OnPaint();
 			return 0;
-		case WM_TOUCH:
+		case WM_MOUSE_KEY:
 			if (pObj->_OnTouch(Param))
 				pObj->_ForwardPIDMsgToOwner(MsgId, Param);
 			return 0;
-		case WM_MOUSEOVER:
+		case WM_MOUSE_OVER:
 			if (pObj->_OnMouseOver(Param))
 				pObj->_ForwardPIDMsgToOwner(MsgId, Param);
 			return 0;

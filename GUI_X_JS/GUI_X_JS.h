@@ -1,8 +1,5 @@
 #pragma once
 
-void GUI_X_JS_Init();
-void GUI_X_JS_Exec();
-
 #include "duktape.h"
 
 struct js_exception {
@@ -11,6 +8,5 @@ struct js_exception {
 };
 extern duk_context *ctx;
 
-#ifdef _WIN32
-void GUI_X_JS_CMDL();
-#endif
+void GUI_X_JS_Init();
+void GUI_X_JS_Exec(const char *lpCmdl);

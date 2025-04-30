@@ -84,14 +84,14 @@ WM_RESULT DropDown::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc)
 		case WM_PAINT:
 			pObj->_OnPaint();
 			return 0;
-		case WM_TOUCH:
+		case WM_MOUSE_KEY:
 			pObj->_OnTouch(Param);
 			return 0;
 		case WM_KEY:
 			if (!pObj->_OnKey(Param))
 				return 0;
 			break;
-		case WM_PID_STATE_CHANGED:
+		case WM_MOUSE_CHANGED:
 			if (!IsExpandedBeforeMsg) /* Make sure we do not react a second time */
 				if (const PID_CHANGED_STATE *pInfo = Param)
 					if (pInfo->Pressed)
@@ -100,7 +100,7 @@ WM_RESULT DropDown::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc)
 		case WM_DELETE:
 			pObj->~DropDown();
 			return 0;
-		case WM_NOTIFY_PARENT:
+		case WM_NOTIFY_CHILD:
 			switch ((int)Param) {
 			case WN_SCROLL_CHANGED:
 				pObj->NotifyParent(WN_SCROLL_CHANGED);

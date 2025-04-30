@@ -439,7 +439,7 @@ WM_RESULT WObj::DefCallback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 			return true;
 		case WM_GET_ID:
 			return pWin->Id;
-		case WM_GET_ACCEPT_FOCUS:
+		case WM_FOCUSSABLE:
 			return pWin->Status & WC_FOCUSSABLE;
 		case WM_GET_SERVE_RECT:
 			return pWin->InsideRect();
@@ -520,14 +520,14 @@ PWObj WObj::Focus() {
 		return nullptr;
 	if (!Focussable())
 		return nullptr;
-	FOCUSED_STATE Info;
+	if (pWinFocus)
+		pWinFocus->SendMessage(WM_FOCUS, false);
+	pWinFocus = this;
+	if (SendMessage(WM_FOCUS, true))
+		return this;
+	FOCUS_CHANGED_STATE Info;
 	Info.pOld = pWinFocus;
 	Info.pNew = this;
-	if (pWinFocus)
-		pWinFocus->SendMessage(WM_SET_FOCUS, false);
-	pWinFocus = this;
-	if (SendMessage(WM_SET_FOCUS, true))
-		return this;
 	for (auto pWin = this; (pWin = pWin->Parent());)
 		pWin->SendMessage(WM_NOTIFY_CHILD_HAS_FOCUS, &Info);
 	if (auto pWin = Info.pOld)
@@ -588,13 +588,13 @@ void WObj::Capture(bool bAutoRelease) {
 	}
 }
 void WObj::CaptureRelease() {
-	if (pWinCapture) {
-		pWinCapture->SendMessage(WM_CAPTURE_RELEASED);
-		pWinCapture = nullptr;
-	}
 	if (pCursorCapture) {
 		GUI.Cursor(pCursorCapture);
 		pCursorCapture = nullptr;
+	}
+	if (pWinCapture) {
+		pWinCapture->SendMessage(WM_CAPTURE_RELEASED);
+		pWinCapture = nullptr;
 	}
 }
 void WObj::CaptureMove(Point Pos, int MinVisibility) {
@@ -733,7 +733,7 @@ void WObj::_SendTouchMessage(int MsgId, PID_STATE *pState) {
 	if (pState) *pState -= rsWin.left_top();
 	_SendMessageIfEnabled(MsgId, pState);
 	for (auto i = pParent; IsWindow(i); i = i->pParent)
-		i->_SendMessageIfEnabled(WM_TOUCH_CHILD, pState, this);
+		i->_SendMessageIfEnabled(WM_MOUSE_CHILD, pState, this);
 }
 
 WObj::CriticalHandles
@@ -779,7 +779,7 @@ bool WObj::HandlePID() {
 			Info.StatePrev = _StateLast.Pressed;
 			Info.x = StateNew.x - pWin->rsWin.x0;
 			Info.y = StateNew.y - pWin->rsWin.y0;
-			CHWin.pWin->_SendMessageIfEnabled(WM_PID_STATE_CHANGED, &Info);
+			CHWin.pWin->_SendMessageIfEnabled(WM_MOUSE_CHANGED, &Info);
 		}
 		if (_StateLast.Pressed | StateNew.Pressed) { /* Only if pressed or just released */
 			r = true;
@@ -793,7 +793,7 @@ bool WObj::HandlePID() {
 						State.Pressed = 0;
 						pState = &State;
 					}
-					CriticalHandles::Last.pWin->_SendTouchMessage(WM_TOUCH, pState);
+					CriticalHandles::Last.pWin->_SendTouchMessage(WM_MOUSE_KEY, pState);
 					CriticalHandles::Last.pWin = nullptr;
 				}
 			if (CHWin.pWin) {
@@ -805,12 +805,12 @@ bool WObj::HandlePID() {
 						CaptureRelease();
 					CriticalHandles::Last.pWin = nullptr;
 				}
-				CHWin.pWin->_SendTouchMessage(WM_TOUCH, &State);
+				CHWin.pWin->_SendTouchMessage(WM_MOUSE_KEY, &State);
 			}
 		}
 		else if (CHWin.pWin)
 			if (CHWin.pWin->Enable())
-				CHWin.pWin->_SendTouchMessage(WM_MOUSEOVER, &StateNew);
+				CHWin.pWin->_SendTouchMessage(WM_MOUSE_OVER, &StateNew);
 	}
 	_StateLast = StateNew;
 	return r;
@@ -878,20 +878,20 @@ PWObj WM_CREATESTRUCT::Create() const {
 			return new CheckBox(*this);
 		case WCLS_DROPDOWN:
 			return new DropDown(*this);
-			//	//case WCLS_EDIT:
-			//	//	return new Edit(*this.x, *this.y, *this.xsize, *this.ysize, *this.pParent, *this.Flags);
-			//	//case WCLS_HEADER:
-			//	//	return new Header(*this.x, *this.y, *this.xsize, *this.ysize, *this.pParent, *this.Flags);
+		//case WCLS_EDIT:
+		//	return new Edit(*this.x, *this.y, *this.xsize, *this.ysize, *this.pParent, *this.Flags);
+		//case WCLS_HEADER:
+		//	return new Header(*this.x, *this.y, *this.xsize, *this.ysize, *this.pParent, *this.Flags);
 		case WCLS_LISTBOX:
 			return new ListBox(*this);
-			//	//case WCLS_LISTVIEW:
-			//	//	return new ListView(*this.x, *this.y, *this.xsize, *this.ysize, *this.pParent, *this.Flags);
-			//	//case WCLS_MENU:
-			//	//	return new Menu(*this.x, *this.y, *this.xsize, *this.ysize, *this.pParent, *this.Flags);
-			//	//case WCLS_MULTIEDIT:
-			//	//	return new MultiEdit(*this.x, *this.y, *this.xsize, *this.ysize, *this.pParent, *this.Flags);
-			//	//case WCLS_MULTIPAGE:
-			//	//	return new MultiPage(*this.x, *this.y, *this.xsize, *this.ysize, *this.pParent, *this.Flags);
+		//case WCLS_LISTVIEW:
+		//	return new ListView(*this.x, *this.y, *this.xsize, *this.ysize, *this.pParent, *this.Flags);
+		//case WCLS_MENU:
+		//	return new Menu(*this.x, *this.y, *this.xsize, *this.ysize, *this.pParent, *this.Flags);
+		//case WCLS_MULTIEDIT:
+		//	return new MultiEdit(*this.x, *this.y, *this.xsize, *this.ysize, *this.pParent, *this.Flags);
+		//case WCLS_MULTIPAGE:
+		//	return new MultiPage(*this.x, *this.y, *this.xsize, *this.ysize, *this.pParent, *this.Flags);
 		case WCLS_PROGBAR:
 			return new ProgBar(*this);
 		case WCLS_RADIO:
@@ -1007,14 +1007,14 @@ void WObj::Enable(bool bEnable) {
 	this->SendMessage(WM_NOTIFY_ENABLE, bEnable);
 }
 void WObj::Focussable(bool bFocussable) {
-	auto StatusEx = this->StatusEx;
+	auto Status = this->Status;
 	if (bFocussable)
-		StatusEx |= WC_FOCUSSABLE;
+		Status |= WC_FOCUSSABLE;
 	else
-		StatusEx &= ~WC_FOCUSSABLE;
-	if (this->StatusEx == StatusEx)
+		Status &= ~WC_FOCUSSABLE;
+	if (this->Status == Status)
 		return;
-	this->StatusEx = StatusEx;
+	this->Status = Status;
 	Invalidate();
 }
 void WObj::Visible(bool bVisible) {
@@ -1034,12 +1034,12 @@ void WObj::Visible(bool bVisible) {
 void WObj::Parent(PWObj pParent) {
 	if (pParent == this)
 		return;
-	if (pParent = this->pParent)
+	if (pParent == this->pParent)
 		return;
 	/* Detach */
 	_RemoveWindowFromList();
 	InvalidateArea(rsWin);
-	Move(-pParent->rsWin.left_top());
+//	Move(-pParent->rsWin.left_top());
 	/* Attach */
 	_InsertWindowIntoList(pParent);
 }
@@ -1070,19 +1070,19 @@ bool Widget::HandleActive(int MsgId, WM_PARAM &Param) {
 			Invalidate();
 			return false;
 		}
-		case WM_PID_STATE_CHANGED:
+		case WM_MOUSE_CHANGED:
 			if (const PID_CHANGED_STATE *pInfo = Param)
 				if (pInfo->Pressed)
 					Focus();
 			return true;
-		case WM_TOUCH_CHILD:
+		case WM_MOUSE_CHILD:
 			if (const PID_STATE *pState = Param)
 				if (pState->Pressed) {
 					BringToTop();
 					return false;
 				}
 			return true;
-		case WM_SET_FOCUS: {
+		case WM_FOCUS: {
 			int Notification;
 			if (Param) 
 				Notification = WN_GOT_FOCUS;

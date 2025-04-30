@@ -74,7 +74,7 @@ private:
 	void _OnTouch(const PID_STATE *pState);
 	bool _OnTouchResize(const PID_STATE *pState);
 	void _OnPaint() const;
-	void _OnChildHasFocus(const FOCUSED_STATE *pInfo);
+	void _OnChildHasFocus(const FOCUS_CHANGED_STATE *pInfo);
 	bool _HandleResize(int MsgId, const PID_STATE *pState);
 
 	static WM_RESULT _cbClient(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc);
@@ -167,7 +167,7 @@ public: // Property - BorderSize
 public: // Property - Text
 	/* R */ inline const char *Text() const { return Title; }
 	/* W */ inline void Text(const char *s) {
-		GUI__SetText(&Title, s);
+		GUI.SetText(&Title, s);
 		Invalidate();
 	}
 public: // Property - TextAlign

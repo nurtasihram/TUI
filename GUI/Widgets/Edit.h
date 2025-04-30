@@ -36,7 +36,7 @@ public:
 	} DefaultProps;
 
 private:
-	GUI_STRING pText;
+	GUI_STRING text;
 	uint16_t LenMax;
 	uint16_t BufferSize = 0;
 	int CursorPos = 0;

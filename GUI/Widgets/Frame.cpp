@@ -186,9 +186,9 @@ bool Frame::_HandleResize(int MsgId, const PID_STATE *pState) {
 	if (Minimized() || Maximized())
 		return false;
 	switch (MsgId) {
-		case WM_TOUCH:
+		case WM_MOUSE_KEY:
 			return _OnTouchResize(pState);
-		case WM_MOUSEOVER:
+		case WM_MOUSE_OVER:
 			if (pState) {
 				if (auto Mode = _CheckReactBorder(*pState)) {
 					if (!_ForwardMouseOverMsg(MsgId, *pState))
@@ -254,7 +254,7 @@ void Frame::_OnPaint() const {
 	if (Props.BorderSize >= 2)
 		DrawUp();
 }
-void Frame::_OnChildHasFocus(const FOCUSED_STATE *pInfo) {
+void Frame::_OnChildHasFocus(const FOCUS_CHANGED_STATE *pInfo) {
 	if (pInfo) {
 		if (pInfo->pNew) {
 			if (pInfo->pNew->IsAncestorOrSelf(this)) {
@@ -291,9 +291,9 @@ WM_RESULT Frame::_cbClient(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 					}
 				}
 			break;
-		case WM_SET_FOCUS:
+		case WM_FOCUS:
 			return pParent->SendMessage(MsgId, Param, pSrc);
-		case WM_GET_ACCEPT_FOCUS:
+		case WM_FOCUSSABLE:
 			pParent->HandleActive(MsgId, Param);
 			return Param;
 		case WM_GET_BKCOLOR:
@@ -316,10 +316,10 @@ WM_RESULT Frame::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 		case WM_PAINT:
 			pObj->_OnPaint();
 			return 0;
-		case WM_TOUCH:
+		case WM_MOUSE_KEY:
 			pObj->_OnTouch(Param);
 			return 0;
-		case WM_TOUCH_CHILD:
+		case WM_MOUSE_CHILD:
 			if (!(pObj->StatusEx & FRAME_CF_ACTIVE))
 				if (const PID_STATE *pState = Param)
 					if (pState->Pressed)
@@ -340,10 +340,10 @@ WM_RESULT Frame::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 			return pObj->pClient;
 		case WM_GET_SERVE_RECT:
 			return pObj->pClient->ServeRect();
-		case WM_NOTIFY_PARENT:
+		case WM_NOTIFY_CHILD:
 			switch ((int)Param) {
 				case WN_RELEASED:
-					pObj->SendMessage(WM_NOTIFY_PARENT_REFLECTION, Param, pObj);
+					pObj->SendMessage(WM_NOTIFY_CHILD_REFLECT, Param, pObj);
 					if (PWObj pButton = Param)
 						if (pSrc)
 							switch (pSrc->ID()) {
@@ -366,7 +366,7 @@ WM_RESULT Frame::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 					break;
 			}
 			return 0;
-		case WM_SET_FOCUS:
+		case WM_FOCUS:
 			if (Param) {
 				if (IsWindow(pObj->pFocussedChild))
 					pObj->pFocussedChild->Focus();

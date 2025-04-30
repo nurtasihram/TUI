@@ -3,18 +3,18 @@
 Button::Property Button::DefaultProps;
 
 void Button::_Pressed() {
-	if (!(StatusEx & _BUTTON_STATE_PRESSED)) {
-		StatusEx |= _BUTTON_STATE_PRESSED;
-		Invalidate();
-	}
+	if (StatusEx & _BUTTON_STATE_PRESSED)
+		return;
+	StatusEx |= _BUTTON_STATE_PRESSED;
+	Invalidate();
 	if (Status & WC_VISIBLE)
 		NotifyParent(WN_CLICKED);
 }
 void Button::_Released(int Notification) {
-	if (StatusEx & _BUTTON_STATE_PRESSED) {
-		StatusEx &= ~_BUTTON_STATE_PRESSED;
-		Invalidate();
-	}
+	if (!(StatusEx & _BUTTON_STATE_PRESSED))
+		return;
+	StatusEx &= ~_BUTTON_STATE_PRESSED;
+	Invalidate();
 	if (Status & WC_VISIBLE)
 		NotifyParent(Notification);
 	if (Notification == WN_RELEASED)
@@ -57,25 +57,21 @@ void Button::_OnPaint() const {
 }
 void Button::_OnTouch(const PID_STATE *pState) {
 	if (pState) {
-		if (pState->Pressed) {
-			if (!(StatusEx & _BUTTON_STATE_PRESSED))
-				_Pressed();
-		}
-		else if (StatusEx & _BUTTON_STATE_PRESSED)
+		if (StatusEx & BUTTON_CF_SWITCH)
+			return;
+		if (pState->Pressed)
+			_Pressed();
+		else
 			_Released(WN_RELEASED);
 	}
 	else
 		_Released(WN_MOVED_OUT);
 }
 void Button::_OnPidStateChange(const PID_CHANGED_STATE *pState) {
-	if ((pState->StatePrev == 0) && (pState->Pressed == 1)) {
-		if (!(StatusEx & _BUTTON_STATE_PRESSED))
-			_Pressed();
-	}
-	else if ((pState->StatePrev == 1) && (pState->Pressed == 0)) {
-		if (StatusEx & _BUTTON_STATE_PRESSED)
-			_Released(WN_RELEASED);
-	}
+	if (pState->StatePrev == 0 && pState->Pressed == 1)
+		_Pressed();
+	else if (pState->StatePrev == 1 && pState->Pressed == 0)
+		_Released(WN_RELEASED);
 }
 bool Button::_OnKey(const KEY_STATE *pKi) {
 	int PressedCnt = pKi->PressedCnt;
@@ -99,14 +95,14 @@ WM_RESULT Button::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 		case WM_PAINT:
 			pObj->_OnPaint();
 			return 0;
-		case WM_TOUCH:
+		case WM_MOUSE_KEY:
 			pObj->_OnTouch(Param);
 			return 0;
 		case WM_KEY:
 			if (!pObj->_OnKey(Param))
 				break;
 			return 0;
-		case WM_PID_STATE_CHANGED:
+		case WM_MOUSE_CHANGED:
 			pObj->_OnPidStateChange(Param);
 			return 0;
 		case WM_DELETE:

@@ -128,40 +128,16 @@ int  GUI_GetYAdjust();
 void GUI__strcpy(char *s, const char *c);
 void GUI__memcpy(void *sDest, const void *pSrc, size_t Len);
 
-uint16_t GUI__NumTexts(const char *pTexts);
-const char *GUI__NextText(const char *pText);
-
-uint16_t GUI__NumLines(const char *pText);
-const char *GUI__NextLines(const char *pText);
-uint16_t GUI__NumCharsLine(const char *pText);
-uint16_t GUI__NumChars(const char *pText);
-void GUI__SetText(char **ppText, const char *pText);
-
-struct GUI_STRING {
-	char *pText = nullptr;
-	GUI_STRING() {}
-	GUI_STRING(const GUI_STRING &s) { GUI__SetText(&pText, s); }
-	GUI_STRING(const char *s) { GUI__SetText(&pText, s); }
-	~GUI_STRING() {
-		GUI_MEM_Free(pText);
-		pText = nullptr;
-	}
-	inline char **operator&() { return &pText; }
-	inline void operator=(const char *s) { GUI__SetText(&pText, s); }
-	inline operator char *() { return pText; }
-	inline operator const char *() const { return pText; }
-};
-
 /* Message layer */
 void GUI_StoreKeyMsg(int Key, int Pressed);
 void GUI_SendKeyMsg(int Key, int Pressed);
 bool GUI_PollKeyMsg();
+
 /* Application layer */
 int  GUI_GetKey();
 void GUI_StoreKey(int c);
 
-void GUI__DispLine(const char *s, int MaxNumChars, Point Pos);
-
+/// @brief 繪圖面板
 class GUI_PANEL {
 
 private:
@@ -270,7 +246,24 @@ public: // 字串繪製方法
 	}
 
 	int XDist(const char *pString, int NumChars) { return Props.pFont->XDist(pString, NumChars); }
-	inline int XDist(const char *pString) { return XDist(pString, GUI__NumChars(pString)); }
+	inline int XDist(const char *pString) { return XDist(pString, NumChars(pString)); }
+
+public:
+	uint16_t NumTexts(const char *pText);
+	const char *NextText(const char *pTexts);
+
+	uint16_t NumLines(const char *pText);
+	const char *NextLines(const char *pText);
+	
+	uint16_t NumCharsLine(const char *pText);
+	uint16_t NumChars(const char *pText);
+	uint16_t BytesChars(const char *pText);
+
+	uint16_t NextChar(const char *&pText);
+	const char *NextChars(const char *pText, uint16_t NumChars);
+	uint16_t Char(const char *pText) { return NextChar(pText); }
+
+	void SetText(char **ppText, const char *pText);
 
 #pragma region Properties
 public: // Property - Font
@@ -300,3 +293,34 @@ public: // Property - ClipRect
 
 };
 extern GUI_PANEL GUI;
+
+struct GUI_ISTRING {
+	mutable char *pText = nullptr;
+public:
+	GUI_ISTRING() {}
+	GUI_ISTRING(char *pText) : pText(pText) {}
+public:
+	inline auto Chars() const { return GUI.NumChars(pText); }
+	inline auto Bytes() const { return GUI.BytesChars(pText); }
+public:
+	inline GUI_ISTRING operator()(uint16_t num) {}
+	inline GUI_ISTRING operator[](uint16_t bytes) { return pText + bytes; }
+	inline char **operator&() { return &pText; }
+	inline uint16_t operator*() const { return GUI.Char(pText); }
+	inline uint16_t operator++() const { return GUI.NextChar((const char *&)pText); }
+	inline operator char *() { return pText; }
+	inline operator const char *() const { return pText; }
+};
+struct GUI_STRING : GUI_ISTRING {
+	GUI_STRING() {}
+	GUI_STRING(const GUI_STRING &s) { GUI.SetText(&pText, s); }
+	GUI_STRING(const char *s) { GUI.SetText(&pText, s); }
+	~GUI_STRING() {
+		if (pText) {
+			GUI_MEM_Free(pText);
+			pText = nullptr;
+		}
+	}
+	uint16_t operator++() = delete;
+	inline void operator=(const char *s) { GUI.SetText(&pText, s); }
+};

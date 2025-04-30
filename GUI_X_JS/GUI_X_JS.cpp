@@ -491,3 +491,18 @@ void GUI_X_JS_Init() {
 		ctx = duk_create_heap(js_alloc, js_realloc, js_free, nullptr, js_fatal);
 	LoadSymbols(ctx);
 }
+
+void GUI_X_JS_Exec(const char *lpCmdl) {
+	try {
+		duk_eval_raw(
+			ctx,
+			lpCmdl, 0,
+			1 /*args*/ |
+			DUK_COMPILE_EVAL |
+			DUK_COMPILE_NOSOURCE |
+			DUK_COMPILE_STRLEN |
+			DUK_COMPILE_NOFILENAME);
+	} catch (js_exception err) {
+		printf("DUK_FATAL: %d.\n%s\n", err.code, err.MsgId);
+	}
+}

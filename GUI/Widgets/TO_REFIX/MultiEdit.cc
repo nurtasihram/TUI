@@ -726,7 +726,7 @@ void MultiEdit::_Callback(WObj *pWin, int msgid, WM_PARAM *pData, WObj *pWinSrc)
 	if (!pObj->HandleActive(msgid, pData))
 		return;
 	switch (msgid) {
-		case WM_NOTIFY_CLIENTCHANGE:
+		case WM_NOTIFY_CLIENT_CHANGE:
 			pObj->_InvalidateCursorXY();
 			pObj->_InvalidateNumLines();
 			pObj->_InvalidateTextSizeX();
@@ -740,7 +740,7 @@ void MultiEdit::_Callback(WObj *pWin, int msgid, WM_PARAM *pData, WObj *pWinSrc)
 			pObj->_ClearCache();
 			pObj->_Invalidate();
 			break;
-		case WM_NOTIFY_PARENT:
+		case WM_NOTIFY_CHILD:
 			switch (*pData) {
 				case WN_VALUE_CHANGED:
 					if (pData->pWinSrc == pObj->ScrollBarV()) {
@@ -762,7 +762,7 @@ void MultiEdit::_Callback(WObj *pWin, int msgid, WM_PARAM *pData, WObj *pWinSrc)
 		case WM_PAINT:
 			pObj->_OnPaint();
 			return;
-		case WM_TOUCH:
+		case WM_MOUSE_KEY:
 			pObj->_OnTouch(pData);
 			break;
 		case WM_DELETE:

@@ -1,10 +1,12 @@
 #include "Radio.h"
 
+constexpr auto RM_GET_RADIOGROUP = WM_WIDGET(0);
+
 Radio::Property Radio::DefaultProps;
 
 static bool _IsInGroup(PWObj pWin, uint8_t GroupId) {
 	if (!GroupId) return false;
-	return (int)pWin->SendMessage(WM_GET_RADIOGROUP) == GroupId;
+	return (int)pWin->SendMessage(RM_GET_RADIOGROUP) == GroupId;
 }
 static PWObj _GetPrevInGroup(PWObj pWin, uint8_t GroupId) {
 	for (pWin = pWin->PrevSibling(); pWin; pWin = pWin->PrevSibling())
@@ -154,7 +156,7 @@ WM_RESULT Radio::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 	case WM_PAINT:
 		pObj->_OnPaint();
 		return 0;
-	case WM_TOUCH:
+	case WM_MOUSE_KEY:
 		pObj->_OnTouch(Param);
 		return 0;
 	case WM_KEY:
@@ -164,7 +166,7 @@ WM_RESULT Radio::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 	case WM_DELETE:
 		pObj->~Radio();
 		return 0;
-	case WM_GET_RADIOGROUP:
+	case RM_GET_RADIOGROUP:
 		return pObj->groupId;
 	case WM_GET_CLASS:
 		return ClassNames[WCLS_RADIO];
@@ -193,10 +195,10 @@ Radio::Radio(const SRect &rc,
 	Radio(rc,
 		  pParent, Id,
 		  Flags, FlagsEx,
-		  GUI__NumTexts(pItems), Spacing) {
+		  GUI.NumTexts(pItems), Spacing) {
 	for (auto &s : TextArray) {
 		s = pItems;
-		pItems = GUI__NextText(pItems);
+		pItems = GUI.NextText(pItems);
 	}
 }
 
