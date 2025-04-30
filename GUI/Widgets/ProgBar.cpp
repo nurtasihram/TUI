@@ -37,7 +37,7 @@ const char *ProgBar::_GetText(char *pBuffer) const {
 SRect ProgBar::_GetTextRect(const char *pText) const {
 	auto &&size = Size();
 	int TextWidth = GUI.XDist(pText),
-		TextHeight = GUI.Font()->YSize,
+		TextHeight = GUI.Font()->YDist,
 		EffectSize = this->EffectSize();
 	Point p0{ Off.x, (size.y - TextHeight) / 2 };
 	switch (Props.Align & TEXTALIGN_HCENTER) {

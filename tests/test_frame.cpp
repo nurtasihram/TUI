@@ -14,7 +14,7 @@ enum {
 Frame *pFrm1, *pFrm2;
 WM_RESULT _cbFrame(PWObj pDlg, int MsgId, WM_PARAM Param, PWObj pSrc) {
 	switch (MsgId) {
-		case WM_NOTIFY_PARENT:
+		case WM_NOTIFY_CHILD:
 			switch ((int)Param) {
 				case WN_RELEASED: {
 					auto &&rcFrm1 = pFrm1->Rect();

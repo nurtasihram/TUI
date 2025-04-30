@@ -48,7 +48,7 @@ bool Edit::_IncrementBuffer(uint16_t AddBytes) {
 	if (!text)
 		pNew[0] = '\0';
 	BufferSize = NewSize;
-	text = pNew;
+	text.pText = pNew;
 	return true;
 }
 bool Edit::_IsSpaceInBuffer(uint16_t BytesNeeded) {
@@ -73,10 +73,9 @@ bool Edit::_IsCharsAvailable(uint16_t CharsNeeded) {
 }
 void Edit::_DeleteChar() {
 	if (!text) return;
-	int CursorOffset = GUI_UC__NumChars2NumBytes(text., CursorPos);
-	if (CursorOffset >= GUI.BytesChars(pText))
+	if (CursorPos >= text.Chars())
 		return;
-	int NumBytes = GUI_UC_GetCharSize(pText);
+	int NumBytes = text. GUI_UC_GetCharSize(pText);
 	char *pstrCur = pText + CursorOffset;
 	GUI__strcpy(pstrCur, pstrCur + NumBytes);
 	NotifyParent(WN_VALUE_CHANGED);

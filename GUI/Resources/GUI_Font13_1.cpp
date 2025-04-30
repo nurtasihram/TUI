@@ -1442,114 +1442,112 @@ static const BPP1_DAT acFont13_1_00FF[13] { /* code 00FF */
   __XX____________};
 #pragma endregion
 
-static const FontProp::CharInfo GUI_Font13_1_CharInfo[96] {
-	 {   3,   3,  1, acFont13_1_00A0 } /* code 00A0 */
-	,{   4,   4,  1, acFont13_1_00A1 } /* code 00A1 */
-	,{   6,   6,  1, acFont13_1_00A2 } /* code 00A2 */
-	,{   6,   6,  1, acFont13_1_00A3 } /* code 00A3 */
-	,{   6,   6,  1, acFont13_1_00A4 } /* code 00A4 */
-	,{   6,   6,  1, acFont13_1_00A5 } /* code 00A5 */
-	,{   4,   4,  1, acFont13_1_00A6 } /* code 00A6 */
-	,{   6,   6,  1, acFont13_1_00A7 } /* code 00A7 */
-	,{   6,   6,  1, acFont13_1_00A8 } /* code 00A8 */
-	,{  10,  10,  2, acFont13_1_00A9 } /* code 00A9 */
-	,{   5,   5,  1, acFont13_1_00AA } /* code 00AA */
-	,{   6,   6,  1, acFont13_1_00AB } /* code 00AB */
-	,{   8,   8,  1, acFont13_1_00AC } /* code 00AC */
-	,{   4,   4,  1, acFont13_1_00AD } /* code 00AD */
-	,{  10,  10,  2, acFont13_1_00AE } /* code 00AE */
-	,{   6,   6,  1, acFont13_1_00AF } /* code 00AF */
-	,{   5,   5,  1, acFont13_1_00B0 } /* code 00B0 */
-	,{   8,   8,  1, acFont13_1_00B1 } /* code 00B1 */
-	,{   5,   5,  1, acFont13_1_00B2 } /* code 00B2 */
-	,{   5,   5,  1, acFont13_1_00B3 } /* code 00B3 */
-	,{   6,   6,  1, acFont13_1_00B4 } /* code 00B4 */
-	,{   6,   6,  1, acFont13_1_00B5 } /* code 00B5 */
-	,{   6,   6,  1, acFont13_1_00B6 } /* code 00B6 */
-	,{   3,   3,  1, acFont13_1_00B7 } /* code 00B7 */
-	,{   6,   6,  1, acFont13_1_00B8 } /* code 00B8 */
-	,{   5,   5,  1, acFont13_1_00B9 } /* code 00B9 */
-	,{   5,   5,  1, acFont13_1_00BA } /* code 00BA */
-	,{   6,   6,  1, acFont13_1_00BB } /* code 00BB */
-	,{  11,  11,  2, acFont13_1_00BC } /* code 00BC */
-	,{  11,  11,  2, acFont13_1_00BD } /* code 00BD */
-	,{  11,  11,  2, acFont13_1_00BE } /* code 00BE */
-	,{   5,   5,  1, acFont13_1_00BF } /* code 00BF */
-	,{   7,   7,  1, acFont13_1_00C0 } /* code 00C0 */
-	,{   7,   7,  1, acFont13_1_00C1 } /* code 00C1 */
-	,{   7,   7,  1, acFont13_1_00C2 } /* code 00C2 */
-	,{   7,   7,  1, acFont13_1_00C3 } /* code 00C3 */
-	,{   7,   7,  1, acFont13_1_00C4 } /* code 00C4 */
-	,{   7,   7,  1, acFont13_1_00C5 } /* code 00C5 */
-	,{  10,  10,  2, acFont13_1_00C6 } /* code 00C6 */
-	,{   7,   7,  1, acFont13_1_00C7 } /* code 00C7 */
-	,{   6,   6,  1, acFont13_1_00C8 } /* code 00C8 */
-	,{   6,   6,  1, acFont13_1_00C9 } /* code 00C9 */
-	,{   6,   6,  1, acFont13_1_00CA } /* code 00CA */
-	,{   6,   6,  1, acFont13_1_00CB } /* code 00CB */
-	,{   4,   4,  1, acFont13_1_00CC } /* code 00CC */
-	,{   4,   4,  1, acFont13_1_00CD } /* code 00CD */
-	,{   4,   4,  1, acFont13_1_00CE } /* code 00CE */
-	,{   4,   4,  1, acFont13_1_00CF } /* code 00CF */
-	,{   8,   8,  1, acFont13_1_00D0 } /* code 00D0 */
-	,{   7,   7,  1, acFont13_1_00D1 } /* code 00D1 */
-	,{   8,   8,  1, acFont13_1_00D2 } /* code 00D2 */
-	,{   8,   8,  1, acFont13_1_00D3 } /* code 00D3 */
-	,{   8,   8,  1, acFont13_1_00D4 } /* code 00D4 */
-	,{   8,   8,  1, acFont13_1_00D5 } /* code 00D5 */
-	,{   8,   8,  1, acFont13_1_00D6 } /* code 00D6 */
-	,{   8,   8,  1, acFont13_1_00D7 } /* code 00D7 */
-	,{   8,   8,  1, acFont13_1_00D8 } /* code 00D8 */
-	,{   7,   7,  1, acFont13_1_00D9 } /* code 00D9 */
-	,{   7,   7,  1, acFont13_1_00DA } /* code 00DA */
-	,{   7,   7,  1, acFont13_1_00DB } /* code 00DB */
-	,{   7,   7,  1, acFont13_1_00DC } /* code 00DC */
-	,{   6,   6,  1, acFont13_1_00DD } /* code 00DD */
-	,{   6,   6,  1, acFont13_1_00DE } /* code 00DE */
-	,{   6,   6,  1, acFont13_1_00DF } /* code 00DF */
-	,{   6,   6,  1, acFont13_1_00E0 } /* code 00E0 */
-	,{   6,   6,  1, acFont13_1_00E1 } /* code 00E1 */
-	,{   6,   6,  1, acFont13_1_00E2 } /* code 00E2 */
-	,{   6,   6,  1, acFont13_1_00E3 } /* code 00E3 */
-	,{   6,   6,  1, acFont13_1_00E4 } /* code 00E4 */
-	,{   6,   6,  1, acFont13_1_00E5 } /* code 00E5 */
-	,{  10,  10,  2, acFont13_1_00E6 } /* code 00E6 */
-	,{   5,   5,  1, acFont13_1_00E7 } /* code 00E7 */
-	,{   6,   6,  1, acFont13_1_00E8 } /* code 00E8 */
-	,{   6,   6,  1, acFont13_1_00E9 } /* code 00E9 */
-	,{   6,   6,  1, acFont13_1_00EA } /* code 00EA */
-	,{   6,   6,  1, acFont13_1_00EB } /* code 00EB */
-	,{   2,   2,  1, acFont13_1_00EC } /* code 00EC */
-	,{   2,   2,  1, acFont13_1_00ED } /* code 00ED */
-	,{   2,   2,  1, acFont13_1_00EE } /* code 00EE */
-	,{   2,   2,  1, acFont13_1_00EF } /* code 00EF */
-	,{   6,   6,  1, acFont13_1_00F0 } /* code 00F0 */
-	,{   6,   6,  1, acFont13_1_00F1 } /* code 00F1 */
-	,{   6,   6,  1, acFont13_1_00F2 } /* code 00F2 */
-	,{   6,   6,  1, acFont13_1_00F3 } /* code 00F3 */
-	,{   6,   6,  1, acFont13_1_00F4 } /* code 00F4 */
-	,{   6,   6,  1, acFont13_1_00F5 } /* code 00F5 */
-	,{   6,   6,  1, acFont13_1_00F6 } /* code 00F6 */
-	,{   8,   8,  1, acFont13_1_00F7 } /* code 00F7 */
-	,{   6,   6,  1, acFont13_1_00F8 } /* code 00F8 */
-	,{   6,   6,  1, acFont13_1_00F9 } /* code 00F9 */
-	,{   6,   6,  1, acFont13_1_00FA } /* code 00FA */
-	,{   6,   6,  1, acFont13_1_00FB } /* code 00FB */
-	,{   6,   6,  1, acFont13_1_00FC } /* code 00FC */
-	,{   6,   6,  1, acFont13_1_00FD } /* code 00FD */
-	,{   6,   6,  1, acFont13_1_00FE } /* code 00FE */
-	,{   6,   6,  1, acFont13_1_00FF } /* code 00FF */
+static const FontProp::Glyph GUI_Font13_1_Glyph[96] {
+	 {   3,  1, acFont13_1_00A0 } /* code 00A0 */
+	,{   4,  1, acFont13_1_00A1 } /* code 00A1 */
+	,{   6,  1, acFont13_1_00A2 } /* code 00A2 */
+	,{   6,  1, acFont13_1_00A3 } /* code 00A3 */
+	,{   6,  1, acFont13_1_00A4 } /* code 00A4 */
+	,{   6,  1, acFont13_1_00A5 } /* code 00A5 */
+	,{   4,  1, acFont13_1_00A6 } /* code 00A6 */
+	,{   6,  1, acFont13_1_00A7 } /* code 00A7 */
+	,{   6,  1, acFont13_1_00A8 } /* code 00A8 */
+	,{  10,  2, acFont13_1_00A9 } /* code 00A9 */
+	,{   5,  1, acFont13_1_00AA } /* code 00AA */
+	,{   6,  1, acFont13_1_00AB } /* code 00AB */
+	,{   8,  1, acFont13_1_00AC } /* code 00AC */
+	,{   4,  1, acFont13_1_00AD } /* code 00AD */
+	,{  10,  2, acFont13_1_00AE } /* code 00AE */
+	,{   6,  1, acFont13_1_00AF } /* code 00AF */
+	,{   5,  1, acFont13_1_00B0 } /* code 00B0 */
+	,{   8,  1, acFont13_1_00B1 } /* code 00B1 */
+	,{   5,  1, acFont13_1_00B2 } /* code 00B2 */
+	,{   5,  1, acFont13_1_00B3 } /* code 00B3 */
+	,{   6,  1, acFont13_1_00B4 } /* code 00B4 */
+	,{   6,  1, acFont13_1_00B5 } /* code 00B5 */
+	,{   6,  1, acFont13_1_00B6 } /* code 00B6 */
+	,{   3,  1, acFont13_1_00B7 } /* code 00B7 */
+	,{   6,  1, acFont13_1_00B8 } /* code 00B8 */
+	,{   5,  1, acFont13_1_00B9 } /* code 00B9 */
+	,{   5,  1, acFont13_1_00BA } /* code 00BA */
+	,{   6,  1, acFont13_1_00BB } /* code 00BB */
+	,{  11,  2, acFont13_1_00BC } /* code 00BC */
+	,{  11,  2, acFont13_1_00BD } /* code 00BD */
+	,{  11,  2, acFont13_1_00BE } /* code 00BE */
+	,{   5,  1, acFont13_1_00BF } /* code 00BF */
+	,{   7,  1, acFont13_1_00C0 } /* code 00C0 */
+	,{   7,  1, acFont13_1_00C1 } /* code 00C1 */
+	,{   7,  1, acFont13_1_00C2 } /* code 00C2 */
+	,{   7,  1, acFont13_1_00C3 } /* code 00C3 */
+	,{   7,  1, acFont13_1_00C4 } /* code 00C4 */
+	,{   7,  1, acFont13_1_00C5 } /* code 00C5 */
+	,{  10,  2, acFont13_1_00C6 } /* code 00C6 */
+	,{   7,  1, acFont13_1_00C7 } /* code 00C7 */
+	,{   6,  1, acFont13_1_00C8 } /* code 00C8 */
+	,{   6,  1, acFont13_1_00C9 } /* code 00C9 */
+	,{   6,  1, acFont13_1_00CA } /* code 00CA */
+	,{   6,  1, acFont13_1_00CB } /* code 00CB */
+	,{   4,  1, acFont13_1_00CC } /* code 00CC */
+	,{   4,  1, acFont13_1_00CD } /* code 00CD */
+	,{   4,  1, acFont13_1_00CE } /* code 00CE */
+	,{   4,  1, acFont13_1_00CF } /* code 00CF */
+	,{   8,  1, acFont13_1_00D0 } /* code 00D0 */
+	,{   7,  1, acFont13_1_00D1 } /* code 00D1 */
+	,{   8,  1, acFont13_1_00D2 } /* code 00D2 */
+	,{   8,  1, acFont13_1_00D3 } /* code 00D3 */
+	,{   8,  1, acFont13_1_00D4 } /* code 00D4 */
+	,{   8,  1, acFont13_1_00D5 } /* code 00D5 */
+	,{   8,  1, acFont13_1_00D6 } /* code 00D6 */
+	,{   8,  1, acFont13_1_00D7 } /* code 00D7 */
+	,{   8,  1, acFont13_1_00D8 } /* code 00D8 */
+	,{   7,  1, acFont13_1_00D9 } /* code 00D9 */
+	,{   7,  1, acFont13_1_00DA } /* code 00DA */
+	,{   7,  1, acFont13_1_00DB } /* code 00DB */
+	,{   7,  1, acFont13_1_00DC } /* code 00DC */
+	,{   6,  1, acFont13_1_00DD } /* code 00DD */
+	,{   6,  1, acFont13_1_00DE } /* code 00DE */
+	,{   6,  1, acFont13_1_00DF } /* code 00DF */
+	,{   6,  1, acFont13_1_00E0 } /* code 00E0 */
+	,{   6,  1, acFont13_1_00E1 } /* code 00E1 */
+	,{   6,  1, acFont13_1_00E2 } /* code 00E2 */
+	,{   6,  1, acFont13_1_00E3 } /* code 00E3 */
+	,{   6,  1, acFont13_1_00E4 } /* code 00E4 */
+	,{   6,  1, acFont13_1_00E5 } /* code 00E5 */
+	,{  10,  2, acFont13_1_00E6 } /* code 00E6 */
+	,{   5,  1, acFont13_1_00E7 } /* code 00E7 */
+	,{   6,  1, acFont13_1_00E8 } /* code 00E8 */
+	,{   6,  1, acFont13_1_00E9 } /* code 00E9 */
+	,{   6,  1, acFont13_1_00EA } /* code 00EA */
+	,{   6,  1, acFont13_1_00EB } /* code 00EB */
+	,{   2,  1, acFont13_1_00EC } /* code 00EC */
+	,{   2,  1, acFont13_1_00ED } /* code 00ED */
+	,{   2,  1, acFont13_1_00EE } /* code 00EE */
+	,{   2,  1, acFont13_1_00EF } /* code 00EF */
+	,{   6,  1, acFont13_1_00F0 } /* code 00F0 */
+	,{   6,  1, acFont13_1_00F1 } /* code 00F1 */
+	,{   6,  1, acFont13_1_00F2 } /* code 00F2 */
+	,{   6,  1, acFont13_1_00F3 } /* code 00F3 */
+	,{   6,  1, acFont13_1_00F4 } /* code 00F4 */
+	,{   6,  1, acFont13_1_00F5 } /* code 00F5 */
+	,{   6,  1, acFont13_1_00F6 } /* code 00F6 */
+	,{   8,  1, acFont13_1_00F7 } /* code 00F7 */
+	,{   6,  1, acFont13_1_00F8 } /* code 00F8 */
+	,{   6,  1, acFont13_1_00F9 } /* code 00F9 */
+	,{   6,  1, acFont13_1_00FA } /* code 00FA */
+	,{   6,  1, acFont13_1_00FB } /* code 00FB */
+	,{   6,  1, acFont13_1_00FC } /* code 00FC */
+	,{   6,  1, acFont13_1_00FD } /* code 00FD */
+	,{   6,  1, acFont13_1_00FE } /* code 00FE */
+	,{   6,  1, acFont13_1_00FF } /* code 00FF */
 };
 
 const FontProp GUI_Font13_1 {
-	13, /* height of font */
-	13, /* space of font y */
-	11,
-	6,
-	8,
+	13, /* YDist */
+	11, /* Baseline */
+	6, /* LHeight */
+	8, /* CHeight */
 	160, /* first character */
 	255, /* last character */
-	GUI_Font13_1_CharInfo, /* address of first character */
+	GUI_Font13_1_Glyph, /* address of first character */
 	&GUI_Font13_ASCII /* pointer to next GUI_FONT_PROP */
 };
-

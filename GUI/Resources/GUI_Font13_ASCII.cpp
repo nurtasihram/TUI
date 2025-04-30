@@ -1427,111 +1427,110 @@ static const BPP1_DAT acFont13ASCII_007E[13] { /* code 007E */
   ________________};
 #pragma endregion
 
-const FontProp::CharInfo GUI_Font13ASCII_CharInfo[95] {
-	 {   3,   3,  1, acFont13ASCII_0020 } /* code 0020 */
-	,{   4,   4,  1, acFont13ASCII_0021 } /* code 0021 */
-	,{   4,   4,  1, acFont13ASCII_0022 } /* code 0022 */
-	,{   8,   8,  1, acFont13ASCII_0023 } /* code 0023 */
-	,{   6,   6,  1, acFont13ASCII_0024 } /* code 0024 */
-	,{  11,  11,  2, acFont13ASCII_0025 } /* code 0025 */
-	,{   7,   7,  1, acFont13ASCII_0026 } /* code 0026 */
-	,{   2,   2,  1, acFont13ASCII_0027 } /* code 0027 */
-	,{   4,   4,  1, acFont13ASCII_0028 } /* code 0028 */
-	,{   4,   4,  1, acFont13ASCII_0029 } /* code 0029 */
-	,{   6,   6,  1, acFont13ASCII_002A } /* code 002A */
-	,{   8,   8,  1, acFont13ASCII_002B } /* code 002B */
-	,{   4,   4,  1, acFont13ASCII_002C } /* code 002C */
-	,{   4,   4,  1, acFont13ASCII_002D } /* code 002D */
-	,{   4,   4,  1, acFont13ASCII_002E } /* code 002E */
-	,{   4,   4,  1, acFont13ASCII_002F } /* code 002F */
-	,{   6,   6,  1, acFont13ASCII_0030 } /* code 0030 */
-	,{   6,   6,  1, acFont13ASCII_0031 } /* code 0031 */
-	,{   6,   6,  1, acFont13ASCII_0032 } /* code 0032 */
-	,{   6,   6,  1, acFont13ASCII_0033 } /* code 0033 */
-	,{   6,   6,  1, acFont13ASCII_0034 } /* code 0034 */
-	,{   6,   6,  1, acFont13ASCII_0035 } /* code 0035 */
-	,{   6,   6,  1, acFont13ASCII_0036 } /* code 0036 */
-	,{   6,   6,  1, acFont13ASCII_0037 } /* code 0037 */
-	,{   6,   6,  1, acFont13ASCII_0038 } /* code 0038 */
-	,{   6,   6,  1, acFont13ASCII_0039 } /* code 0039 */
-	,{   4,   4,  1, acFont13ASCII_003A } /* code 003A */
-	,{   4,   4,  1, acFont13ASCII_003B } /* code 003B */
-	,{   8,   8,  1, acFont13ASCII_003C } /* code 003C */
-	,{   8,   8,  1, acFont13ASCII_003D } /* code 003D */
-	,{   8,   8,  1, acFont13ASCII_003E } /* code 003E */
-	,{   5,   5,  1, acFont13ASCII_003F } /* code 003F */
-	,{  10,  10,  2, acFont13ASCII_0040 } /* code 0040 */
-	,{   7,   7,  1, acFont13ASCII_0041 } /* code 0041 */
-	,{   6,   6,  1, acFont13ASCII_0042 } /* code 0042 */
-	,{   7,   7,  1, acFont13ASCII_0043 } /* code 0043 */
-	,{   7,   7,  1, acFont13ASCII_0044 } /* code 0044 */
-	,{   6,   6,  1, acFont13ASCII_0045 } /* code 0045 */
-	,{   6,   6,  1, acFont13ASCII_0046 } /* code 0046 */
-	,{   7,   7,  1, acFont13ASCII_0047 } /* code 0047 */
-	,{   7,   7,  1, acFont13ASCII_0048 } /* code 0048 */
-	,{   4,   4,  1, acFont13ASCII_0049 } /* code 0049 */
-	,{   5,   5,  1, acFont13ASCII_004A } /* code 004A */
-	,{   6,   6,  1, acFont13ASCII_004B } /* code 004B */
-	,{   5,   5,  1, acFont13ASCII_004C } /* code 004C */
-	,{   8,   8,  1, acFont13ASCII_004D } /* code 004D */
-	,{   7,   7,  1, acFont13ASCII_004E } /* code 004E */
-	,{   8,   8,  1, acFont13ASCII_004F } /* code 004F */
-	,{   6,   6,  1, acFont13ASCII_0050 } /* code 0050 */
-	,{   8,   8,  1, acFont13ASCII_0051 } /* code 0051 */
-	,{   7,   7,  1, acFont13ASCII_0052 } /* code 0052 */
-	,{   6,   6,  1, acFont13ASCII_0053 } /* code 0053 */
-	,{   6,   6,  1, acFont13ASCII_0054 } /* code 0054 */
-	,{   7,   7,  1, acFont13ASCII_0055 } /* code 0055 */
-	,{   6,   6,  1, acFont13ASCII_0056 } /* code 0056 */
-	,{  10,  10,  2, acFont13ASCII_0057 } /* code 0057 */
-	,{   6,   6,  1, acFont13ASCII_0058 } /* code 0058 */
-	,{   6,   6,  1, acFont13ASCII_0059 } /* code 0059 */
-	,{   6,   6,  1, acFont13ASCII_005A } /* code 005A */
-	,{   4,   4,  1, acFont13ASCII_005B } /* code 005B */
-	,{   4,   4,  1, acFont13ASCII_005C } /* code 005C */
-	,{   4,   4,  1, acFont13ASCII_005D } /* code 005D */
-	,{   8,   8,  1, acFont13ASCII_005E } /* code 005E */
-	,{   6,   6,  1, acFont13ASCII_005F } /* code 005F */
-	,{   6,   6,  1, acFont13ASCII_0060 } /* code 0060 */
-	,{   6,   6,  1, acFont13ASCII_0061 } /* code 0061 */
-	,{   6,   6,  1, acFont13ASCII_0062 } /* code 0062 */
-	,{   5,   5,  1, acFont13ASCII_0063 } /* code 0063 */
-	,{   6,   6,  1, acFont13ASCII_0064 } /* code 0064 */
-	,{   6,   6,  1, acFont13ASCII_0065 } /* code 0065 */
-	,{   4,   4,  1, acFont13ASCII_0066 } /* code 0066 */
-	,{   6,   6,  1, acFont13ASCII_0067 } /* code 0067 */
-	,{   6,   6,  1, acFont13ASCII_0068 } /* code 0068 */
-	,{   2,   2,  1, acFont13ASCII_0069 } /* code 0069 */
-	,{   3,   3,  1, acFont13ASCII_006A } /* code 006A */
-	,{   5,   5,  1, acFont13ASCII_006B } /* code 006B */
-	,{   2,   2,  1, acFont13ASCII_006C } /* code 006C */
-	,{   8,   8,  1, acFont13ASCII_006D } /* code 006D */
-	,{   6,   6,  1, acFont13ASCII_006E } /* code 006E */
-	,{   6,   6,  1, acFont13ASCII_006F } /* code 006F */
-	,{   6,   6,  1, acFont13ASCII_0070 } /* code 0070 */
-	,{   6,   6,  1, acFont13ASCII_0071 } /* code 0071 */
-	,{   4,   4,  1, acFont13ASCII_0072 } /* code 0072 */
-	,{   5,   5,  1, acFont13ASCII_0073 } /* code 0073 */
-	,{   4,   4,  1, acFont13ASCII_0074 } /* code 0074 */
-	,{   6,   6,  1, acFont13ASCII_0075 } /* code 0075 */
-	,{   6,   6,  1, acFont13ASCII_0076 } /* code 0076 */
-	,{   8,   8,  1, acFont13ASCII_0077 } /* code 0077 */
-	,{   6,   6,  1, acFont13ASCII_0078 } /* code 0078 */
-	,{   6,   6,  1, acFont13ASCII_0079 } /* code 0079 */
-	,{   5,   5,  1, acFont13ASCII_007A } /* code 007A */
-	,{   5,   5,  1, acFont13ASCII_007B } /* code 007B */
-	,{   4,   4,  1, acFont13ASCII_007C } /* code 007C */
-	,{   5,   5,  1, acFont13ASCII_007D } /* code 007D */
-	,{   8,   8,  1, acFont13ASCII_007E } /* code 007E */
+const FontProp::Glyph GUI_Font13ASCII_Glyph[95] {
+	 {   3,  1, acFont13ASCII_0020 } /* code 0020 */
+	,{   4,  1, acFont13ASCII_0021 } /* code 0021 */
+	,{   4,  1, acFont13ASCII_0022 } /* code 0022 */
+	,{   8,  1, acFont13ASCII_0023 } /* code 0023 */
+	,{   6,  1, acFont13ASCII_0024 } /* code 0024 */
+	,{  11,  2, acFont13ASCII_0025 } /* code 0025 */
+	,{   7,  1, acFont13ASCII_0026 } /* code 0026 */
+	,{   2,  1, acFont13ASCII_0027 } /* code 0027 */
+	,{   4,  1, acFont13ASCII_0028 } /* code 0028 */
+	,{   4,  1, acFont13ASCII_0029 } /* code 0029 */
+	,{   6,  1, acFont13ASCII_002A } /* code 002A */
+	,{   8,  1, acFont13ASCII_002B } /* code 002B */
+	,{   4,  1, acFont13ASCII_002C } /* code 002C */
+	,{   4,  1, acFont13ASCII_002D } /* code 002D */
+	,{   4,  1, acFont13ASCII_002E } /* code 002E */
+	,{   4,  1, acFont13ASCII_002F } /* code 002F */
+	,{   6,  1, acFont13ASCII_0030 } /* code 0030 */
+	,{   6,  1, acFont13ASCII_0031 } /* code 0031 */
+	,{   6,  1, acFont13ASCII_0032 } /* code 0032 */
+	,{   6,  1, acFont13ASCII_0033 } /* code 0033 */
+	,{   6,  1, acFont13ASCII_0034 } /* code 0034 */
+	,{   6,  1, acFont13ASCII_0035 } /* code 0035 */
+	,{   6,  1, acFont13ASCII_0036 } /* code 0036 */
+	,{   6,  1, acFont13ASCII_0037 } /* code 0037 */
+	,{   6,  1, acFont13ASCII_0038 } /* code 0038 */
+	,{   6,  1, acFont13ASCII_0039 } /* code 0039 */
+	,{   4,  1, acFont13ASCII_003A } /* code 003A */
+	,{   4,  1, acFont13ASCII_003B } /* code 003B */
+	,{   8,  1, acFont13ASCII_003C } /* code 003C */
+	,{   8,  1, acFont13ASCII_003D } /* code 003D */
+	,{   8,  1, acFont13ASCII_003E } /* code 003E */
+	,{   5,  1, acFont13ASCII_003F } /* code 003F */
+	,{  10,  2, acFont13ASCII_0040 } /* code 0040 */
+	,{   7,  1, acFont13ASCII_0041 } /* code 0041 */
+	,{   6,  1, acFont13ASCII_0042 } /* code 0042 */
+	,{   7,  1, acFont13ASCII_0043 } /* code 0043 */
+	,{   7,  1, acFont13ASCII_0044 } /* code 0044 */
+	,{   6,  1, acFont13ASCII_0045 } /* code 0045 */
+	,{   6,  1, acFont13ASCII_0046 } /* code 0046 */
+	,{   7,  1, acFont13ASCII_0047 } /* code 0047 */
+	,{   7,  1, acFont13ASCII_0048 } /* code 0048 */
+	,{   4,  1, acFont13ASCII_0049 } /* code 0049 */
+	,{   5,  1, acFont13ASCII_004A } /* code 004A */
+	,{   6,  1, acFont13ASCII_004B } /* code 004B */
+	,{   5,  1, acFont13ASCII_004C } /* code 004C */
+	,{   8,  1, acFont13ASCII_004D } /* code 004D */
+	,{   7,  1, acFont13ASCII_004E } /* code 004E */
+	,{   8,  1, acFont13ASCII_004F } /* code 004F */
+	,{   6,  1, acFont13ASCII_0050 } /* code 0050 */
+	,{   8,  1, acFont13ASCII_0051 } /* code 0051 */
+	,{   7,  1, acFont13ASCII_0052 } /* code 0052 */
+	,{   6,  1, acFont13ASCII_0053 } /* code 0053 */
+	,{   6,  1, acFont13ASCII_0054 } /* code 0054 */
+	,{   7,  1, acFont13ASCII_0055 } /* code 0055 */
+	,{   6,  1, acFont13ASCII_0056 } /* code 0056 */
+	,{  10,  2, acFont13ASCII_0057 } /* code 0057 */
+	,{   6,  1, acFont13ASCII_0058 } /* code 0058 */
+	,{   6,  1, acFont13ASCII_0059 } /* code 0059 */
+	,{   6,  1, acFont13ASCII_005A } /* code 005A */
+	,{   4,  1, acFont13ASCII_005B } /* code 005B */
+	,{   4,  1, acFont13ASCII_005C } /* code 005C */
+	,{   4,  1, acFont13ASCII_005D } /* code 005D */
+	,{   8,  1, acFont13ASCII_005E } /* code 005E */
+	,{   6,  1, acFont13ASCII_005F } /* code 005F */
+	,{   6,  1, acFont13ASCII_0060 } /* code 0060 */
+	,{   6,  1, acFont13ASCII_0061 } /* code 0061 */
+	,{   6,  1, acFont13ASCII_0062 } /* code 0062 */
+	,{   5,  1, acFont13ASCII_0063 } /* code 0063 */
+	,{   6,  1, acFont13ASCII_0064 } /* code 0064 */
+	,{   6,  1, acFont13ASCII_0065 } /* code 0065 */
+	,{   4,  1, acFont13ASCII_0066 } /* code 0066 */
+	,{   6,  1, acFont13ASCII_0067 } /* code 0067 */
+	,{   6,  1, acFont13ASCII_0068 } /* code 0068 */
+	,{   2,  1, acFont13ASCII_0069 } /* code 0069 */
+	,{   3,  1, acFont13ASCII_006A } /* code 006A */
+	,{   5,  1, acFont13ASCII_006B } /* code 006B */
+	,{   2,  1, acFont13ASCII_006C } /* code 006C */
+	,{   8,  1, acFont13ASCII_006D } /* code 006D */
+	,{   6,  1, acFont13ASCII_006E } /* code 006E */
+	,{   6,  1, acFont13ASCII_006F } /* code 006F */
+	,{   6,  1, acFont13ASCII_0070 } /* code 0070 */
+	,{   6,  1, acFont13ASCII_0071 } /* code 0071 */
+	,{   4,  1, acFont13ASCII_0072 } /* code 0072 */
+	,{   5,  1, acFont13ASCII_0073 } /* code 0073 */
+	,{   4,  1, acFont13ASCII_0074 } /* code 0074 */
+	,{   6,  1, acFont13ASCII_0075 } /* code 0075 */
+	,{   6,  1, acFont13ASCII_0076 } /* code 0076 */
+	,{   8,  1, acFont13ASCII_0077 } /* code 0077 */
+	,{   6,  1, acFont13ASCII_0078 } /* code 0078 */
+	,{   6,  1, acFont13ASCII_0079 } /* code 0079 */
+	,{   5,  1, acFont13ASCII_007A } /* code 007A */
+	,{   5,  1, acFont13ASCII_007B } /* code 007B */
+	,{   4,  1, acFont13ASCII_007C } /* code 007C */
+	,{   5,  1, acFont13ASCII_007D } /* code 007D */
+	,{   8,  1, acFont13ASCII_007E } /* code 007E */
 };
 
 const FontProp GUI_Font13_ASCII{
-	13, /* height of font  */
-	13, /* space of font y */
-	11, /* baseline */
+	13, /* YDist */
+	11, /* Baseline */
 	6, /* LHeight */
 	8, /* CHeight */
 	32, /* first character */
 	126, /* last character */
-	GUI_Font13ASCII_CharInfo /* address of first character */
+	GUI_Font13ASCII_Glyph /* address of first character */
 };

@@ -23,9 +23,6 @@ struct SCROLL_STATE {
 	}
 	inline bool operator!=(const SCROLL_STATE &s) const { return !(*this == s); }
 };
-struct KEY_STATE {
-	uint16_t Key = 0, PressedCnt = 0;
-};
 struct DIALOG_STATE {
 	int Done = 0, ReturnValue = 0;
 };
@@ -253,7 +250,7 @@ public:
 	/// @param Key 鍵位
 	/// @param Pressed 按下或釋放
 	/// @return 鍵位是否被處理
-	static bool OnKey(int Key, int Pressed);
+	static bool OnKey(uint16_t Key, int Pressed);
 
 	/// @brief 默認窗體消息事件迴調
 	/// @param pWin 窗體對象

@@ -16,17 +16,17 @@ void MultiPage::_ShowPage(unsigned Index) {
 SRect MultiPage::_CalcClientRect() {
 	auto &&rInside = ClientRect();
 	if (align & MULTIPAGE_ALIGN_BOTTOM)
-		rInside.y1 -= Props.pFont->YSize + 6;
+		rInside.y1 -= Props.pFont->YDist + 6;
 	else
-		rInside.y0 += Props.pFont->YSize + 6;
+		rInside.y0 += Props.pFont->YDist + 6;
 	return rInside;
 }
 SRect MultiPage::_CalcBorderRect() {
 	auto &&r = ClientRect();
 	if (align & MULTIPAGE_ALIGN_BOTTOM)
-		r.y1 -= Props.pFont->YSize + 6;
+		r.y1 -= Props.pFont->YDist + 6;
 	else
-		r.y0 += Props.pFont->YSize + 6;
+		r.y0 += Props.pFont->YDist + 6;
 	return r;
 }
 int MultiPage::_GetPageSizeX(unsigned Index) {
@@ -42,7 +42,7 @@ int MultiPage::_GetTextWidth() {
 	return _GetPagePosX(Handles.NumItems());
 }
 SRect MultiPage::_GetTextRect() {
-	int Height = Props.pFont->YSize + 6;
+	int Height = Props.pFont->YDist + 6;
 	auto &&rBorder = _CalcBorderRect();
 	SRect rText;
 	rText.y0 = (align & MULTIPAGE_ALIGN_BOTTOM) ?
@@ -73,7 +73,7 @@ void MultiPage::_UpdatePositions() {
 		int16_t NumItems = 0;
 		while (Width >= xText)
 			Width -= _GetPageSizeX(NumItems++);
-		Point size = ((Props.pFont->YSize + 6) * 3) / 2;
+		Point size = ((Props.pFont->YDist + 6) * 3) / 2;
 		size.y /= 2;
 		Point pos = {
 			(align & MULTIPAGE_ALIGN_RIGHT) ? rBorder.x0 : rBorder.x1 - 2 * size.y + 1,

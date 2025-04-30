@@ -20,7 +20,7 @@ void CheckBox::_OnPaint() {
 		rText = GUI.DrawStringIn(text, rText);
 		if (Focussed()) {
 			GUI.PenColor(RGB_BLACK);
-			GUI.DrawFocus(rText * 2);
+			GUI.DrawFocus(rText * 1);
 		}
 	}
 	GUI.PenColor(Props.aBkColorBox[ColorIndex]);
@@ -52,7 +52,7 @@ void CheckBox::_OnTouch(const PID_STATE *pState) {
 		Notification = WN_MOVED_OUT;
 	NotifyParent(Notification);
 	if (Hit == 1)
-		GUI_StoreKey(Id);
+		GUI.Key(Id);
 }
 bool CheckBox::_OnKey(const KEY_STATE *pKeyInfo) {
 	if (!Enable()) return false;

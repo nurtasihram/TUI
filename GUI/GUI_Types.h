@@ -220,28 +220,95 @@ struct Cursor : Bitmap {
 	Cursor(CBitmap &bmp, Point Hot = 0) : Bitmap(bmp), Hot(Hot) {}
 };
 using CCursor = const Cursor;
+
+/// @brief 位圖矩形類
+struct BitmapRect : SRect {
+	void *pData = nullptr;
+	const RGBC *pPalEntries = nullptr;
+	uint16_t BytesPerLine = 0;
+	uint8_t BitsPerPixel = 0;
+	uint8_t BitsXOff = 0;
+	bool HasTrans = false;
+public:
+	BitmapRect() {}
+	BitmapRect(const SRect &r) : SRect(r) {}
+	BitmapRect(CBitmap &bmp, Point Pos = 0);
+public:
+	inline auto CountPixel() const { return xsize() * ysize(); }
+	inline auto Bytes() const { return ysize() * BytesPerLine; }
+	BitmapRect &operator&=(const SRect &rClip);
+	inline const BitmapRect &operator&=(const SRect &rClip) const { return const_cast<BitmapRect &>(*this) &= rClip; }
+	inline BitmapRect operator&(const SRect &rClip) { auto br = *this; br &= rClip; return br; }
+	inline const BitmapRect operator&(const SRect &rClip) const { return const_cast<BitmapRect &>(*this) & rClip; }
+	inline BitmapRect &operator=(const SRect &r) { SRect::operator=(r); return*this; }
+};
+using CBitmapRect = const BitmapRect;
+inline BitmapRect Bitmap::operator+(Point Pos) {
+	BitmapRect br = *this;
+	br += Pos;
+	return br;
+}
+inline const BitmapRect Bitmap::operator+(Point Pos) const {
+	BitmapRect br = *this;
+	br += Pos;
+	return br;
+}
 #pragma endregion
+
+/// @brief 按鍵數據結構
+struct KEY_STATE {
+	uint16_t Key = 0, PressedCnt = 0;
+};
+
+/// @brief 鼠標數據結構
+struct PID_STATE : Point {
+	int8_t Pressed;
+	PID_STATE(Point p = 0, int8_t Pressed = 0) : Point(p), Pressed(Pressed) {}
+	inline PID_STATE operator+(const PID_STATE &pid) const { return{ Point::operator+(pid), pid.Pressed }; }
+	inline bool operator==(const PID_STATE &pid) const { return (const Point &)*this == pid && Pressed == pid.Pressed; }
+	inline bool operator!=(const PID_STATE &pid) const { return (const Point &)*this != pid || Pressed != pid.Pressed; }
+};
+
+struct STRING_SIZE {
+	uint16_t NumChars = 0;
+	uint16_t NumBytes = 0;
+};
+struct Encoder {
+	virtual uint8_t CharSize(const char *s) { return 1; }
+	virtual STRING_SIZE Size(const char *s) {}
+};
 
 #pragma region Font
 /// @brief 字體類
 class Font {
 public:
-	uint8_t YSize, YDist;
-	uint8_t Baseline;
+	uint8_t YDist, Baseline;
 	uint8_t LHeight, CHeight;
 public:
-	Font(
-		uint8_t YSize, uint8_t YDist,
-		uint8_t Baseline,
-		uint8_t LHeight, uint8_t CHeight) :
-		YSize(YSize), YDist(YDist),
-		Baseline(Baseline),
+	Font(uint8_t YDist, uint8_t Baseline,
+		 uint8_t LHeight, uint8_t CHeight) :
+		YDist(YDist), Baseline(Baseline),
 		LHeight(LHeight), CHeight(CHeight) {}
 public:
-	virtual int  DispChar(uint16_t) const = 0;
-	virtual int  XDist(uint16_t) const = 0;
-	virtual int  XDist(const char *pString, int NumChars) const;
-	virtual bool IsInFont(uint16_t) const = 0;
+
+	virtual int  DispChar(uint16_t ch) const = 0;
+
+	/// @brief 字元寬度
+	/// @param ch 字元
+	/// @return 字元寬度，單位為像素
+	virtual int XDist(uint16_t ch) const = 0;
+
+	/// @brief 計算字串的寬度
+	/// @param pString 字串
+	/// @param NumChars 字串長度
+	/// @return 字串的寬度，單位為像素
+	virtual int XDist(const char *pString, int NumChars) const;
+
+	/// @brief 是否在字體範圍內
+	/// @param ch 字元
+	/// @return 在字體範圍內返回true，否則返回false
+	virtual bool IsInFont(uint16_t ch) const = 0;
+
 public:
 	Point Size(const char *pText) const;
 };
@@ -250,36 +317,29 @@ using CFont = const Font;
 /// @brief 等綫字體
 class FontProp : public Font {
 public:
-	struct CharInfo {
-		uint8_t XSize;
-		uint8_t XDist;
-		uint8_t BytesPerLine;
+
+	/// @brief 字形數據結構
+	struct Glyph {
+		uint8_t XDist, BytesPerLine;
 		const BPP1_DAT *pData;
 	};
+
 	struct Prop {
 		uint16_t First, Last;
-		const CharInfo *paCharInfo;
+		const Glyph *paGlyph;
 		const Prop *pNext;
-	public:
-		Prop(uint16_t First, uint16_t Last,
-			 const CharInfo *paCharInfo,
-			 const Prop *pNext) :
-			First(First), Last(Last),
-			paCharInfo(paCharInfo),
-			pNext(pNext) {}
 	};
+
 private:
 	Prop prop;
 public:
-	FontProp(
-		uint8_t YSize, uint8_t YDist,
-		uint8_t Baseline,
-		uint8_t LHeight, uint8_t CHeight,
-		uint16_t First, uint16_t Last,
-		const CharInfo *paCharInfo,
-		const FontProp *pNext = nullptr) :
-		Font(YSize, YDist, Baseline, LHeight, CHeight),
-		prop(First, Last, paCharInfo, pNext ? &pNext->prop : nullptr) {}
+	FontProp(uint8_t YDist, uint8_t Baseline,
+			 uint8_t LHeight, uint8_t CHeight,
+			 uint16_t First, uint16_t Last,
+			 const Glyph *paGlyph,
+			 const FontProp *pNext = nullptr) :
+		Font(YDist, Baseline, LHeight, CHeight),
+		prop({ First, Last, paGlyph, pNext ? &pNext->prop : nullptr }) {}
 private:
 	const Prop *_FindChar(uint16_t) const;
 public:
@@ -306,17 +366,15 @@ private:
 	uint8_t xSize, xDist;
 	uint8_t BytesPerLine;
 public:
-	FontMono(
-		uint8_t YSize, uint8_t YDist,
-		uint8_t Baseline,
-		uint8_t LHeight, uint8_t CHeight,
-		const BPP1_DAT *pData,
-		const BPP1_DAT *pTransData,
-		const TransInfo *pTrans,
-		uint16_t FirstChar, uint16_t LastChar,
-		uint8_t XSize, uint8_t XDist,
-		uint8_t BytesPerLine) :
-		Font(YSize, YDist, Baseline, LHeight, CHeight),
+	FontMono(uint8_t YDist, uint8_t Baseline,
+			 uint8_t LHeight, uint8_t CHeight,
+			 const BPP1_DAT *pData,
+			 const BPP1_DAT *pTransData,
+			 const TransInfo *pTrans,
+			 uint16_t FirstChar, uint16_t LastChar,
+			 uint8_t XSize, uint8_t XDist,
+			 uint8_t BytesPerLine) :
+		Font(YDist, Baseline, LHeight, CHeight),
 		pData(pData), pTransData(pTransData), pTrans(pTrans),
 		FirstChar(FirstChar), LastChar(LastChar),
 		xSize(XSize), xDist(XDist),

@@ -4,7 +4,7 @@
 
 void MainTask() {
 	static auto pText = new Static(
-		25, 35, 290, 145,
+		SRect::left_top({ 25, 35 }, { 290, 145 }),
 		nullptr, 0,
 		WC_VISIBLE, TEXTALIGN_LEFT,
 		"Read two news stories every day.\n"
@@ -12,14 +12,14 @@ void MainTask() {
 		" are written for quick readability and learning.");
 	pText->BkColor(RGB_CYAN);
 	static auto pHorizon = new Radio(
-		25, 35 + 145 + 5, 60, 15 * 3,
+		SRect::left_top({ 25, 35 + 145 + 5 }, { 60, 15 * 3 }),
 		nullptr, GUI_ID_RADIO0,
 		WC_VISIBLE, 0,
 		"Left\0"
 		"HCenter\0"
 		"Right\0", 15);
 	static auto pVertical = new Radio(
-		25 + 60, 35 + 145 + 5, 60, 15 * 3,
+		SRect::left_top({ 25 + 60, 35 + 145 + 5 }, { 60, 15 * 3 }),
 		nullptr, GUI_ID_RADIO1,
 		WC_VISIBLE, 0,
 		"Top\0"
@@ -28,7 +28,7 @@ void MainTask() {
 	WObj::Desktop()->Callback(
 		[](PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) -> WM_RESULT {
 			switch (MsgId) {
-				case WM_NOTIFY_PARENT:
+				case WM_NOTIFY_CHILD:
 					switch ((int)Param) {
 						case WN_VALUE_CHANGED:
 							switch (pSrc->ID()) {

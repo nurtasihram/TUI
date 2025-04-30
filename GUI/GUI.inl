@@ -7,10 +7,12 @@ enum GUI_KEYS {
 	GUI_KEY_BACKSPACE         = 8,
 	GUI_KEY_TAB               = 9,
 	GUI_KEY_ENTER             = 13,
-	GUI_KEY_LEFT              = 16,
-	GUI_KEY_UP                = 17,
-	GUI_KEY_RIGHT             = 18,
-	GUI_KEY_DOWN              = 19,
+
+	GUI_KEY_LEFT              = 0x25,
+	GUI_KEY_UP                = 0x26,
+	GUI_KEY_RIGHT             = 0x27,
+	GUI_KEY_DOWN              = 0x28,
+
 	GUI_KEY_HOME              = 23,
 	GUI_KEY_END               = 24,
 	GUI_KEY_SHIFT             = 25,

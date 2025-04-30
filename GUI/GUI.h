@@ -7,48 +7,6 @@
 
 #include "Resources.inl"
 
-/// @brief 鼠標數據結構
-struct PID_STATE : Point {
-	int8_t Pressed;
-	PID_STATE(Point p = 0, int8_t Pressed = 0) : Point(p), Pressed(Pressed) {}
-	inline PID_STATE operator+(const PID_STATE &pid) const { return{ Point::operator+(pid), pid.Pressed }; }
-	inline bool operator==(const PID_STATE &pid) const { return (const Point &)*this == pid && Pressed == pid.Pressed; }
-	inline bool operator!=(const PID_STATE &pid) const { return (const Point &)*this != pid || Pressed != pid.Pressed; }
-};
-
-/// @brief 位圖矩形類
-struct BitmapRect : SRect {
-	void *pData = nullptr;
-	const RGBC *pPalEntries = nullptr;
-	uint16_t BytesPerLine = 0;
-	uint8_t BitsPerPixel = 0;
-	uint8_t BitsXOff = 0;
-	bool HasTrans = false;
-public:
-	BitmapRect() {}
-	BitmapRect(const SRect &r) : SRect(r) {}
-	BitmapRect(CBitmap &bmp, Point Pos = 0);
-public:
-	inline auto CountPixel() const { return xsize() * ysize(); }
-	inline auto Bytes() const { return ysize() * BytesPerLine; }
-	BitmapRect &operator&=(const SRect &rClip);
-	inline const BitmapRect &operator&=(const SRect &rClip) const { return const_cast<BitmapRect &>(*this) &= rClip; }
-	inline BitmapRect operator&(const SRect &rClip) { auto br = *this; br &= rClip; return br; }
-	inline const BitmapRect operator&(const SRect &rClip) const { return const_cast<BitmapRect &>(*this) & rClip; }
-	inline BitmapRect &operator=(const SRect &r) { SRect::operator=(r); return*this; }
-};
-using CBitmapRect = const BitmapRect;
-inline BitmapRect Bitmap::operator+(Point Pos) {
-	BitmapRect br = *this;
-	br += Pos;
-	return br;
-}
-inline const BitmapRect Bitmap::operator+(Point Pos) const {
-	BitmapRect br = *this;
-	br += Pos;
-	return br;
-}
-
 /// @brief 光標控制類
 class CursorCtl {
 	BitmapRect brClip, brCursor;
@@ -78,7 +36,7 @@ public: // Property - Position
 	/* W */ void Position(Point);
 };
 
-#pragma region Draw
+#pragma region GUI_DRAW
 struct GUI_DRAW_BASE {
 	virtual void Draw(SRect) {}
 	virtual Point Size() { return 0; }
@@ -123,19 +81,8 @@ public:
 };
 #pragma endregion
 
-int  GUI_GetYAdjust();
-
 void GUI__strcpy(char *s, const char *c);
 void GUI__memcpy(void *sDest, const void *pSrc, size_t Len);
-
-/* Message layer */
-void GUI_StoreKeyMsg(int Key, int Pressed);
-void GUI_SendKeyMsg(int Key, int Pressed);
-bool GUI_PollKeyMsg();
-
-/* Application layer */
-int  GUI_GetKey();
-void GUI_StoreKey(int c);
 
 /// @brief 繪圖面板
 class GUI_PANEL {
@@ -163,8 +110,27 @@ public:
 	/// @brief 光標數據結構
 	PID_STATE PID_STATE;
 
+private:
+	KEY_STATE _KeyLast, _KeyNow;
+
 public:
 	void Init();
+
+public:
+	void StoreKeyMsg(uint16_t Key, int Pressed);
+	void SendKeyMsg(uint16_t Key, int Pressed);
+	bool PollKeyMsg();
+
+public:
+	inline uint16_t Key() {
+		uint16_t r = _KeyNow.Key;
+		_KeyNow.Key = 0;
+		return r;
+	}
+	inline void Key(uint16_t Key) {
+		if (!_KeyNow.Key)
+			_KeyNow.Key = Key;
+	}
 
 #pragma region Graphics
 public: // 基礎繪圖方法

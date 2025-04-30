@@ -421,7 +421,7 @@ void WObj::Init() {
 bool WObj::Exec() {
 	if (HandlePID())
 		return true;
-	if (GUI_PollKeyMsg())
+	if (GUI.PollKeyMsg())
 		return true;
 	if (PaintNext())
 		return true;
@@ -465,7 +465,7 @@ WM_RESULT WObj::DesktopCallback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSr
 		case WM_KEY:
 			if (const KEY_STATE *pKeyInfo = Param)
 				if (pKeyInfo->PressedCnt == 1)
-					GUI_StoreKey(pKeyInfo->Key);
+					GUI.Key(pKeyInfo->Key);
 			return 0;
 		case WM_PAINT:
 			if (clDesktop != RGB_INVALID_COLOR) {
@@ -564,7 +564,7 @@ PWObj WObj::FocusNextChild() {
 }
 #pragma endregion
 
-bool WObj::OnKey(int Key, int Pressed) {
+bool WObj::OnKey(uint16_t Key, int Pressed) {
 	if (!pWinFocus)
 		return false;
 	KEY_STATE Info;

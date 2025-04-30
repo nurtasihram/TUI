@@ -128,7 +128,7 @@ void Radio::_OnTouch(const PID_STATE *pState) {
 		Notification = WN_MOVED_OUT;
 	NotifyParent(Notification);
 	if (Hit)
-		GUI_StoreKey(Id);
+		GUI.Key(Id);
 }
 bool Radio::_OnKey(const KEY_STATE *pKeyInfo) {
 	if (pKeyInfo->PressedCnt <= 0)
@@ -137,11 +137,11 @@ bool Radio::_OnKey(const KEY_STATE *pKeyInfo) {
 	case GUI_KEY_RIGHT:
 	case GUI_KEY_DOWN:
 		Inc();
-		break; /* Send to parent by not doing anything */
+		break;
 	case GUI_KEY_LEFT:
 	case GUI_KEY_UP:
 		Dec();
-		break; /* Send to parent by not doing anything */
+		break;
 	default:
 		return false;
 	}
@@ -161,8 +161,8 @@ WM_RESULT Radio::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 		return 0;
 	case WM_KEY:
 		if (!pObj->_OnKey(Param))
-			return 0;
-		break;
+			break;
+		return 0;
 	case WM_DELETE:
 		pObj->~Radio();
 		return 0;
@@ -187,7 +187,7 @@ Radio::Radio(const SRect &rc,
 		   Flags | WC_FOCUSSABLE, FlagsEx),
 	TextArray(NumItems),
 	height(DefaultProps.apBm[0]->Size.y + DefaultProps.Border * 2),
-	spacing(Spacing <= 0 ? 20 : Spacing) {}\
+	spacing(Spacing <= 0 ? 20 : Spacing) {}
 Radio::Radio(const SRect &rc,
 			 PWObj pParent, uint16_t Id,
 			 WM_CF Flags, uint16_t FlagsEx,

@@ -24,6 +24,9 @@ REG_FUNC(void, BindMouse, int16_t *xMouse, int16_t *yMouse, int8_t *keyMouse) {
 	pMouseY = yMouse;
 	pMouseKey = keyMouse;
 }
+REG_FUNC(void, BindKey, void(*pfnOnKey)(UINT vk, BOOL bPressed)) {
+	SimDisp::SetOnKey(pfnOnKey);
+}
 REG_FUNC(void, CreateDisplay, const wchar_t *lpTitle, uint16_t xSize, uint16_t ySize) {
 	using namespace SimDisp;
 	LoadDll(_T("SimClient.dll"));
