@@ -55,7 +55,7 @@ void Button::_OnPaint() const {
 	}
 	WObj::UserClip(nullptr);
 }
-void Button::_OnTouch(const PID_STATE *pState) {
+void Button::_OnMouse(const MOUSE_STATE *pState) {
 	if (pState) {
 		if (StatusEx & BUTTON_CF_SWITCH)
 			return;
@@ -67,18 +67,16 @@ void Button::_OnTouch(const PID_STATE *pState) {
 	else
 		_Released(WN_MOVED_OUT);
 }
-void Button::_OnPidStateChange(const PID_CHANGED_STATE *pState) {
-	if (pState->StatePrev == 0 && pState->Pressed == 1)
+void Button::_OnMouseChange(MOUSE_CHANGED_STATE State) {
+	if (State.StatePrev == 0 && State.Pressed == 1)
 		_Pressed();
-	else if (pState->StatePrev == 1 && pState->Pressed == 0)
+	else if (State.StatePrev == 1 && State.Pressed == 0)
 		_Released(WN_RELEASED);
 }
-bool Button::_OnKey(const KEY_STATE *pKi) {
-	int PressedCnt = pKi->PressedCnt;
-	int Key = pKi->Key;
-	switch (Key) {
+bool Button::_OnKey(KEY_STATE State) {
+	switch (State.Key) {
 		case ' ':
-			if (PressedCnt > 0)
+			if (State.PressedCnt > 0)
 				_Pressed();
 			else
 				_Released(WN_RELEASED);
@@ -95,15 +93,15 @@ WM_RESULT Button::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 		case WM_PAINT:
 			pObj->_OnPaint();
 			return 0;
-		case WM_MOUSE_KEY:
-			pObj->_OnTouch(Param);
+		case WM_MOUSE:
+			pObj->_OnMouse(Param);
 			return 0;
 		case WM_KEY:
-			if (!pObj->_OnKey(Param))
-				break;
-			return 0;
+			if (pObj->_OnKey(Param))
+				return true;
+			break;
 		case WM_MOUSE_CHANGED:
-			pObj->_OnPidStateChange(Param);
+			pObj->_OnMouseChange(Param);
 			return 0;
 		case WM_DELETE:
 			pObj->~Button();
@@ -117,7 +115,7 @@ WM_RESULT Button::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 Button::Button(const SRect &rc,
 			   PWObj pParent, uint16_t Id,
 			   WM_CF Flags, WC_EX FlagsEx,
-			   const char *pText) :
+			   GUI_PCSTR pText) :
 	Widget(rc,
 		   _Callback,
 		   pParent, Id,

@@ -95,6 +95,13 @@ void LCD_GetBitmap(BitmapRect &br) {
 	GUI_X_SIM::GetBitmap(br.x0, br.y0, br.x1, br.y1, (uint32_t *)br.pData, br.BytesPerLine);
 }
 void LCD_FillRect(const SRect &r) {
+	//auto color = GUI.PenColor();
+	//if (color != RGB_BLACK && color != RGB_WHITE) {
+	//	for (int x0 = r.x0; x0 <= r.x1; ++x0)
+	//		for (int y0 = r.y0; y0 <= r.y1; ++y0)
+	//			GUI_X_SIM::Fill(x0, y0, x0, y0, ((x0 & 1) ^ (y0 & 1)) ? RGB_BLACK : RGB_WHITE);
+	//	return;
+	//}
 	GUI_X_SIM::Fill(r.x0, r.y0, r.x1, r.y1, GUI.PenColor());
 }
 
@@ -120,6 +127,6 @@ SRect LCD_Rect() {
 void GUI_X_LCD_Init() {
 	GUI_X_SIM::LoadDll(_T("GUI_X_SIM.dll"));
 	GUI_X_SIM::BindSize(&xSizeDisp, &ySizeDisp);
-	GUI_X_SIM::BindMouse(&GUI.PID_STATE.x, &GUI.PID_STATE.y, &GUI.PID_STATE.Pressed);
+	GUI_X_SIM::BindMouse(&GUI.MouseState.x, &GUI.MouseState.y, &GUI.MouseState.Pressed);
 	GUI_X_SIM::CreateDisplay(L"TUI - User Interface", 800, 480);
 }

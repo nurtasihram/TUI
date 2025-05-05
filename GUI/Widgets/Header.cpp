@@ -22,7 +22,7 @@ int Header::_GetItemIndex(Point Pos) {
 	return -1;
 }
 
-void Header::_HandlePID(PID_STATE State) {
+void Header::_HandleMouse(MOUSE_STATE State) {
 	State.x += scrollPos;
 	int Hit = _GetItemIndex(State);
 	/* set capture position () */
@@ -48,14 +48,14 @@ void Header::_HandlePID(PID_STATE State) {
 		if (Hit == -1)
 			CaptureRelease();
 }
-bool Header::_HandleDrag(int MsgId, const PID_STATE *pState) {
+bool Header::_HandleDrag(int MsgId, const MOUSE_STATE *pState) {
 	if (!(StatusEx & HEADER_CF_DRAG))
 		return false;
 	switch (MsgId) {
-		case WM_MOUSE_KEY: {
+		case WM_MOUSE: {
 			int Notification;
 			if (pState) {
-				_HandlePID(*pState);
+				_HandleMouse(*pState);
 				Notification = pState->Pressed ? WN_CLICKED : WN_RELEASED;
 			}
 			else
@@ -65,7 +65,7 @@ bool Header::_HandleDrag(int MsgId, const PID_STATE *pState) {
 		}
 		case WM_MOUSE_OVER:
 			if (pState)
-				_HandlePID({ *pState, -1 });
+				_HandleMouse({ *pState, -1 });
 			return true;
 		case WM_CAPTURE_RELEASED:
 			CapturePosX = -1;
@@ -146,7 +146,7 @@ WM_RESULT Header::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 Header::Header(const SRect &rc,
 			   PWObj pParent, uint16_t Id,
 			   WM_CF Flags, uint16_t FlagsEx,
-			   const char *pTexts,
+			   GUI_PCSTR pTexts,
 			   const uint16_t *pacWidth) :
 	Widget(rc,
 		   _Callback,
@@ -160,7 +160,7 @@ Header::Header(const SRect &rc,
 	if (rc.y1 <= rc.y0)
 		SizeY(Props.pFont->YDist +
 			  2 * _DefaultBorderV +
-			  2 * Effect()->EffectSize);
+			  2 * EffectSize());
 	if (auto NumItems = GUI.NumTexts(pTexts)) {
 		Columns.Resize(NumItems);
 		for (auto &&i : Columns) {
@@ -171,7 +171,7 @@ Header::Header(const SRect &rc,
 	}
 }
 
-void Header::Add(const char *pText, int Width, TEXTALIGN Align) {
+void Header::Add(GUI_PCSTR pText, int Width, TEXTALIGN Align) {
 	if (Width < 0)
 		Width = Props.pFont->Size(pText).x +
 		2 * (EffectSize() + _DefaultBorderH);

@@ -161,7 +161,7 @@ void ListView::_OnPaint(SRect rClip) const {
 	}
 	DrawDown();
 }
-void ListView::_OnTouch(const PID_STATE *pState) {
+void ListView::_OnMouse(const MOUSE_STATE *pState) {
 	int Notification;
 	if (pState) {
 		if (pState->Pressed) {
@@ -176,8 +176,10 @@ void ListView::_OnTouch(const PID_STATE *pState) {
 		Notification = WN_MOVED_OUT;
 	_NotifyOwner(Notification);
 }
-bool ListView::_OnKey(int Key) {
-	switch (Key) {
+bool ListView::_OnKey(KEY_STATE State) {
+	if (State.PressedCnt <= 0)
+		return false;
+	switch (State.Key) {
 		case GUI_KEY_DOWN:
 			Inc();
 			return true;
@@ -194,14 +196,12 @@ WM_RESULT  ListView::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc
 		case WM_PAINT:
 			pObj->_OnPaint(Param);
 			return 0;
-		case WM_MOUSE_KEY:
-			pObj->_OnTouch(Param);
+		case WM_MOUSE:
+			pObj->_OnMouse(Param);
 			return 0;
 		case WM_KEY:
-			if (const KEY_STATE *pKi = Param)
-				if (pKi->PressedCnt > 0)
-					if (pObj->_OnKey(pKi->Key))
-						return 0;
+			if (pObj->_OnKey(Param))
+				return true;
 			break;
 		case WM_DELETE:
 			pObj->~ListView();
@@ -264,7 +264,7 @@ ListView::ListView(const SRect &rc,
 	_UpdateScrollParas();
 }
 
-void ListView::AddColumn(const char *s, int Width, TEXTALIGN Align) {
+void ListView::AddColumn(GUI_PCSTR s, int Width, TEXTALIGN Align) {
 	pHeader->Add(s, Width, Align);
 	auto NumRows = this->NumRows();
 	if (!NumRows)
@@ -274,15 +274,18 @@ void ListView::AddColumn(const char *s, int Width, TEXTALIGN Align) {
 	_UpdateScrollParas();
 	Invalidate();
 }
-void ListView::AddRow(const char *pTexts) {
+bool ListView::AddRow(GUI_PCSTR pTexts) {
 	auto NumRows = this->NumRows();
 	auto &Row = RowArray.Add();
+	if (GUI.NumTexts(pTexts) < this->NumColumns())
+		return false;
 	for (int i = 0, NumColumns = this->NumColumns(); i < NumColumns; ++i) {
 		Row.Add().Text = pTexts;
 		pTexts = GUI.NextText(pTexts);
 	}
 	_UpdateScrollParas();
 	_InvalidateRow(NumRows);
+	return true;
 }
 
 void ListView::DeleteColumn(uint16_t Index) {

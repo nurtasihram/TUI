@@ -11,7 +11,7 @@
 #include "ListView.h"
 #include "MultiPage.h"
 
-#include "GUI_X_JS.h"
+#include "ext_duktape.h"
 
 void property(duk_context *ctx, const char *name, duk_c_function setter, duk_c_function getter) {
 	duk_push_string(ctx, name);
@@ -188,7 +188,7 @@ static void LoadSymbols(duk_context *ctx) {
 		/* DropDown Flags */
 		/* Frame Flags */
 		_ENUM_(FRAME_CF_ACTIVE),
-		_ENUM_(FRAME_CF_MOVEABLE),
+		_ENUM_(FRAME_CF_UNMOVEABLE),
 		_ENUM_(FRAME_CF_RESIZEABLE),
 		_ENUM_(FRAME_CF_TITLEVIS),
 		_ENUM_(FRAME_CF_MINIMIZED),

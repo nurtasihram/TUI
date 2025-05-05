@@ -7,7 +7,8 @@ constexpr	SCROLLBAR_CF
 			SCROLLBAR_CF_VERTICAL	= WC_EX_VERTICAL,
 			SCROLLBAR_CF_FOCUSSABLE	= WC_FOCUSSABLE;
 enum SCROLLBAR_CI {
-	SCROLLBAR_CI_
+	SCROLLBAR_CI_RAIL = 0,
+	SCROLLBAR_CI_BUTTON,
 };
 
 class ScrollBar : public Widget {
@@ -23,7 +24,7 @@ public:
 	static const int16_t DefaultWidth = 12;
 
 private:
-	Property Props;
+	Property Props = DefaultProps;
 	SCROLL_STATE state;
 
 private:
@@ -48,8 +49,8 @@ private:
 	void _ScrollbarPressed();
 	void _ScrollbarReleased();
 
-	void _OnTouch(const PID_STATE *pState);
-	void _OnKey(const KEY_STATE *pKeyInfo);
+	void _OnMouse(const MOUSE_STATE *pState);
+	bool _OnKey(KEY_STATE);
 	void _OnPaint();
 	
 	static WM_RESULT _Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc);

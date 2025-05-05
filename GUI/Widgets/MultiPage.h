@@ -39,7 +39,7 @@ private:
 		uint8_t Status = 0;
 		GUI_STRING Text;
 	};
-	Property Props;
+	Property Props = DefaultProps;
 	PWObj pClient;
 	GUI_Array<Page> Handles;
 	int16_t ScrollValue = 0;
@@ -55,12 +55,12 @@ private:
 	int _GetTextWidth();
 	SRect _GetTextRect();
 	void _UpdatePositions();
-	void _DrawTextItem(const char *pText, unsigned Index,
+	void _DrawTextItem(GUI_PCSTR pText, unsigned Index,
 					   SRect r, int x0, int w, MULTIPAGE_CI ColorIndex);
 	bool _ClickedOnMultipage(Point);
 
 	void _OnPaint();
-	void _OnTouch(PID_STATE *);
+	void _OnMouse(MOUSE_STATE *);
 
 	static WM_RESULT _ClientCb(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc);
 	static WM_RESULT _Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc);
@@ -73,15 +73,15 @@ protected:
 	~MultiPage() = default;
 
 public:
-	void Add(const char *pText = nullptr, PWObj pWin = nullptr);
+	void Add(GUI_PCSTR pText = nullptr, PWObj pWin = nullptr);
 	void Delete(unsigned Index, int Delete);
 
 #pragma region Properties
 public: // Property - PageRect
 	/* R */ inline SRect PageRect() const { return pClient->ClientRect(); }
 public: // Property - Text
-	/* R */ inline const char *Text(unsigned Index) const { return Handles[Index].Text; }
-	/* W */ inline void Text(unsigned Index, const char *pText) {
+	/* R */ inline GUI_PCSTR Text(unsigned Index) const { return Handles[Index].Text; }
+	/* W */ inline void Text(unsigned Index, GUI_PCSTR pText) {
 		Handles[Index].Text = pText;
 		_UpdatePositions();
 	}

@@ -31,7 +31,7 @@ void CheckBox::_OnPaint() {
 	}
 	DrawDown(rBox);
 }
-void CheckBox::_OnTouch(const PID_STATE *pState) {
+void CheckBox::_OnMouse(const MOUSE_STATE *pState) {
 	int Notification = 0;
 	int Hit = 0;
 	if (pState) {
@@ -54,17 +54,17 @@ void CheckBox::_OnTouch(const PID_STATE *pState) {
 	if (Hit == 1)
 		GUI.Key(Id);
 }
-bool CheckBox::_OnKey(const KEY_STATE *pKeyInfo) {
+bool CheckBox::_OnKey(KEY_STATE State) {
 	if (!Enable()) return false;
-	if (pKeyInfo->PressedCnt <= 0)
+	if (State.PressedCnt <= 0)
 		return false;
-	switch (pKeyInfo->Key) {
+	switch (State.Key) {
 	case GUI_KEY_SPACE:
 		CurrentState = (CurrentState + 1) % Props.NumStates;
 		Invalidate();
-		break;
+		return true;
 	}
-	return true;
+	return false;
 }
 WM_RESULT CheckBox::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 	auto pObj = (CheckBox *)pWin;
@@ -74,12 +74,12 @@ WM_RESULT CheckBox::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc)
 		case WM_PAINT:
 			pObj->_OnPaint();
 			return 0;
-		case WM_MOUSE_KEY:
-			pObj->_OnTouch(Param);
+		case WM_MOUSE:
+			pObj->_OnMouse(Param);
 			return 0;
 		case WM_KEY:
-			if (!pObj->_OnKey(Param))
-				return 0;
+			if (pObj->_OnKey(Param))
+				return true;
 			break;
 		case WM_DELETE:
 			pObj->~CheckBox();
@@ -93,10 +93,10 @@ WM_RESULT CheckBox::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc)
 CheckBox::CheckBox(const SRect &rc,
 				   PWObj pParent, uint16_t Id,
 				   WM_CF Flags, WC_EX FlagsEx,
-				   const char *pText) :
+				   GUI_PCSTR pText) :
 	Widget({ rc.left_top(), {
-				rc.x1 >= rc.x0 ? rc.x1 : rc.x0 + DefaultProps.apBm[0]->Size.x + 2 * DefaultEffect()->EffectSize,
-				rc.y1 >= rc.y0 ? rc.y1 : rc.x0 + DefaultProps.apBm[0]->Size.y + 2 * DefaultEffect()->EffectSize }
+				rc.x1 >= rc.x0 ? rc.x1 : rc.x0 + DefaultProps.apBm[0]->Size.x + 2 * DefaultEffect().EffectSize,
+				rc.y1 >= rc.y0 ? rc.y1 : rc.x0 + DefaultProps.apBm[0]->Size.y + 2 * DefaultEffect().EffectSize }
 		   },
 		   _Callback,
 		   pParent, Id,

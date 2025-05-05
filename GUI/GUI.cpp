@@ -1,6 +1,7 @@
 #include "GUI.h"
 
-GUI_PANEL GUI;
+GUI_Panel GUI;
+GUI_Encoder DefaultEncoder;
 
 #pragma region Cursor Control
 static const RGBC _aColorI[]{ RGB_BLUE, RGB_WHITE, RGB_BLACK };
@@ -107,11 +108,11 @@ CCursor *CursorCtl::ResizeCursor(uint8_t Mode) {
 #pragma endregion
 
 #pragma region Graphics Methods
-void GUI_PANEL::Clear() {
+void GUI_Panel::Clear() {
 	DispPos(0);
 	Clear({ GUI_XMIN, GUI_YMIN, GUI_XMAX, GUI_YMAX });
 }
-void GUI_PANEL::Clear(SRect r) {
+void GUI_Panel::Clear(SRect r) {
 	r += off;
 	r &= rClip;
 	if (!r) return;
@@ -119,13 +120,13 @@ void GUI_PANEL::Clear(SRect r) {
 	LCD_FillRect(r);
 	RevColor();
 }
-void GUI_PANEL::Fill(SRect r) {
+void GUI_Panel::Fill(SRect r) {
 	r += off;
 	r &= rClip;
 	if (!r) return;
 	LCD_FillRect(r);
 }
-void GUI_PANEL::DrawFocus(SRect r, int Dist) {
+void GUI_Panel::DrawFocus(SRect r, int Dist) {
 	r /= Dist;
 	for (auto i = r.x0; i <= r.x1; i += 2) {
 		Fill(Point{ i, r.y0 });
@@ -136,53 +137,55 @@ void GUI_PANEL::DrawFocus(SRect r, int Dist) {
 		Fill(Point{ r.x1, i });
 	}
 }
-void GUI_PANEL::Outline(SRect r) {
+void GUI_Panel::Outline(SRect r) {
 	Fill({ r.x0, r.y0, r.x1, r.y0 });
 	Fill({ r.x0, r.y1, r.x1, r.y1 });
 	Fill({ r.x0, r.y0, r.x0, r.y1 });
 	Fill({ r.x1, r.y0, r.x1, r.y1 });
 }
 
-void GUI_PANEL::DrawBitmap(CBitmap &bmp, Point Pos) {
+void GUI_Panel::DrawBitmap(CBitmap &bmp, Point Pos) {
 	Pos += off;
 	auto &&bc = bmp + Pos;
 	if (bc &= rClip)
 		LCD_SetBitmap(bc);
 }
-void GUI_PANEL::DrawBitmap(BitmapRect bc) {
+void GUI_Panel::DrawBitmap(BitmapRect bc) {
 	if (bc &= rClip)
 		LCD_SetBitmap(bc);
 }
 #pragma endregion
 
 #pragma region String
-uint16_t GUI_PANEL::NumTexts(const char *pTexts) {
+uint16_t GUI_Panel::NumTexts(GUI_PCSTR pTexts) {
+	if (!pTexts) return 0;
 	uint16_t NumTexts = 0;
-	if (pTexts)
-		for (; *pTexts; ++NumTexts)
-			while (*pTexts++);
+	while ((pTexts = NextText(pTexts)))
+		++NumTexts;
 	return NumTexts;
 }
-const char *GUI_PANEL::NextText(const char *pTexts) {
-	while (*pTexts++);
-	return pTexts;
+GUI_PCSTR GUI_Panel::NextText(GUI_PCSTR pTexts) {
+	if (auto Bytes = NumBytes(pTexts))
+		if (Char(pTexts))
+			return pTexts + Bytes;
+	return nullptr;
 }
 
-uint16_t GUI_PANEL::NumLines(const char *pText) {
+uint16_t GUI_Panel::NumLines(GUI_PCSTR pText) {
 	uint16_t NumLines = 1;
-	for (; auto ch = *pText; ++pText)
+	while (auto ch = CharNext(pText))
 		if (ch == '\n')
 			++NumLines;
 	return NumLines;
 }
-const char *GUI_PANEL::NextLines(const char *pText) {
+GUI_PCSTR GUI_Panel::NextLines(GUI_PCSTR pText) {
 	for (; auto ch = *pText; ++pText)
 		if (ch == '\n')
 			return ++pText;
 	return pText;
 }
 
-uint16_t GUI_PANEL::NumCharsLine(const char *pText) {
+uint16_t GUI_Panel::NumCharsLine(GUI_PCSTR pText) {
 	uint16_t NumChars = 1;
 	for (; auto ch = *pText; ++pText)
 		if (ch == '\n')
@@ -192,36 +195,13 @@ uint16_t GUI_PANEL::NumCharsLine(const char *pText) {
 	return NumChars;
 }
 
-uint16_t GUI_PANEL::NumChars(const char *pText) {
-	uint16_t NumChars = 0;
-	for (; auto ch = *pText; ++pText)
-		++NumChars;
-	return NumChars;
-}
-uint16_t GUI_PANEL::BytesChars(const char *pText) {
-	uint16_t NumChars = 0;
-	for (; auto ch = *pText; ++pText)
-		++NumChars;
-	return NumChars;
-}
-
-uint16_t GUI_PANEL::NextChar(const char *&pText) {
-	return *pText++;
-}
-const char *GUI_PANEL::NextChars(const char *pText, uint16_t NumChars) {
-	while (NumChars--)
-		if (!*pText++)
-			return nullptr;
-	return pText;
-}
-
-void GUI_PANEL::SetText(char **ppText, const char *pText) {
+void GUI_Panel::SetText(GUI_PSTR *ppText, GUI_PCSTR pText) {
 	if (!pText) {
 		GUI_MEM_Free(*ppText);
 		*ppText = nullptr;
 		return;
 	}
-	auto pString = (char *)GUI_MEM_Alloc(NumChars(pText) + 1);
+	auto pString = (char *)GUI_MEM_Alloc(NumBytes(pText) + 1);
 	GUI__strcpy(pString, pText);
 	GUI_MEM_Free(*ppText);
 	*ppText = pString;
@@ -229,62 +209,8 @@ void GUI_PANEL::SetText(char **ppText, const char *pText) {
 #pragma endregion
 
 #pragma region Char
-void GUI_PANEL::DrawString(const char *s) {
-	if (!s)
-		return;
-	auto YDist = Font()->YDist;
-	auto xOrg = dispPos.x;
-	auto yAdjust = 0;
-	switch (TextAlign() & TEXTALIGN_VCENTER) {
-	case TEXTALIGN_VCENTER:
-		yAdjust = YDist / 2;
-		break;
-	case TEXTALIGN_BOTTOM:
-		yAdjust = YDist - 1;
-		break;
-	}
-	dispPos.y -= yAdjust;
-	for (; *s; s++) {
-		auto LineNumChars = NumChars(s);
-		auto xLineSize = XDist(s, LineNumChars);
-		int xAdjust;
-		switch (TextAlign() & TEXTALIGN_HCENTER) {
-			case TEXTALIGN_HCENTER:
-				xAdjust = xLineSize / 2;
-				break;
-			case TEXTALIGN_RIGHT:
-				xAdjust = xLineSize;
-				break;
-			default:
-				xAdjust = 0;
-		}
-		dispPos += off;
-		dispPos.x -= xAdjust;
-		while (LineNumChars--)
-			dispPos.x += Font()->DispChar(*s++);
-		dispPos -= off;
-		if (*s == '\n' || *s == '\r') {
-			switch (TextAlign() & TEXTALIGN_HCENTER) {
-				case TEXTALIGN_HCENTER:
-				case TEXTALIGN_RIGHT:
-					dispPos.x = xOrg;
-					break;
-				default:
-					dispPos.x = 0;
-			}
-			if (*s == '\n')
-				dispPos.y += YDist;
-		}
-		else
-			dispPos.x += xLineSize;
-		if (*s == 0)
-			break;
-	}
-	dispPos.y += yAdjust;
-	TextAlign(TextAlign() & ~TEXTALIGN_HCENTER);
-}
 #include "WM.h"
-SRect GUI_PANEL::DrawStringIn(const char *s, SRect rText) {
+SRect GUI_Panel::DrawStringIn(GUI_PCSTR s, SRect rText) {
 	if (!s) return {};
 	Point start;
 	auto pOldClipRect = WObj::UserClip(&rText);
@@ -333,7 +259,7 @@ SRect GUI_PANEL::DrawStringIn(const char *s, SRect rText) {
 		auto ch = *s;
 		if (ch == '\0')
 			break;
-		else if (ch == '\n')
+		if (ch == '\n')
 			++s;
 		dispPos.y += Font()->YDist;
 	}
@@ -343,14 +269,14 @@ SRect GUI_PANEL::DrawStringIn(const char *s, SRect rText) {
 #pragma endregion
 
 #pragma region Font
-int Font::XDist(const char *pString, int NumChars) const {
+int Font::XDist(GUI_PCSTR pString, uint16_t NumChars) const {
 	if (!pString) return 0;
 	int DistX = 0;
 	while (NumChars--)
 		DistX += GUI.Font()->XDist(*pString++);
 	return DistX;
 }
-Point Font::Size(const char *pText) const {
+Point Font::Size(GUI_PCSTR pText) const {
 	uint16_t DistX = 0;
 	auto NumLines = GUI.NumLines(pText);
 	for (int i = 0; i < NumLines; ++i) {
@@ -362,13 +288,13 @@ Point Font::Size(const char *pText) const {
 	return{ DistX, NumLines * YDist };
 }
 #pragma region Proportional Font
-const FontProp::Prop *FontProp::_FindChar(uint16_t c) const {
+const FontProp::Prop *FontProp::_FindChar(GUI_CHAR c) const {
 	for (auto pProp = &prop; pProp; pProp = pProp->pNext)
 		if (c >= pProp->First && c <= pProp->Last)
 			return pProp;
 	return nullptr;
 }
-int FontProp::DispChar(uint16_t c) const {
+int FontProp::DispChar(GUI_CHAR c) const {
 	auto pProp = _FindChar(c);
 	if (!pProp)
 		return 0;
@@ -384,15 +310,15 @@ int FontProp::DispChar(uint16_t c) const {
 			}, GUI.DispPos()});
 	return ci.XDist;
 }
-int FontProp::XDist(uint16_t c) const {
+int FontProp::XDist(GUI_CHAR c) const {
 	auto pProp = _FindChar(c);
 	return pProp ? pProp->paGlyph[c - pProp->First].XDist : 0;
 }
-bool FontProp::IsInFont(uint16_t c) const
+bool FontProp::IsInFont(GUI_CHAR c) const
 { return _FindChar(c); }
 #pragma endregion
 #pragma region Monospace Font
-int FontMono::DispChar(uint16_t c) const {
+int FontMono::DispChar(GUI_CHAR c) const {
 	int c0 = -1, c1 = -1;
 	const uint8_t *pd;
 	auto FirstChar = this->FirstChar;
@@ -434,8 +360,8 @@ int FontMono::DispChar(uint16_t c) const {
 			}, GUI.DispPos() });
 	return xDist;
 }
-int FontMono::XDist(uint16_t) const { return xDist; }
-bool FontMono::IsInFont(uint16_t c) const {
+int FontMono::XDist(GUI_CHAR) const { return xDist; }
+bool FontMono::IsInFont(GUI_CHAR c) const {
 	if (FirstChar <= c && c <= LastChar)
 		return true;
 	if (pTrans)
@@ -445,19 +371,20 @@ bool FontMono::IsInFont(uint16_t c) const {
 #pragma endregion
 #pragma endregion
 
-void GUI_PANEL::Init() {
+void GUI_Panel::Init() {
 	ClipRect();
 	Cursor(Props.pCursor);
+	Font(Props.pFont);
 	WObj::Init();
 }
 
 #pragma region Key
-void GUI_PANEL::StoreKeyMsg(uint16_t Key, int PressedCnt) {
+void GUI_Panel::StoreKeyMsg(uint16_t Key, int PressedCnt) {
 	_KeyLast.Key = Key;
 	_KeyLast.PressedCnt = PressedCnt;
 	_KeyNow.PressedCnt = 1;
 }
-bool GUI_PANEL::PollKeyMsg() {
+bool GUI_Panel::PollKeyMsg() {
 	if (!_KeyNow.PressedCnt)
 		return false;
 	int key = _KeyLast.Key;
@@ -467,7 +394,7 @@ bool GUI_PANEL::PollKeyMsg() {
 		Key(key);
 	return true;
 }
-void GUI_PANEL::SendKeyMsg(uint16_t Key, int PressedCnt) {
+void GUI_Panel::SendKeyMsg(uint16_t Key, int PressedCnt) {
 	if (!WObj::OnKey(Key, PressedCnt))
 		StoreKeyMsg(Key, PressedCnt);
 }

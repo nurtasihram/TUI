@@ -14,7 +14,9 @@ void MultiPage::_ShowPage(unsigned Index) {
 			pChild->Visible(false);
 }
 SRect MultiPage::_CalcClientRect() {
-	auto &&rInside = ClientRect();
+	auto EffectSize = this->EffectSize();
+	auto &&rInside = ClientRect() / EffectSize;
+	rInside.y0 -= EffectSize;
 	if (align & MULTIPAGE_ALIGN_BOTTOM)
 		rInside.y1 -= Props.pFont->YDist + 6;
 	else
@@ -106,19 +108,21 @@ void MultiPage::_UpdatePositions() {
 	pClient->Rect(_CalcClientRect());
 	Invalidate();
 }
-void MultiPage::_DrawTextItem(const char *pText, unsigned Index,
+void MultiPage::_DrawTextItem(GUI_PCSTR pText, unsigned Index,
 							  SRect r, int x0, int w, MULTIPAGE_CI ColorIndex) {
 	r.x0 += x0;
 	r.x1 = r.x0 + w;
+	r.y1 += EffectSize() + 1;
 	DrawUp(r);
 	r /= EffectSize();
 	GUI.PenColor(Props.aBkColor[ColorIndex]);
 	Fill(r);
 	GUI.BkColor(Props.aBkColor[ColorIndex]);
 	GUI.PenColor(Props.aTextColor[ColorIndex]);
-	GUI.DrawStringAt(pText, { r.x0 + 4, r.y0 + 3 });
+	GUI.TextAlign(TEXTALIGN_CENTER);
+	GUI.DrawStringIn(pText, r);
 	if (Sel == Index)
-		GUI.DrawFocus(r);
+		GUI.DrawFocus(r, 1);
 }
 bool MultiPage::_ClickedOnMultipage(Point Pos) {
 	auto &&rText = _GetTextRect();
@@ -157,6 +161,7 @@ void MultiPage::_OnPaint() {
 	rClip.y1 = rText.y1 + 1;
 	GUI.BkColor(Parent()->BkColor());
 	GUI.Clear();
+	DrawUp(_CalcClientRect() * EffectSize());
 	WObj::UserClip(&rClip);
 	GUI.Font(Props.pFont);
 	int w = 0;
@@ -172,7 +177,7 @@ void MultiPage::_OnPaint() {
 	}
 	WObj::UserClip(nullptr);
 }
-void MultiPage::_OnTouch(PID_STATE *pState) {
+void MultiPage::_OnMouse(MOUSE_STATE *pState) {
 	int Notification;
 	if (pState) {
 		if (pState->Pressed) {
@@ -183,7 +188,7 @@ void MultiPage::_OnTouch(PID_STATE *pState) {
 				Pos = Client2Screen(Pos);
 				if (auto pBelow = WObj::FindOnScreen(Pos, this)) {
 					*pState = pBelow->Screen2Client(Pos);
-					pBelow->Callback()(pBelow, WM_MOUSE_KEY, pState, nullptr);
+					pBelow->Callback()(pBelow, WM_MOUSE, pState, nullptr);
 				}
 			}
 			Notification = WN_CLICKED;
@@ -204,7 +209,7 @@ WM_PARAM MultiPage::_ClientCb(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc)
 			GUI.BkColor(pObj->BkColor());
 			GUI.Clear();
 			return 0;
-		case WM_MOUSE_KEY:
+		case WM_MOUSE:
 			pParent->Focus();
 			pParent->BringToTop();
 			return 0;
@@ -224,8 +229,8 @@ WM_PARAM MultiPage::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc)
 	case WM_PAINT:
 		pObj->_OnPaint();
 		return 0;
-	case WM_MOUSE_KEY:
-		pObj->_OnTouch(Param);
+	case WM_MOUSE:
+		pObj->_OnMouse(Param);
 		return 0;
 	case WM_NOTIFY_CHILD:
 		switch ((int)Param) {
@@ -245,7 +250,7 @@ WM_PARAM MultiPage::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc)
 		return pObj->pClient->ServeRect();
 	case WM_WIDGET_SET_EFFECT:
 		if (auto pScroll = pObj->ScrollBarH())
-			pScroll->Effect(Param);
+			pScroll->Effect(*(const EffectItf *)Param);
 		break;
 	case WM_SIZE:
 		pObj->_UpdatePositions();
@@ -276,7 +281,7 @@ MultiPage::MultiPage(
 		WC_VISIBLE | WC_ANCHOR_MASK))
 { _UpdatePositions(); }
 
-void MultiPage::Add(const char *pText, PWObj pWin) {
+void MultiPage::Add(GUI_PCSTR pText, PWObj pWin) {
 	if (!pWin)
 		pWin = new WObj(
 			PageRect(),

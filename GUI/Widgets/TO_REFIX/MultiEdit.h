@@ -46,15 +46,15 @@ public:
 	void _InvalidateNumChars();
 	int _GetNumChars();
 	int _GetXSize();
-	int _GetNumCharsInPrompt(const char *pText);
-	int _NumChars2XSize(const char *pText, int NumChars);
-	int _WrapGetNumCharsDisp(const char *pText);
-	int _WrapGetNumBytesToNextLine(const char *pText);
-	int _GetCharDistX(const char *pText);
-	void _DispString(const char *pText, SRect *pRect);
+	int _GetNumCharsInPrompt(GUI_PCSTR pText);
+	int _NumChars2XSize(GUI_PCSTR pText, int NumChars);
+	int _WrapGetNumCharsDisp(GUI_PCSTR pText);
+	int _WrapGetNumBytesToNextLine(GUI_PCSTR pText);
+	int _GetCharDistX(GUI_PCSTR pText);
+	void _DispString(GUI_PCSTR pText, SRect *pRect);
 	char *_GetpLine(unsigned LineNumber);
 	void _ClearCache();
-	int _GetCursorLine(const char *pText, int CursorPosChar);
+	int _GetCursorLine(GUI_PCSTR pText, int CursorPosChar);
 	void _GetCursorXY(int *px, int *py);
 	void _InvalidateCursorXY();
 	void _SetScrollState();
@@ -87,7 +87,7 @@ public:
 	void _DeleteChar();
 	int _InsertChar(uint16_t Char);
 	void _OnPaint();
-	void _OnTouch(WM_PARAM *pData);
+	void _OnMouse(WM_PARAM *pData);
 	int _AddKey(uint16_t Key);
 
 	static void _Callback(WObj *pWin, int msgid, WM_PARAM *pData, WObj *pWinSrc);
@@ -105,11 +105,11 @@ public:
 public:
 	static MultiEdit *Create(int x0, int y0, int xsize, int ysize,
 							 WObj *pParent, uint16_t Flags, uint16_t ExFlags,
-							 uint16_t Id, int BufferSize, const char *pText);
+							 uint16_t Id, int BufferSize, GUI_PCSTR pText);
 
 	static inline auto Create(int x0, int y0, int xsize, int ysize,
 							  WObj *pParent, uint16_t Id,
-							  uint16_t Flags, uint16_t ExFlags, const char *pText, int MaxLen) {
+							  uint16_t Flags, uint16_t ExFlags, GUI_PCSTR pText, int MaxLen) {
 		return Create(x0, y0, xsize, ysize, pParent, Flags, ExFlags, Id, MaxLen, pText);
 	}
 
@@ -134,7 +134,7 @@ public: // Property - BorderH
 	}
 	/* R */ inline auto BorderH() const { return HBorder; }
 public: // Property - Text
-	/* W */ void Text(const char *);
+	/* W */ void Text(GUI_PCSTR );
 	/* R */ inline auto Text() const { return pText; }
 public: // Property - InsertMode
 	inline void InsertMode(bool bEnable) { _SetFlag(bEnable, MULTIEDIT_CF_INSERT); }

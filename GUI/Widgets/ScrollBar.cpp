@@ -131,7 +131,7 @@ void ScrollBar::_OnPaint() {
 	GUI.PenColor(Props.aColor);
 	Fill(r);
 }
-void ScrollBar::_OnTouch(const PID_STATE *pState) {
+void ScrollBar::_OnMouse(const MOUSE_STATE *pState) {
 	if (!pState)
 		return;
 	if (!pState->Pressed) {
@@ -162,22 +162,20 @@ void ScrollBar::_OnTouch(const PID_STATE *pState) {
 	if (!(StatusEx & SCROLLBAR_CF__PRESSED))
 		_ScrollbarPressed();
 }
-void ScrollBar::_OnKey(const KEY_STATE *pKeyInfo) {
-	int Key = pKeyInfo->Key;
-	if (pKeyInfo->PressedCnt <= 0)
-		return;
-	switch (Key) {
+bool ScrollBar::_OnKey(KEY_STATE State) {
+	if (State.PressedCnt <= 0)
+		return true;
+	switch (State.Key) {
 	case GUI_KEY_RIGHT:
 	case GUI_KEY_DOWN:
 		Inc();
-		break;
+		return true;
 	case GUI_KEY_LEFT:
 	case GUI_KEY_UP:
 		Dec();
-		break;
-	default:
-		return;
+		return true;
 	}
+	return false;
 }
 
 WM_RESULT ScrollBar::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
@@ -188,12 +186,13 @@ WM_RESULT ScrollBar::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc
 	case WM_PAINT:
 		pObj->_OnPaint();
 		return 0;
-	case WM_MOUSE_KEY:
-		pObj->_OnTouch(Param);
+	case WM_MOUSE:
+		pObj->_OnMouse(Param);
 		return 0;
 	case WM_KEY:
-		pObj->_OnKey(Param);
-		return 0;
+		if (pObj->_OnKey(Param))
+			return true;
+		break;
 	case WM_DELETE:
 		pObj->_InvalidatePartner();
 		return 0;

@@ -36,14 +36,14 @@ public:
 	} static DefaultProps;
 
 private:
-	Property Props;
+	Property Props = DefaultProps;
 	GUI_STRING text;
 	uint8_t CurrentState = 0;
 
 private:
 	void _OnPaint();
-	void _OnTouch(const PID_STATE *pState);
-	bool _OnKey(const KEY_STATE *pKeyInfo);
+	void _OnMouse(const MOUSE_STATE *pState);
+	bool _OnKey(KEY_STATE);
 
 	static WM_RESULT _Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc);
 
@@ -51,7 +51,7 @@ public:
 	CheckBox(const SRect &rc = {},
 			 PWObj pParent = nullptr, uint16_t Id = 0,
 			 WM_CF Flags = WC_HIDE, WC_EX FlagsEx = 0,
-			 const char *pText = nullptr);
+			 GUI_PCSTR pText = nullptr);
 	CheckBox(const WM_CREATESTRUCT &wc) : CheckBox(
 		wc.rect(),
 		wc.pParent, wc.Id,
@@ -92,8 +92,8 @@ public: // Property - Spacing
 		Invalidate();
 	}
 public: // Property - Text
-	/* R */ inline const char *Text() const { return text; }
-	/* W */ inline void Text(const char *s) {
+	/* R */ inline GUI_PCSTR Text() const { return text; }
+	/* W */ inline void Text(GUI_PCSTR s) {
 		text = s;
 		Invalidate();
 	}

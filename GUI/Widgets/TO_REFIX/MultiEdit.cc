@@ -44,7 +44,7 @@ int MultiEdit::_GetNumChars() {
 int MultiEdit::_GetXSize() {
 	return this->InsideRectScrollBar().xsize() - (this->HBorder + 1) * 2;
 }
-int MultiEdit::_GetNumCharsInPrompt(const char *pText) {
+int MultiEdit::_GetNumCharsInPrompt(GUI_PCSTR pText) {
 	int r = 0;
 	auto pString = this->pText;
 	auto pEndPrompt = pString + GUI_UC__NumChars2NumBytes(pString, this->NumCharsPrompt);
@@ -53,13 +53,13 @@ int MultiEdit::_GetNumCharsInPrompt(const char *pText) {
 	}
 	return r;
 }
-int MultiEdit::_NumChars2XSize(const char *pText, int NumChars) {
+int MultiEdit::_NumChars2XSize(GUI_PCSTR pText, int NumChars) {
 	int xSize = 0;
 	while (--NumChars)
 		xSize += GUI.Font()->XDist(GUI_UC__GetCharCodeInc(&pText));
 	return xSize;
 }
-int MultiEdit::_WrapGetNumCharsDisp(const char *pText) {
+int MultiEdit::_WrapGetNumCharsDisp(GUI_PCSTR pText) {
 	int xSize, r;
 	xSize = _GetXSize();
 	if (this->Flags & MULTIEDIT_CF_PASSWORD) {
@@ -92,7 +92,7 @@ int MultiEdit::_WrapGetNumCharsDisp(const char *pText) {
 	}
 	return r;
 }
-int MultiEdit::_WrapGetNumBytesToNextLine(const char *pText) {
+int MultiEdit::_WrapGetNumBytesToNextLine(GUI_PCSTR pText) {
 	int xSize, r;
 	xSize = _GetXSize();
 	if (this->Flags & MULTIEDIT_CF_PASSWORD) {
@@ -111,7 +111,7 @@ int MultiEdit::_WrapGetNumBytesToNextLine(const char *pText) {
 	}
 	return r;
 }
-int MultiEdit::_GetCharDistX(const char *pText) {
+int MultiEdit::_GetCharDistX(GUI_PCSTR pText) {
 	int r;
 	if ((this->Flags & MULTIEDIT_CF_PASSWORD) && (_GetNumCharsInPrompt(pText) == 0)) {
 		r = GUI.Font()->XDist(MULTIEDIT_PASSWORD_CHAR);
@@ -123,7 +123,7 @@ int MultiEdit::_GetCharDistX(const char *pText) {
 	}
 	return r;
 }
-void MultiEdit::_DispString(const char *pText, SRect *pRect) {
+void MultiEdit::_DispString(GUI_PCSTR pText, SRect *pRect) {
 	int NumCharsDisp;
 	NumCharsDisp = _WrapGetNumCharsDisp(pText);
 	if (this->Flags & MULTIEDIT_CF_PASSWORD) {
@@ -173,9 +173,9 @@ void MultiEdit::_ClearCache() {
 	this->CacheFirstVisibleByte = 0;
 	this->CacheFirstVisibleLine = 0;
 }
-int MultiEdit::_GetCursorLine(const char *pText, int CursorPosChar) {
-	const char *pCursor;
-	const char *pEndLine;
+int MultiEdit::_GetCursorLine(GUI_PCSTR pText, int CursorPosChar) {
+	GUI_PCSTR pCursor;
+	GUI_PCSTR pEndLine;
 	int NumChars, ByteOffsetNewCursor, LineNumber = 0;
 	ByteOffsetNewCursor = GUI_UC__NumChars2NumBytes(pText, CursorPosChar);
 	pCursor = pText + ByteOffsetNewCursor;
@@ -202,8 +202,8 @@ void MultiEdit::_GetCursorXY(int *px, int *py) {
 		int CursorLine = 0, x = 0;
 		GUI.Font(this->pFont);
 		if (this->pText) {
-			const char *pLine;
-			const char *pCursor;
+			GUI_PCSTR pLine;
+			GUI_PCSTR pCursor;
 			pLine = this->pText;
 			pCursor = pLine + this->CursorPosByte;
 			CursorLine = this->CursorLine;
@@ -442,7 +442,7 @@ void MultiEdit::_MoveCursor2LinePos1() {
 int MultiEdit::_IsOverwriteAtThisChar() {
 	int r = 0;
 	if (this->pText && !(this->Flags & MULTIEDIT_CF_INSERT)) {
-		const char *pText;
+		GUI_PCSTR pText;
 		int CurPos, Line1, Line2;
 		uint16_t Char;
 		pText = this->pText;
@@ -468,7 +468,7 @@ int MultiEdit::_IsOverwriteAtThisChar() {
 }
 int MultiEdit::_GetCursorSizeX() {
 	if (_IsOverwriteAtThisChar()) {
-		const char *pText;
+		GUI_PCSTR pText;
 		pText = this->pText;
 		pText += this->CursorPosByte;
 		return _GetCharDistX(pText);
@@ -578,7 +578,7 @@ void MultiEdit::_OnPaint() {
 	rClip.y1 = this->SizeY() - EffectSize - 1;
 	prOldClip = WObj::SetUserClipRect(&rClip);
 	if (this->pText) {
-		const char *pText;
+		GUI_PCSTR pText;
 		int Line = 0;
 		int xSize = _GetXSize();
 		int NumVisLines = _GetNumVisLines();
@@ -619,7 +619,7 @@ void MultiEdit::_OnPaint() {
 	WObj::SetUserClipRect(prOldClip);
 	this->DrawDown();
 }
-void MultiEdit::_OnTouch(WM_PARAM *pData) {
+void MultiEdit::_OnMouse(WM_PARAM *pData) {
 	int Notification;
 	auto pState = (const PidState *)*pData;
 	if (*pData) {
@@ -762,8 +762,8 @@ void MultiEdit::_Callback(WObj *pWin, int msgid, WM_PARAM *pData, WObj *pWinSrc)
 		case WM_PAINT:
 			pObj->_OnPaint();
 			return;
-		case WM_MOUSE_KEY:
-			pObj->_OnTouch(pData);
+		case WM_MOUSE:
+			pObj->_OnMouse(pData);
 			break;
 		case WM_DELETE:
 			GUI_MEM_Free(pObj->pText);
@@ -801,7 +801,7 @@ void MultiEdit::_SetWrapMode(GUI_WRAPMODE WrapMode) {
 
 MultiEdit *MultiEdit::Create(
 	int x0, int y0, int xsize, int ysize, WObj *pParent, uint16_t Flags, uint16_t ExFlags,
-	uint16_t Id, int BufferSize, const char *pText) {
+	uint16_t Id, int BufferSize, GUI_PCSTR pText) {
 	//if ((xsize == 0) && (ysize == 0) && (x0 == 0) && (y0 == 0)) {
 	//	auto &&rect = pParent->ClientRect();
 	//	xsize = rect.x1 - rect.x0 + 1;
@@ -850,7 +850,7 @@ void MultiEdit::Font(CFont *pFont) {
 		_InvalidateTextSizeX();
 	}
 }
-void MultiEdit::Text(const char *pNew) {
+void MultiEdit::Text(GUI_PCSTR pNew) {
 	int NumCharsNew = 0, NumCharsOld = 0;
 	int NumBytesNew = 0, NumBytesOld = 0;
 	if (pText) {
@@ -906,7 +906,7 @@ void MultiEdit::PasswordMode(bool bEnable) {
 //		pObj->Invalidate();
 //	}
 //}
-//void MULTIEDIT_SetPrompt(MultiEdit *pObj, const char *pPrompt) {
+//void MULTIEDIT_SetPrompt(MultiEdit *pObj, GUI_PCSTR pPrompt) {
 //	int NumCharsNew = 0, NumCharsOld = 0;
 //	int NumBytesNew = 0, NumBytesOld = 0;
 //	char *pText;

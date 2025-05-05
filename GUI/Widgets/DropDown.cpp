@@ -1,5 +1,7 @@
 #include "DropDown.h"
 
+DropDown::Property DropDown::DefaultProps;
+
 static int _Tolower(int Key) {
 	return Key >= 0x41 && Key <= 0x5a ? Key + 0x20 : Key;
 }
@@ -58,7 +60,7 @@ void DropDown::_OnPaint() const {
 	_DrawTriangleDown((r.x1 + r.x0) / 2, r.y0 + 5, (r.y1 - r.y0 - 8) / 2);
 	DrawUp(r);
 }
-bool DropDown::_OnTouch(const PID_STATE *pState) {
+bool DropDown::_OnMouse(const MOUSE_STATE *pState) {
 	if (pState) {
 		if (pState->Pressed)
 			NotifyParent(WN_CLICKED);
@@ -69,9 +71,9 @@ bool DropDown::_OnTouch(const PID_STATE *pState) {
 		NotifyParent(WN_MOVED_OUT);
 	return false;
 }
-bool DropDown::_OnKey(const KEY_STATE *pKi) {
-	if (pKi->PressedCnt > 0)
-		return AddKey(pKi->Key);
+bool DropDown::_OnKey(KEY_STATE State) {
+	if (State.PressedCnt > 0)
+		return AddKey(State.Key);
 	return false;
 }
 
@@ -84,18 +86,19 @@ WM_RESULT DropDown::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc)
 		case WM_PAINT:
 			pObj->_OnPaint();
 			return 0;
-		case WM_MOUSE_KEY:
-			pObj->_OnTouch(Param);
+		case WM_MOUSE:
+			pObj->_OnMouse(Param);
 			return 0;
 		case WM_KEY:
-			if (!pObj->_OnKey(Param))
-				return 0;
+			if (pObj->_OnKey(Param))
+				return true;
 			break;
 		case WM_MOUSE_CHANGED:
-			if (!IsExpandedBeforeMsg) /* Make sure we do not react a second time */
-				if (const PID_CHANGED_STATE *pInfo = Param)
-					if (pInfo->Pressed)
-						pObj->Expand();
+			if (!IsExpandedBeforeMsg) { /* Make sure we do not react a second time */
+				MOUSE_CHANGED_STATE State = Param;
+				if (State.Pressed)
+					pObj->Expand();
+			}
 			break;
 		case WM_DELETE:
 			pObj->~DropDown();
@@ -190,7 +193,7 @@ bool DropDown::AddKey(int Key) {
 	return false;
 }
 
-void DropDown::Insert(uint16_t Index, const char *s) {
+void DropDown::Insert(uint16_t Index, GUI_PCSTR s) {
 	if (!s) return;
 	auto NumItems = this->NumItems();
 	if (Index >= NumItems) {

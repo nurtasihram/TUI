@@ -26,21 +26,25 @@ struct SCROLL_STATE {
 struct DIALOG_STATE {
 	int Done = 0, ReturnValue = 0;
 };
-struct PID_CHANGED_STATE : PID_STATE {
-	uint8_t StatePrev = 0;
+struct MOUSE_CHANGED_STATE : MOUSE_STATE {
+	int8_t StatePrev = 0;
+	MOUSE_CHANGED_STATE(Point NowPos, int8_t NewState, int8_t OldState) :
+		MOUSE_STATE(NowPos, NewState), StatePrev(OldState) {}
 };
 struct WM_PARAM {
 	uint64_t Data = 0;
 	WM_PARAM() {}
 	WM_PARAM(int Data) : Data(Data) {}
+	WM_PARAM(bool Data) : Data(Data) {}
 	template<class AnyType>
 	WM_PARAM(const AnyType &t) : Data(*(const uint64_t *)&t)
-	{ static_assert(sizeof(t) <= 8); }
+	{ static_assert(sizeof(t) <= sizeof(WM_PARAM)); }
 	template<class AnyType>
 	inline operator AnyType() const {
-		static_assert(sizeof(AnyType) <= 8);
+		static_assert(sizeof(AnyType) <= sizeof(WM_PARAM));
 		return *(const AnyType *)&Data;
 	}
+	inline operator bool() const { return Data; }
 };
 using WM_RESULT = WM_PARAM;
 
@@ -53,7 +57,7 @@ struct WM_CREATESTRUCT {
 	int16_t x = 0, y = 0;
 	int16_t xsize = 0, ysize = 0;
 	inline SRect rect() const { return SRect::left_top({ x, y }, { xsize, ysize }); }
-	const char *pCaption = nullptr;
+	GUI_PCSTR pCaption = nullptr;
 	PWObj pParent = nullptr;
 	uint16_t Id = 0;
 	WM_CF Flags = WC_HIDE;
@@ -68,7 +72,7 @@ struct WM_CREATESTRUCT {
 		int32_t i32_2[2];
 		uint32_t u32_2[2];
 		void *ptr;
-		const char *pString;
+		GUI_PCSTR pString;
 		Param(void *ptr = nullptr) : ptr(ptr) {}
 		Param(int64_t i64) : i64(i64) {}
 		Param(uint64_t u64) : u64(u64) {}
@@ -77,7 +81,7 @@ struct WM_CREATESTRUCT {
 	WM_CREATESTRUCT(
 		uint16_t Class,
 		int16_t x, int16_t y, int16_t xsize, int16_t ysize,
-		const char *pCaption,
+		GUI_PCSTR pCaption,
 		int16_t Id, WM_CF Flags = WC_HIDE, uint16_t FlagsEx = 0,
 		void *pPara = nullptr) :
 		Class(Class),
@@ -88,7 +92,7 @@ struct WM_CREATESTRUCT {
 	WM_CREATESTRUCT(
 		uint16_t Class,
 		int16_t x, int16_t y, int16_t xsize, int16_t ysize,
-		const char *pCaption,
+		GUI_PCSTR pCaption,
 		int16_t Id, WM_CF Flags, uint16_t FlagsEx,
 		Param Para) :
 		Class(Class),
@@ -243,8 +247,8 @@ public:
 	/// @param Notification 通知ID
 	inline void NotifyParent(int Notification) { SendToParent(WM_NOTIFY_CHILD, Notification); }
 
-	static bool HandlePID();
-	static inline PID_STATE PrevPidState() { return _StateLast; }
+	static bool HandleMouse();
+	static inline MOUSE_STATE PrevPidState() { return _StateLast; }
 
 	/// @brief 鍵盤事件
 	/// @param Key 鍵位
@@ -270,9 +274,9 @@ public:
 private:
 	WM_RESULT _SendMessage(int MsgId, WM_PARAM Param = 0, PWObj pSrc = nullptr);
 	void _SendMessageIfEnabled(int MsgId, WM_PARAM Param, PWObj pSrc = nullptr);
-	void _SendTouchMessage(int MsgId, PID_STATE *pState);
+	void _SendMouseMessage(int MsgId, MOUSE_STATE *pState);
 	bool _IsInModalArea();
-	static PID_STATE _StateLast;
+	static MOUSE_STATE _StateLast;
 	struct CriticalHandles {
 		static CriticalHandles *pFirst, Last, Modal;
 		PWObj pWin = nullptr;
@@ -537,11 +541,8 @@ public: // Property - Client
 	/* R */ inline PWObj Client() const { return const_cast<PWObj>(this)->Client(); }
 public: // Property - Parent
 	/* R */ inline PWObj Parent() const { return pParent; }
-	/* W */ void Parent(PWObj pParent);
-	/* W */ inline void Parent(PWObj pParent, Point ptcPosition) {
-		Parent(pParent);
-		Position(ptcPosition);
-	}
+	/* W */ inline void Parent(PWObj pParent) { Parent(pParent, Position()); }
+	/* W */ void Parent(PWObj pParent, Point ptcPosition);
 public: // Property - FirstChild
 	/* R */ inline PWObj FirstChild() { return pFirstChild; }
 	/* R */ inline PWObj FirstChild() const { return pFirstChild; }
@@ -559,7 +560,7 @@ public: // Property - ID
 	/* R */ inline uint16_t ID() const { return const_cast<PWObj>(this)->SendMessage(WM_GET_ID); }
 	/* W */ inline void ID(uint16_t id) { this->SendMessage(WM_SET_ID, id); }
 public: // Property - ClassName
-	/* R */ inline const char *ClassName() const { return const_cast<PWObj>(this)->SendMessage(WM_GET_CLASS); }
+	/* R */ inline GUI_PCSTR ClassName() const { return const_cast<PWObj>(this)->SendMessage(WM_GET_CLASS); }
 public: // Property - DialogItem
 	/* R */ PWObj DialogItem(uint16_t Id);
 	/* R */ inline PWObj DialogItem(uint16_t Id) const { return const_cast<PWObj>(this)->DialogItem(Id); }
@@ -598,10 +599,10 @@ struct FOCUS_CHANGED_STATE {
 
 struct WIDGET_ITEM_DRAW_INFO {
 	PWObj pWin;
-	int Cmd;
 	/* WIDGET_ITEM_GET_XSIZE, WIDGET_ITEM_GET_YSIZE, WIDGET_ITEM_DRAW, */
-	int ItemIndex;
-	int x0, y0;
+	int16_t Cmd;
+	int16_t ItemIndex;
+	Point Pos;
 };
 typedef int WIDGET_DRAW_ITEM_FUNC(const WIDGET_ITEM_DRAW_INFO *pDrawItemInfo);
 
@@ -654,8 +655,8 @@ protected: // Effective
 protected: // Property - EffectSize
 	/* R */ inline auto EffectSize() const { return pEffect ? pEffect->EffectSize : 0; }
 public: // Property - DefaultEffect
-	static void DefaultEffect(const EffectItf *pEffect) { pEffectDefault = pEffect; }
-	static auto DefaultEffect() { return pEffectDefault; }
+	static void DefaultEffect(const EffectItf &effect) { pEffectDefault = &effect; }
+	static auto&DefaultEffect() { return pEffectDefault ? *pEffectDefault : EffectItf::None; }
 #pragma endregion
 
 protected:
@@ -679,8 +680,8 @@ protected:
 
 #pragma region Properties
 public: // Property - Effect
-	/* R */ inline auto Effect() const { return pEffect; }
-	/* W */ inline void Effect(const EffectItf *pEffect) { SendMessage(WM_WIDGET_SET_EFFECT, pEffect); }
+	/* R */ inline auto&Effect() const { return pEffect ? *pEffect : EffectItf::None; }
+	/* W */ inline void Effect(const EffectItf &effect) { SendMessage(WM_WIDGET_SET_EFFECT, &effect); }
 public: // Property - ClientRect
 	/* R */ inline SRect ClientRect() const {
 		auto &&r = WObj::ClientRect();
@@ -725,5 +726,5 @@ enum WIDGET_CLASSES : uint16_t {
 	WCLS_STATIC,
 	WCLS_FRAME
 };
-extern const char *ClassNames[];
+extern GUI_PCSTR ClassNames[];
 #pragma endregion

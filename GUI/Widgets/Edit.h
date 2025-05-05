@@ -44,7 +44,7 @@ private:
 	bool bInsert = false;
 	uint8_t XSizeCursor = 1;
 	tEDIT_AddKeyEx *pfAddKeyEx;
-	Property Props;
+	Property Props = DefaultProps;
 
 private:
 	void _CursorAtPixel(int xPos);
@@ -57,7 +57,8 @@ private:
 	void _CursorPos(int CursorPos);
 
 	void _OnPaint();
-	void _OnTouch(const PID_STATE *pState);
+	void _OnMouse(const MOUSE_STATE *pState);
+	bool _OnKey(KEY_STATE);
 	static WM_RESULT _Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc);
 
 public:
@@ -105,8 +106,8 @@ public: // Property - TextAlign
 		Invalidate();
 	}
 public: // Property - Text
-	/* R */ inline const char *Text() const { return pText; }
-	/* W */ void Text(const char *pText);
+	/* R */ inline GUI_PCSTR Text() const { return pText; }
+	/* W */ void Text(GUI_PCSTR pText);
 public: // Property - InsertMode
 	/* R */ inline auto InsertMode() const { return bInsert; }
 	/* W */ inline void InsertMode(bool bInsert) { this->bInsert = bInsert; }

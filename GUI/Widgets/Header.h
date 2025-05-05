@@ -26,12 +26,12 @@ private:
 			GUI_MEM_Free(pDrawObj);
 			pDrawObj = nullptr;
 		}
-		inline operator const char *() const {
+		inline operator GUI_PCSTR () const {
 			return Text;
 		}
 	};
 	GUI_Array<Column> Columns;
-	Property Props;
+	Property Props = DefaultProps;
 	int16_t CapturePosX = -1;
 	int16_t CaptureItem = -1;
 	uint16_t scrollPos = 0;
@@ -39,8 +39,8 @@ private:
 private:
 	int _GetItemIndex(Point Pos);
 
-	void _HandlePID(PID_STATE State);
-	bool _HandleDrag(int MsgId, const PID_STATE *pState);
+	void _HandleMouse(MOUSE_STATE State);
+	bool _HandleDrag(int MsgId, const MOUSE_STATE *pState);
 
 	void _OnPaint();
 
@@ -50,13 +50,13 @@ public:
 	Header(const SRect &rc,
 		   PWObj pParent, uint16_t Id,
 		   WM_CF Flags, HEADER_CF FlagsEx = 0,
-		   const char *pTexts = nullptr,
+		   GUI_PCSTR pTexts = nullptr,
 		   const uint16_t *pacWidth = nullptr);
 protected:
 	~Header() = default;
 
 public:
-	void Add(const char *pText, int Width = -1, TEXTALIGN Align = TEXTALIGN_LEFT);
+	void Add(GUI_PCSTR pText, int Width = -1, TEXTALIGN Align = TEXTALIGN_LEFT);
 
 	void Delete(unsigned Index);
 
@@ -99,8 +99,8 @@ public: // Property - ItemAlign
 		}
 	}
 public: // Property - ItemText
-	/* R */ inline const char *ItemText(uint16_t Index) const { return Columns[Index].Text; }
-	/* W */ inline void ItemText(uint16_t Index, const char *pText) {
+	/* R */ inline GUI_PCSTR ItemText(uint16_t Index) const { return Columns[Index].Text; }
+	/* W */ inline void ItemText(uint16_t Index, GUI_PCSTR pText) {
 		if (Index < Columns.NumItems())
 			Columns[Index].Text = pText;
 	}

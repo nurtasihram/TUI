@@ -85,7 +85,7 @@ void Radio::_OnPaint() const {
 				*pBmCheck,
 				{ Props.Border + (pBmRadio->Size.x - pBmCheck->Size.x) / 2,
 				  Props.Border + (pBmRadio->Size.y - pBmCheck->Size.y) / 2 + y });
-		const char *pText = TextArray[i];
+		GUI_PCSTR pText = TextArray[i];
 		if (!pText)
 			continue;
 		if (!*pText)
@@ -105,7 +105,7 @@ void Radio::_OnPaint() const {
 		GUI.DrawFocus(rFocus);
 	}
 }
-void Radio::_OnTouch(const PID_STATE *pState) {
+void Radio::_OnMouse(const MOUSE_STATE *pState) {
 	int Notification;
 	bool Hit = 0;
 	if (pState) {
@@ -130,10 +130,10 @@ void Radio::_OnTouch(const PID_STATE *pState) {
 	if (Hit)
 		GUI.Key(Id);
 }
-bool Radio::_OnKey(const KEY_STATE *pKeyInfo) {
-	if (pKeyInfo->PressedCnt <= 0)
+bool Radio::_OnKey(KEY_STATE State) {
+	if (State.PressedCnt <= 0)
 		return false;
-	switch (pKeyInfo->Key) {
+	switch (State.Key) {
 	case GUI_KEY_RIGHT:
 	case GUI_KEY_DOWN:
 		Inc();
@@ -156,13 +156,13 @@ WM_RESULT Radio::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 	case WM_PAINT:
 		pObj->_OnPaint();
 		return 0;
-	case WM_MOUSE_KEY:
-		pObj->_OnTouch(Param);
+	case WM_MOUSE:
+		pObj->_OnMouse(Param);
 		return 0;
 	case WM_KEY:
-		if (!pObj->_OnKey(Param))
-			break;
-		return 0;
+		if (pObj->_OnKey(Param))
+			return true;
+		break;
 	case WM_DELETE:
 		pObj->~Radio();
 		return 0;
@@ -191,7 +191,7 @@ Radio::Radio(const SRect &rc,
 Radio::Radio(const SRect &rc,
 			 PWObj pParent, uint16_t Id,
 			 WM_CF Flags, uint16_t FlagsEx,
-			 const char *pItems, int Spacing) :
+			 GUI_PCSTR pItems, int Spacing) :
 	Radio(rc,
 		  pParent, Id,
 		  Flags, FlagsEx,

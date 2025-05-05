@@ -22,7 +22,7 @@ public:
 	} static DefaultProps;
 
 private:
-	Property Props;
+	Property Props = DefaultProps;
 	GUI_STRING text;
 
 private:
@@ -34,7 +34,7 @@ public:
 	Static(const SRect &rc = {},
 		   PWObj pParent = nullptr, uint16_t Id = 0,
 		   WM_CF Flags = WC_HIDE, STATIC_CF FlagsEx = 0,
-		   const char *pText = nullptr);
+		   GUI_PCSTR pText = nullptr);
 	Static(const WM_CREATESTRUCT &wc) :
 		Static(wc.rect(),
 			   wc.pParent, wc.Id,
@@ -69,8 +69,8 @@ public: // Property - TextAlign
 		Invalidate();
 	}
 public: // Property - Text
-	/* R */ inline const char *Text() const { return text; }
-	/* W */ inline void Text(const char *pText) {
+	/* R */ inline GUI_PCSTR Text() const { return text; }
+	/* W */ inline void Text(GUI_PCSTR pText) {
 		text = pText;
 		Invalidate();
 	}

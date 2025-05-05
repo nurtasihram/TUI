@@ -13,17 +13,17 @@ public:
 		RGBC Color{ RGBC_GRAY(0xC0) };
 	} static DefaultProps;
 private:
-	Property Props;
-	int16_t Min, Max, v;
-	int16_t nTicks, width = 8;
+	Property Props = DefaultProps;
+	int16_t Min = 0, Max = 100, v = 0;
+	int16_t nTicks = 0, width = 8;
 
 private:
 	void _SliderPressed();
 	void _Released();
 
 	void _OnPaint() const;
-	void _OnTouch(const PID_STATE *pState);
-	void _OnKey(const KEY_STATE *pKeyInfo);
+	void _OnMouse(const MOUSE_STATE *pState);
+	bool _OnKey(KEY_STATE);
 	
 	static WM_RESULT _Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc);
 

@@ -3,90 +3,90 @@
 enum WM_MESSSAGES : uint16_t {
 	 WM_NULL = 0,
 
-	 /// @brief å®Œæˆå‰µå»ºçª—é«”å¾ŒéŸ¿æ‡‰
+	 /// @brief §¹¦¨³Ð«Øµ¡Åé«áÅTÀ³
 	 WM_CREATE,
-	 /// @brief å®Œæˆåˆªé™¤çª—é«”å¾ŒéŸ¿æ‡‰
+	 /// @brief §¹¦¨§R°£µ¡Åé«áÅTÀ³
 	 WM_DELETE,
-	 /// @brief ç¹ªè£½çª—é«”å‰éŸ¿æ‡‰
+	 /// @brief Ã¸»sµ¡Åé«eÅTÀ³
 	 /// @param SRect rInvalid
 	 WM_PAINT,
 
-	 /// @brief å®Œæˆç§»å‹•çª—é«”å¾ŒéŸ¿æ‡‰
+	 /// @brief §¹¦¨²¾°Êµ¡Åé«áÅTÀ³
 	 WM_MOVE,
-	 /// @brief å®Œæˆè£å‰ªçª—é«”å¾ŒéŸ¿æ‡‰
+	 /// @brief §¹¦¨µô°Åµ¡Åé«áÅTÀ³
 	 WM_SIZE,
 
-	 /// @brief éµç›¤åœ¨çª—é«”å†…æ´»èºæ™‚ç›¸æ‡‰
-	 /// @param KEY_STATE æŒ‰éµç‹€æ…‹
+	 /// @brief Áä½L¦bµ¡Åé¤W¬¡ÅD®ÉÅTÀ³
+	 /// @param KEY_STATE «öÁäª¬ºA
 	 WM_KEY,
 
-	 /// @brief é¼ éµåœ¨çª—é«”å†…æ´»èºæ™‚ç›¸æ‡‰
-	 /// @param PID_STATE PIDç›¸å°ç‹€æ…‹
-	 WM_MOUSE_KEY,
-	 /// @brief é¼ æ¨™åœ¨å­çª—é«”å†…æ´»èºæ™‚ç›¸æ‡‰
-	 /// @param PID_STATE PIDç›¸å°ç‹€æ…‹
-	 /// @param pSrc å­çª—é«”
+	 /// @brief ¹«Áä¦bµ¡Åé¤W¬¡ÅD®ÉÅTÀ³
+	 /// @param MOUSE_STATE PID¬Û¹ïª¬ºA
+	 WM_MOUSE,
+	 /// @brief ¹«¼Ð¦b¤lµ¡Åé¤W¬¡ÅD®ÉÅTÀ³
+	 /// @param MOUSE_STATE PID¬Û¹ïª¬ºA
+	 /// @param pSrc ¤lµ¡Åé
 	 WM_MOUSE_CHILD,
-	 /// @brief é¼ æ¨™åœ¨çª—é«”å†…æ´»èºæ™‚ç›¸æ‡‰
-	 /// @param PID_STATE PIDç›¸å°ç‹€æ…‹
+	 /// @brief ¹«¼Ð¦bµ¡Åé¤W¬¡ÅD®ÉÅTÀ³
+	 /// @param MOUSE_STATE PID¬Û¹ïª¬ºA
 	 WM_MOUSE_OVER,
-	 /// @brief é¼ æ¨™åœ¨çª—é«”å†…
-	 /// @param PID_CHANGED_STATE PIDç›¸å°æ”¹è®Šç‹€æ…‹
+	 /// @brief ¹«¼Ð¦bµ¡Åé¤W
+	 /// @param MOUSE_CHANGED_STATE PID¬Û¹ï§ïÅÜª¬ºA
 	 WM_MOUSE_CHANGED,
 
-	 /// @brief çª—é«”æ•ç²é‡‹æ”¾å¾ŒéŸ¿æ‡‰
+	 /// @brief µ¡Åé®·ÀòÄÀ©ñ«áÅTÀ³
 	 WM_CAPTURE_RELEASED,
 
-	 /// @brief æ”¶å–çª—é«”ä½¿èƒ½ç‹€æ…‹æ”¹è®Šé€šçŸ¥
-	 /// @param bool æ˜¯å¦ä½¿èƒ½
+	 /// @brief ¦¬¨úµ¡Åé¨Ï¯àª¬ºA§ïÅÜ³qª¾
+	 /// @param bool ¬O§_¨Ï¯à
 	 WM_NOTIFY_ENABLE,
-	 /// @brief æ”¶å–çª—é«”ç„¦é»žç‹€æ…‹æ”¹è®Šé€šçŸ¥
-	 /// @param FOCUS_CHANGED_STATE ç„¦é»žç‹€æ…‹
+	 /// @brief ¦¬¨úµ¡ÅéµJÂIª¬ºA§ïÅÜ³qª¾
+	 /// @param FOCUS_CHANGED_STATE µJÂIª¬ºA
 	 WM_NOTIFY_CHILD_HAS_FOCUS,
-	 /// @brief æ”¶å–å®¢æˆ¶çª—é«”æ”¹è®Šé€šçŸ¥
+	 /// @brief ¦¬¨ú«È¤áµ¡Åé§ïÅÜ³qª¾
 	 WM_NOTIFY_CLIENT_CHANGE,
-	 /// @brief æ”¶å–å­çª—é«”è¨Šæ¯é€šçŸ¥
-	 /// @param uint16_t é€šçŸ¥ID
+	 /// @brief ¦¬¨ú¤lµ¡Åé°T®§³qª¾
+	 /// @param uint16_t ³qª¾ID
 	 WM_NOTIFY_CHILD,
-	 /// @brief æ”¶å–å­çª—é«”è¨Šæ¯é€šçŸ¥åå°„
-	 /// @param uint16_t é€šçŸ¥ID
+	 /// @brief ¦¬¨ú¤lµ¡Åé°T®§³qª¾¤Ï®g
+	 /// @param uint16_t ³qª¾ID
 	 WM_NOTIFY_CHILD_REFLECT,
 
-	 /// @brief ç²å–çª—é«”é¡žå
-	 /// @return æŒ‡å‘éœæ…‹åªè®€çš„çª—é«”é¡žåå­—ä¸²
+	 /// @brief Àò¨úµ¡ÅéÃþ¦W
+	 /// @return «ü¦VÀRºA¥uÅªªºµ¡ÅéÃþ¦W¦r¦ê
 	 WM_GET_CLASS,
-	 /// @brief ç²å–çª—é«”å®¢æˆ¶çª—é«”
-	 /// @return WObjæŒ‡é‡
+	 /// @brief Àò¨úµ¡Åé«È¤áµ¡Åé
+	 /// @return WObj«ü°w
 	 WM_GET_CLIENT_WINDOW,
-	 /// @brief ç²å–çª—é«”å†…éƒ¨çŸ©å½¢
+	 /// @brief Àò¨úµ¡Åé?³¡¯x§Î
 	 /// @return SRect 8 bytes
 	 WM_GET_INSIDE_RECT,
-	 /// @brief ç²å–çª—é«”å®¢æˆ¶çŸ©å½¢
+	 /// @brief Àò¨úµ¡Åé«È¤á¯x§Î
 	 /// @return SRect 8 bytes
 	 WM_GET_SERVE_RECT,
-	 /// @brief ç²å–çª—é«”èƒŒæ™¯é¡è‰²
-	 /// @return uint32_t R8G8B8A8æ ¼å¼çš„è‰²å½©
+	 /// @brief Àò¨úµ¡Åé­I´ºÃC¦â
+	 /// @return uint32_t R8G8B8A8®æ¦¡ªº¦â±m
 	 WM_GET_BKCOLOR,
-	 /// @brief ç²å–çª—é«”ID
+	 /// @brief Àò¨úµ¡ÅéID
 	 /// @return uint16_t ID
 	 WM_GET_ID,
-	 /// @brief è¨­ç½®çª—é«”ID
+	 /// @brief ³]¸mµ¡ÅéID
 	 /// @param uint16_t ID
 	 WM_SET_ID,
-	 /// @brief çª—é«”å°ç„¦
-	 /// @param bool è¨­ç½®/é‡ç½®ç„¦é»ž
+	 /// @brief µ¡Åé¹ïµJ
+	 /// @param bool ³]¸m/­«¸mµJÂI
 	 WM_FOCUS,
-	 /// @brief ç²å–çª—é«”æ˜¯å¦èƒ½å°ç„¦
-	 /// @return bool æ˜¯å¦èƒ½å°ç„¦
+	 /// @brief Àò¨úµ¡Åé¬O§_¯à¹ïµJ
+	 /// @return bool ¬O§_¯à¹ïµJ
 	 WM_FOCUSSABLE,
 
 	 WM_MENU,
 
-	 /// @brief åˆå§‹åŒ–å°è©±æ¡†
+	 /// @brief ªì©l¤Æ¹ï¸Ü®Ø
 	 WM_INIT_DIALOG,
-	 /// @brief æŒ‡å‘å°è©±æ¡†ç‹€æ…‹
-	 /// @param DIALOG_STATE* æŒ‡å‘è¦è¨­å®šçš„å°è©±æ¡†ç‹€æ…‹ï¼Œè‹¥ç‚ºNULLå‰‡è¿”å›žç•¶å‰ç‹€æ…‹
-	 /// @return DIALOG_STATE* æŒ‡å‘ç•¶å‰å°è©±æ¡†ç‹€æ…‹
+	 /// @brief «ü¦V¹ï¸Ü®Øª¬ºA
+	 /// @param DIALOG_STATE* «ü¦V­n³]©wªº¹ï¸Ü®Øª¬ºA¡A­Y¬°NULL«hªð¦^·í«eª¬ºA
+	 /// @return DIALOG_STATE* «ü¦V·í«e¹ï¸Ü®Øª¬ºA
 	 WM_HANDLE_DIALOG_STATUS,
 
 	_WM_WIDGET_BEGIN = 0x0300,

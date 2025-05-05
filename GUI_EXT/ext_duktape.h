@@ -1,6 +1,6 @@
 #pragma once
 
-#include "duktape.h"
+#include "./duktape/duktape.h"
 
 struct js_exception {
 	duk_errcode_t code;

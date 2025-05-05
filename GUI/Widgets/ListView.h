@@ -36,14 +36,13 @@ public:
 
 private:
 	struct Item {
-		PWObj pItem = nullptr;
 		GUI_STRING Text;
 		Item() {}
 	};
 	struct Column : public GUI_Array<Item> {
 	};
 	GUI_Array<Column> RowArray;
-	Property Props;
+	Property Props = DefaultProps;
 	SCROLL_STATE scrollStateV;
 	int16_t sel = -1;
 	SCROLL_STATE scrollStateH;
@@ -64,9 +63,9 @@ private:
 	void _NotifyOwner(int Notification);
 	void _SelFromPos(Point Pos);
 
-	void _OnTouch(const PID_STATE *pState);
 	void _OnPaint(SRect rClip) const;
-	bool _OnKey(int Key);
+	void _OnMouse(const MOUSE_STATE *pState);
+	bool _OnKey(KEY_STATE);
 
 	static WM_RESULT _Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc);
 
@@ -84,8 +83,8 @@ public:
 			Sel(sel - 1);
 	}
 
-	void AddRow(const char *pTexts);
-	void AddColumn(const char *pText, int Width = -1, TEXTALIGN Align = TEXTALIGN_LEFT);
+	bool AddRow(GUI_PCSTR pTexts);
+	void AddColumn(GUI_PCSTR pText, int Width = -1, TEXTALIGN Align = TEXTALIGN_LEFT);
 	void DeleteRow(uint16_t Index);
 	void DeleteColumn(uint16_t Index);
 
@@ -149,7 +148,7 @@ public: // Property - ColumnWidth
 	/* R */ inline auto ColumnWidth(uint16_t Index) const { return pHeader->ItemWidth(Index); }
 	/* W */ inline void ColumnWidth(uint16_t Index, uint16_t Width) { pHeader->ItemWidth(Index, Width); }
  public: // Property - ItemText
-	 /* W */ inline void ItemText(uint16_t Column, uint16_t Row, const char *s) {
+	 /* W */ inline void ItemText(uint16_t Column, uint16_t Row, GUI_PCSTR s) {
 		 if (Column >= NumColumns() || Row >= NumRows())
 			 return;
 		 RowArray[Row][Column].Text = s;

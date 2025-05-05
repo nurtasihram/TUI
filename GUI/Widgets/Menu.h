@@ -76,7 +76,7 @@ public:
 		MENU_MSGID MsgType;
 		uint16_t ItemId = 0;
 	};
-	Property Props;
+	Property Props = DefaultProps;
 	GUI_Array<Item> ItemArray;
 	PWObj pOwner = nullptr;
 	uint16_t Width = 0, Height = 0;
@@ -96,7 +96,7 @@ private:
 	bool _IsTopLevelMenu();
 	bool _HasEffect();
 	int _GetEffectSize();
-	int _CalcTextWidth(const char *sText);
+	int _CalcTextWidth(GUI_PCSTR sText);
 	int _GetItemWidth(unsigned Index);
 	int _GetItemHeight(unsigned Index);
 	int _CalcMenuSizeX();
@@ -117,11 +117,11 @@ private:
 	void _ActivateMenu(unsigned Index);
 	void _DeactivateMenu();
 	bool _ForwardMouseOverMsg(Point Pos);
-	bool _HandlePID(const PID_STATE &pid);
-	void _ForwardPIDMsgToOwner(int MsgId, PID_STATE *pState);
+	bool _HandleMouse(const MOUSE_STATE &pid);
+	void _ForwardPIDMsgToOwner(int MsgId, MOUSE_STATE *pState);
 	WM_RESULT _OnMenu(const MSG_DAT *pMsgData);
-	bool _OnTouch(const PID_STATE *pState);
-	bool _OnMouseOver(const PID_STATE *pState);
+	bool _OnMouse(const MOUSE_STATE *pState);
+	bool _OnMouseOver(const MOUSE_STATE *pState);
 	void _OnPaint();
 	void _SetPaintColors(const Menu::Item &Item, int ItemIndex) const;
 

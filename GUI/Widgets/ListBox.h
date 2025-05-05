@@ -10,7 +10,8 @@ constexpr	LISTBOX_CF
 enum LISTBOX_CI {
 	LISTBOX_CI_UNSEL = 0,
 	LISTBOX_CI_SEL,
-	LISTBOX_CI_SELFOCUS
+	LISTBOX_CI_SELFOCUS,
+	LISTBOX_CI_DISABLED
 };
 constexpr int LISTBOX_NOTIFICATION_LOST_FOCUS = WN_WIDGET;
 constexpr int16_t LISTBOX_ALL_ITEMS = -1;
@@ -41,7 +42,7 @@ private:
 		uint16_t xSize = 0, ySize = 0;
 		uint8_t Status = 0;
 	};
-	Property Props;
+	Property Props = DefaultProps;
 	GUI_Array<Item> ItemArray;
 	WIDGET_DRAW_ITEM_FUNC *pfDrawItem = nullptr;
 	PWObj pOwner = nullptr;
@@ -73,8 +74,9 @@ private:
 	int _GetItemFromPos(int x, int y);
 
 	void _OnPaint(SRect rClip);
-	void _OnTouch(const PID_STATE *pState);
-	void _OnMouseOver(const PID_STATE *pState);
+	void _OnMouse(const MOUSE_STATE *pState);
+	bool _OnKey(KEY_STATE);
+	void _OnMouseOver(const MOUSE_STATE *pState);
 	
 	static WM_RESULT _Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc);
 
@@ -86,7 +88,7 @@ public:
 	ListBox(const SRect &rc = {},
 			PWObj pParent = nullptr, uint16_t Id = 0,
 			WM_CF Flags = WC_HIDE, LISTBOX_CF FlagsEx = 0,
-			const char *pItems = nullptr);
+			GUI_PCSTR pItems = nullptr);
 	ListBox(const WM_CREATESTRUCT &wc) : ListBox(
 		wc.rect(),
 		wc.pParent, wc.Id,
@@ -98,8 +100,8 @@ protected:
 public:
 	bool AddKey(int Key);
 
-	void Add(const char *s);
-	void Insert(uint16_t Index, const char *s);
+	void Add(GUI_PCSTR s);
+	void Insert(uint16_t Index, GUI_PCSTR s);
 	void Delete(uint16_t Index);
 
 	void InvalidateItem(int Index);
@@ -162,8 +164,8 @@ public: // Property - ItemEnabled
 	/* R */ bool ItemEnabled(uint16_t Index) const;
 	/* W */ void ItemEnabled(uint16_t Index, bool bEnabled);
 public: // Property - ItemText
-	/* R */ inline const char *ItemText(uint16_t Index) const { return Index < ItemArray.NumItems() ? (const char *)ItemArray[Index].Text : nullptr; }
-	/* W */ void ItemText(uint16_t Index, const char *s);
+	/* R */ inline GUI_PCSTR ItemText(uint16_t Index) const { return Index < ItemArray.NumItems() ? (GUI_PCSTR )ItemArray[Index].Text : nullptr; }
+	/* W */ void ItemText(uint16_t Index, GUI_PCSTR s);
 public: // Property - NumItems
 	/* R */ inline auto NumItems() const { return ItemArray.NumItems(); }
 public: // Property - Sel

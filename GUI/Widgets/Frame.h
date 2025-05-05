@@ -5,7 +5,7 @@
 using	  FRAME_CF = WC_EX;
 constexpr FRAME_CF
 		  FRAME_CF_ACTIVE     = WC_EX_USER(3),
-		  FRAME_CF_MOVEABLE   = WC_EX_USER(4),
+		  FRAME_CF_UNMOVEABLE   = WC_EX_USER(4),
 		  FRAME_CF_RESIZEABLE = WC_EX_USER(5),
 		  FRAME_CF_TITLEVIS   = WC_EX_USER(6),
 		  FRAME_CF_MINIMIZED  = WC_EX_USER(7),
@@ -38,10 +38,11 @@ public:
 		uint16_t BorderSize{ 2 };
 		uint16_t IBorderSize{ 1 };
 		TEXTALIGN Align{ TEXTALIGN_VCENTER };
+		uint8_t Border{ 0 };
 	} static DefaultProps;
 
 private:
-	Property Props;
+	Property Props = DefaultProps;
 	WM_CB cb = nullptr;
 	Menu *pMenu = nullptr;
 	GUI_STRING Title;
@@ -63,7 +64,7 @@ private:
 	void _UpdatePositions();
 
 	void _ChangeWindowPosSize(Point);
-	bool _ForwardMouseOverMsg(int MsgId, PID_STATE State);
+	bool _ForwardMouseOverMsg(int MsgId, MOUSE_STATE State);
 	void _SetCapture(Point Pos, uint8_t Mode);
 	uint8_t _CheckReactBorder(Point Pos);
 
@@ -71,11 +72,11 @@ private:
 	void _RestoreMinimized();
 	void _RestoreMaximized();
 
-	void _OnTouch(const PID_STATE *pState);
-	bool _OnTouchResize(const PID_STATE *pState);
+	void _OnMouse(const MOUSE_STATE *pState);
+	bool _OnTouchResize(const MOUSE_STATE *pState);
 	void _OnPaint() const;
 	void _OnChildHasFocus(const FOCUS_CHANGED_STATE *pInfo);
-	bool _HandleResize(int MsgId, const PID_STATE *pState);
+	bool _HandleResize(int MsgId, const MOUSE_STATE *pState);
 
 	static WM_RESULT _cbClient(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc);
 	static WM_RESULT _Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc);
@@ -84,7 +85,7 @@ public:
 	Frame(const SRect &rc = {},
 		  PWObj pParent = nullptr, uint16_t Id = 0,
 		  WM_CF Flags = WC_HIDE, FRAME_CF FlagsEx = 0,
-		  const char *pTitle = nullptr, WM_CB cb = nullptr);
+		  GUI_PCSTR pTitle = nullptr, WM_CB cb = nullptr);
 	Frame(const WM_CREATESTRUCT &wc) : Frame(
 		wc.rect(),
 		wc.pParent, wc.Id,
@@ -132,13 +133,13 @@ public: // Property - ClientColor
 		Props.ClientColor = Color;
 		pClient->Invalidate();
 	}
-public: // Property - Moveable
-	/* R */ inline bool Moveable() const { return StatusEx & FRAME_CF_MOVEABLE; }
-	/* W */ inline void Moveable(bool bMoveable) {
-		if (bMoveable)
-			StatusEx |= FRAME_CF_MOVEABLE;
+public: // Property - Unmoveable
+	/* R */ inline bool Unmoveable() const { return StatusEx & FRAME_CF_UNMOVEABLE; }
+	/* W */ inline void Unmoveable(bool bUnmoveable) {
+		if (bUnmoveable)
+			StatusEx |= FRAME_CF_UNMOVEABLE;
 		else
-			StatusEx &= ~FRAME_CF_MOVEABLE;
+			StatusEx &= ~FRAME_CF_UNMOVEABLE;
 	}
 public: // Property - Resizeable
 	/* R */ inline bool Resizeable() const { return StatusEx & FRAME_CF_RESIZEABLE; }
@@ -165,8 +166,8 @@ public: // Property - BorderSize
 	/* R */ inline auto BorderSize() const { return Props.BorderSize; }
 	/* W */ void BorderSize(int Size);
 public: // Property - Text
-	/* R */ inline const char *Text() const { return Title; }
-	/* W */ inline void Text(const char *s) {
+	/* R */ inline GUI_PCSTR Text() const { return Title; }
+	/* W */ inline void Text(GUI_PCSTR s) {
 		GUI.SetText(&Title, s);
 		Invalidate();
 	}

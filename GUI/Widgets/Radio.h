@@ -25,7 +25,7 @@ public:
 	} static DefaultProps;
 
 private:
-	Property Props;
+	Property Props = DefaultProps;
 	GUI_Array<GUI_STRING> TextArray;
 	uint16_t height, spacing;
 	int16_t sel = 0;
@@ -37,8 +37,8 @@ private:
 	void _HandleSetValue(int16_t v);
 
 	void _OnPaint() const;
-	void _OnTouch(const PID_STATE *pState);
-	bool _OnKey(const KEY_STATE *pKeyInfo);
+	void _OnMouse(const MOUSE_STATE *pState);
+	bool _OnKey(KEY_STATE);
 
 	static WM_RESULT _Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc);
 
@@ -50,7 +50,7 @@ public:
 	Radio(const SRect &rc,
 		  PWObj pParent, uint16_t Id,
 		  WM_CF Flags, uint16_t FlagsEx,
-		  const char *pItems, int Spacing = 0);
+		  GUI_PCSTR pItems, int Spacing = 0);
 	Radio(const WM_CREATESTRUCT &wc) :
 		Radio(wc.rect(),
 			  wc.pParent, wc.Id,
@@ -86,12 +86,12 @@ public: // Property - TextColor
 			Invalidate();
 	}
 public: // Property - Text
-	/* R */ inline const char *Text(unsigned Index) const {
+	/* R */ inline GUI_PCSTR Text(unsigned Index) const {
 		if (Index < (unsigned)TextArray.NumItems())
 			return TextArray[Index];
 		return nullptr;
 	}
-	/* W */ void Text(unsigned Index, const char *pText) {
+	/* W */ void Text(unsigned Index, GUI_PCSTR pText) {
 		if (Index < TextArray.NumItems()) {
 			TextArray[Index] = pText;
 			Invalidate();

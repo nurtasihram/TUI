@@ -54,7 +54,7 @@ bool Edit::_IncrementBuffer(uint16_t AddBytes) {
 bool Edit::_IsSpaceInBuffer(uint16_t BytesNeeded) {
 	int NumBytes = 0;
 	if (text)
-		NumBytes = GUI.BytesChars(text);
+		NumBytes = GUI.NumBytes(text);
 	BytesNeeded += NumBytes - BufferSize + 1;
 	if (BytesNeeded > 0)
 		if (!_IncrementBuffer(BytesNeeded + EDIT_REALLOC_SIZE))
@@ -126,7 +126,7 @@ void Edit::_OnPaint() {
 	rInside.x1 -= Props.Border + EDIT_XOFF;
 //	GUI__CalcTextRect(pText, &rInside, &rText, Props.Align);
 	if (Focussed()) {
-		const char *p = text;
+		GUI_PCSTR p = text;
 		CursorWidth = XSizeCursor > 0 ? XSizeCursor : 1;
 		if (text) {
 			if (!bInsert || SelSize) {
@@ -161,7 +161,7 @@ void Edit::_OnPaint() {
 	});
 }
 
-void Edit::_OnTouch(const PID_STATE *pState) {
+void Edit::_OnMouse(const MOUSE_STATE *pState) {
 	if (pState) {
 		static int StartPress = 0;
 		if (pState->Pressed) {
@@ -170,35 +170,38 @@ void Edit::_OnTouch(const PID_STATE *pState) {
 		}
 	}
 }
+bool Edit::_OnKey(KEY_STATE State) {
+	if (!Enable())
+		return false;
+	if (State.PressedCnt <= 0)
+		return false;
+	switch (auto Key = State.Key) {
+		case GUI_KEY_TAB:
+			break;
+		default:
+			AddKey(Key);
+			return true;
+	}
+	return false;
+}
 WM_RESULT Edit::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 	auto pObj = (Edit *)pWin;
-	auto bEnabled = pObj->Enable();
 	if (!pObj->HandleActive(MsgId, Param))
 		return;
 	switch (MsgId) {
 		case WM_PAINT:
 			pObj->_OnPaint();
 			return 0;
-		case WM_MOUSE_KEY:
-			pObj->_OnTouch(Param);
+		case WM_MOUSE:
+			pObj->_OnMouse(Param);
 			return 0;
 		case WM_DELETE:
 			pObj->~Edit();
 			return 0;
 		case WM_KEY:
-			if (!bEnabled)
-				break;
-			if (auto pKi = (const KEY_STATE *)Param) {
-				if (pKi->PressedCnt <= 0)
-					break;
-				switch (int Key = pKi->Key) {
-					case GUI_KEY_TAB:
-						break;
-					default:
-						pObj->AddKey(Key);
-						return;
-				}
-			}
+			if (pObj->_OnKey(Param))
+				return true;
+			return 0;
 	}
 	return DefCallback(pObj, MsgId, Param, pSrc);
 }
@@ -244,7 +247,7 @@ void Edit::AddKey(int Key) {
 	}
 	Invalidate();
 }
-void Edit::Text(const char *s) {
+void Edit::Text(GUI_PCSTR s) {
 	if (!s) {
 		text.~GUI_STRING();
 		BufferSize = 0;

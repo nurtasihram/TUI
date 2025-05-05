@@ -1,5 +1,7 @@
 #include "ProgBar.h"
 
+ProgBar::Property ProgBar::DefaultProps;
+
 int ProgBar::_Value2X(int v) const {
 	auto EffectSize = this->EffectSize();
 	auto xSize = SizeX();
@@ -8,15 +10,15 @@ int ProgBar::_Value2X(int v) const {
 	if (v > Max) v = Max;
 	return EffectSize + ((xSize - 2 * EffectSize) * (int32_t)(v - Min)) / (Max - Min);
 }
-void ProgBar::_DrawPart(int Index, Point ptText, const char *pText) const {
+void ProgBar::_DrawPart(int Index, SRect rText, GUI_PCSTR pText) const {
 	GUI.BkColor(Props.aBkColor[Index]);
 	GUI.PenColor(Props.aTextColor[Index]);
 	GUI.Clear();
-	GUI.DrawStringAt(pText, ptText);
+	GUI.DrawStringIn(pText, rText);
 }
-const char *ProgBar::_GetText(char *pBuffer) const {
+GUI_PCSTR ProgBar::_GetText(GUI_PSTR pBuffer) const {
 	if (text) return text;
-	const char *pText = pBuffer;
+	GUI_PCSTR pText = pBuffer;
 	if (v >= Max) {
 		*pBuffer++ = '1';
 		*pBuffer++ = '0';
@@ -34,7 +36,7 @@ const char *ProgBar::_GetText(char *pBuffer) const {
 	*pBuffer = '\0';
 	return pText;
 }
-SRect ProgBar::_GetTextRect(const char *pText) const {
+SRect ProgBar::_GetTextRect(GUI_PCSTR pText) const {
 	auto &&size = Size();
 	int TextWidth = GUI.XDist(pText),
 		TextHeight = GUI.Font()->YDist,
@@ -50,7 +52,7 @@ SRect ProgBar::_GetTextRect(const char *pText) const {
 		default:
 			p0.x += EffectSize;
 	}
-	return SRect::left_top(p0, { TextWidth - 1, TextHeight - 1 });
+	return SRect::left_top(p0, { TextWidth, TextHeight });
 }
 
 void ProgBar::_OnPaint() const {
@@ -64,11 +66,11 @@ void ProgBar::_OnPaint() const {
 	auto r = rInside;
 	r.x1 = xPos - 1;
 	WObj::UserClip(&r);
-	_DrawPart(0, rText.left_top(), pText);
+	_DrawPart(0, rText, pText);
 	r = rInside;
 	r.x0 = xPos;
 	WObj::UserClip(&r);
-	_DrawPart(1, rText.left_top(), pText);
+	_DrawPart(1, rText, pText);
 	WObj::UserClip(nullptr);
 	DrawDown(rClient);
 }
@@ -93,7 +95,7 @@ ProgBar::ProgBar(const SRect &rc,
 				 PWObj pParent, uint16_t Id,
 				 WM_CF Flags, WC_EX FlagsEx,
 				 int16_t Min, int16_t Max, int16_t v,
-				 const char *s) :
+				 GUI_PCSTR s) :
 	Widget(rc,
 		   _Callback,
 		   pParent, Id,
@@ -130,7 +132,7 @@ void ProgBar::Value(int16_t v) {
 	GUI.Font(pOldFont);
 	Invalidate(r);
 }
-void ProgBar::Text(const char *s) {
+void ProgBar::Text(GUI_PCSTR s) {
 	char acBuffer[5];
 	auto pOldFont = GUI.Font();
 	GUI.Font(Props.pFont);

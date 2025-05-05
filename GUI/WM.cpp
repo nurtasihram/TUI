@@ -419,7 +419,7 @@ void WObj::Init() {
 	pDesktop->Select();
 }
 bool WObj::Exec() {
-	if (HandlePID())
+	if (HandleMouse())
 		return true;
 	if (GUI.PollKeyMsg())
 		return true;
@@ -448,7 +448,19 @@ WM_RESULT WObj::DefCallback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 		case WM_GET_CLIENT_WINDOW:
 			return pWin;
 		case WM_KEY:
-			return pWin->SendToParent(MsgId, Param);
+			if (!pWin->Parent())
+				break;
+			if (!pWin->SendToParent(MsgId, Param)) {
+				KEY_STATE State = Param;
+				if (State.PressedCnt <= 0)
+					break;
+				switch (State.Key) {
+					case GUI_KEY_TAB:
+						pWin->Parent()->FocusNextChild();
+						break;
+				}
+			}
+			break;
 		case WM_GET_BKCOLOR:
 			return RGB_INVALID_COLOR;
 		case WM_NOTIFY_ENABLE:
@@ -463,10 +475,7 @@ WM_RESULT WObj::DefCallback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 WM_RESULT WObj::DesktopCallback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 	switch (MsgId) {
 		case WM_KEY:
-			if (const KEY_STATE *pKeyInfo = Param)
-				if (pKeyInfo->PressedCnt == 1)
-					GUI.Key(pKeyInfo->Key);
-			return 0;
+			return false;
 		case WM_PAINT:
 			if (clDesktop != RGB_INVALID_COLOR) {
 				GUI.BkColor(clDesktop);
@@ -570,7 +579,7 @@ bool WObj::OnKey(uint16_t Key, int Pressed) {
 	KEY_STATE Info;
 	Info.Key = Key;
 	Info.PressedCnt = Pressed;
-	pWinFocus->_SendMessage(WM_KEY, &Info);
+	pWinFocus->_SendMessage(WM_KEY, Info);
 	return true;
 }
 
@@ -729,7 +738,7 @@ void WObj::_SendMessageIfEnabled(int MsgId, WM_PARAM Param, PWObj pSrc) {
 	if (Enable())
 		_SendMessage(MsgId, Param, pSrc);
 }
-void WObj::_SendTouchMessage(int MsgId, PID_STATE *pState) {
+void WObj::_SendMouseMessage(int MsgId, MOUSE_STATE *pState) {
 	if (pState) *pState -= rsWin.left_top();
 	_SendMessageIfEnabled(MsgId, pState);
 	for (auto i = pParent; IsWindow(i); i = i->pParent)
@@ -762,38 +771,34 @@ void WObj::CriticalHandles::Check(PWObj pWin) {
 		if (pCH->pWin == pWin)
 			pCH->pWin = nullptr;
 }
-PID_STATE WObj::_StateLast;
+MOUSE_STATE WObj::_StateLast;
 
-bool WObj::HandlePID() {
-	PID_STATE StateNew = GUI.PID_STATE;
+bool WObj::HandleMouse() {
+	MOUSE_STATE StateNew = GUI.MouseState;
 	if (_StateLast == StateNew)
 		return false;
 	GUI.Cursor.Position(StateNew);
 	bool r = false;
 	CriticalHandles CHWin = pWinCapture ? pWinCapture : WObj::FindOnScreen(StateNew);
 	if (CHWin.pWin->_IsInModalArea()) {
-		if (_StateLast.Pressed != StateNew.Pressed && CHWin.pWin) {
-			auto pWin = CHWin.pWin;
-			PID_CHANGED_STATE Info;
-			Info.Pressed = StateNew.Pressed;
-			Info.StatePrev = _StateLast.Pressed;
-			Info.x = StateNew.x - pWin->rsWin.x0;
-			Info.y = StateNew.y - pWin->rsWin.y0;
-			CHWin.pWin->_SendMessageIfEnabled(WM_MOUSE_CHANGED, &Info);
-		}
+		if (_StateLast.Pressed != StateNew.Pressed && CHWin.pWin)
+			CHWin.pWin->_SendMessageIfEnabled(WM_MOUSE_CHANGED, 
+				MOUSE_CHANGED_STATE{
+					 CHWin.pWin->Screen2Client(StateNew), 
+					 StateNew.Pressed, _StateLast.Pressed });
 		if (_StateLast.Pressed | StateNew.Pressed) { /* Only if pressed or just released */
 			r = true;
-			PID_STATE State;
+			MOUSE_STATE State;
 			if (CriticalHandles::Last.pWin != CHWin.pWin)
 				if (CriticalHandles::Last.pWin != nullptr) {
-					PID_STATE *pState = nullptr;
+					MOUSE_STATE *pState = nullptr;
 					if (!StateNew.Pressed) {
 						State.x = _StateLast.x;
 						State.y = _StateLast.y;
 						State.Pressed = 0;
 						pState = &State;
 					}
-					CriticalHandles::Last.pWin->_SendTouchMessage(WM_MOUSE_KEY, pState);
+					CriticalHandles::Last.pWin->_SendMouseMessage(WM_MOUSE, pState);
 					CriticalHandles::Last.pWin = nullptr;
 				}
 			if (CHWin.pWin) {
@@ -805,12 +810,12 @@ bool WObj::HandlePID() {
 						CaptureRelease();
 					CriticalHandles::Last.pWin = nullptr;
 				}
-				CHWin.pWin->_SendTouchMessage(WM_MOUSE_KEY, &State);
+				CHWin.pWin->_SendMouseMessage(WM_MOUSE, &State);
 			}
 		}
 		else if (CHWin.pWin)
 			if (CHWin.pWin->Enable())
-				CHWin.pWin->_SendTouchMessage(WM_MOUSE_OVER, &StateNew);
+				CHWin.pWin->_SendMouseMessage(WM_MOUSE_OVER, &StateNew);
 	}
 	_StateLast = StateNew;
 	return r;
@@ -850,7 +855,7 @@ int WObj::DialogExec() {
 #include "Static.h"
 #include "Frame.h"
 
-const char *ClassNames[]{
+GUI_PCSTR ClassNames[]{
 	"",
 	"BUTTON",
 	"CHECKBOX",
@@ -1031,7 +1036,7 @@ void WObj::Visible(bool bVisible) {
 	else
 		InvalidateArea(rsWin);
 }
-void WObj::Parent(PWObj pParent) {
+void WObj::Parent(PWObj pParent, Point ptcPosition) {
 	if (pParent == this)
 		return;
 	if (pParent == this->pParent)
@@ -1039,10 +1044,11 @@ void WObj::Parent(PWObj pParent) {
 	/* Detach */
 	_RemoveWindowFromList();
 	InvalidateArea(rsWin);
-//	Move(-pParent->rsWin.left_top());
 	/* Attach */
 	_InsertWindowIntoList(pParent);
+	Position(ptcPosition);
 }
+
 PWObj WObj::LastSibling() {
 	for (auto pWin = this; pWin; pWin = pWin->pNext)
 		if (!pWin->pNext)
@@ -1070,13 +1076,14 @@ bool Widget::HandleActive(int MsgId, WM_PARAM &Param) {
 			Invalidate();
 			return false;
 		}
-		case WM_MOUSE_CHANGED:
-			if (const PID_CHANGED_STATE *pInfo = Param)
-				if (pInfo->Pressed)
-					Focus();
+		case WM_MOUSE_CHANGED: {
+			MOUSE_CHANGED_STATE State = Param;
+			if (State.Pressed)
+				Focus();
 			return true;
+		}
 		case WM_MOUSE_CHILD:
-			if (const PID_STATE *pState = Param)
+			if (const MOUSE_STATE *pState = Param)
 				if (pState->Pressed) {
 					BringToTop();
 					return false;
@@ -1156,11 +1163,11 @@ public:
 	Effect_Simple() : Widget::EffectItf(1) {}
 	void DrawUp(const SRect &r) const override {
 		GUI.PenColor(RGB_BLACK);
-		GUI.Outline(r); /* Draw rectangle around it */
+		GUI.Outline(r);
 	}
 	void DrawDown(const SRect &r) const override {
 		GUI.PenColor(RGB_BLACK);
-		GUI.Outline(r); /* Draw rectangle around it */
+		GUI.Outline(r);
 	}
 };
 class Effect_D3 : public Widget::EffectItf {

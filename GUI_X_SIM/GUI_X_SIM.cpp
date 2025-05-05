@@ -5,8 +5,8 @@
 #define DLL_EXPORTS
 #include "GUI_X_SIM.h"
 
-#include "./wx/window.h"
-#include "./wx/realtime.h"
+#include "wx_window.h"
+#include "wx_realtime.h"
 
 Ayxandar SimDisp::Ayx;
 
@@ -77,18 +77,3 @@ REG_FUNC(void, CloseConsole, void) {
 }
 
 #pragma endregion
-
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
-	switch (fdwReason) {
-		case DLL_PROCESS_ATTACH:
-			break;
-		case DLL_PROCESS_DETACH:
-			if (!lpvReserved) break;
-			break;
-		case DLL_THREAD_ATTACH:
-			break;
-		case DLL_THREAD_DETACH:
-			break;
-	}
-	return TRUE;
-}

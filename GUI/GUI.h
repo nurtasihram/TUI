@@ -81,11 +81,12 @@ public:
 };
 #pragma endregion
 
-void GUI__strcpy(char *s, const char *c);
+void GUI__strcpy(GUI_PSTR s, GUI_PCSTR c);
 void GUI__memcpy(void *sDest, const void *pSrc, size_t Len);
 
 /// @brief 繪圖面板
-class GUI_PANEL {
+class GUI_Panel {
+	friend class WObj;
 
 private:
 	struct Property {
@@ -103,12 +104,14 @@ private:
 	Point off;
 	/// @brief 字串顯示開始位置
 	Point dispPos;
+	/// @brief 編碼器
+	GUI_Encoder *pEncoder = nullptr;
 
 public:
 	/// @brief 光標控制器
 	CursorCtl Cursor;
 	/// @brief 光標數據結構
-	PID_STATE PID_STATE;
+	MOUSE_STATE MouseState;
 
 private:
 	KEY_STATE _KeyLast, _KeyNow;
@@ -187,21 +190,10 @@ public: // 字串繪製方法
 
 	/// @brief 繪製字串
 	/// @param s 字串緩衝區
-	void DrawString(const char *s);
-
-	/// @brief 繪製字串
-	/// @param s 字串緩衝區
 	/// @param r 繪製區域
 	/// @return 字串所佔區域
-	SRect DrawStringIn(const char *s, SRect r);
+	SRect DrawStringIn(GUI_PCSTR s, SRect r);
 
-	/// @brief 繪製字串
-	/// @param s 字串緩衝區
-	/// @param Pos 繪製開始位置
-	inline void DrawStringAt(const char *s, Point Pos) {
-		DispPos(Pos);
-		DrawString(s);
-	}
 #pragma endregion
 
 	/// @brief 反轉筆刷前景色背景色
@@ -211,30 +203,29 @@ public: // 字串繪製方法
 		Props.aColor[1] = tmp;
 	}
 
-	int XDist(const char *pString, int NumChars) { return Props.pFont->XDist(pString, NumChars); }
-	inline int XDist(const char *pString) { return XDist(pString, NumChars(pString)); }
+	int XDist(GUI_PCSTR pString, int NumChars) { return Props.pFont->XDist(pString, NumChars); }
+	inline int XDist(GUI_PCSTR pString) { return XDist(pString, NumChars(pString)); }
 
 public:
-	uint16_t NumTexts(const char *pText);
-	const char *NextText(const char *pTexts);
+	inline uint16_t NumChars(GUI_PCSTR pText) { return pEncoder->Size(pText).NumChars; }
+	inline uint16_t NumBytes(GUI_PCSTR pText) { return pEncoder->Size(pText).NumBytes; }
+	uint16_t NumCharsLine(GUI_PCSTR pText);
 
-	uint16_t NumLines(const char *pText);
-	const char *NextLines(const char *pText);
+	inline GUI_CHAR CharNext(GUI_PCSTR &pText) { return pEncoder->CharNext(pText); }
+	inline GUI_CHAR Char(GUI_PCSTR pText) { return pEncoder->CharNext(pText); }
+
+	uint16_t NumTexts(GUI_PCSTR pText);
+	GUI_PCSTR NextText(GUI_PCSTR pTexts);
+
+	uint16_t NumLines(GUI_PCSTR pText);
+	GUI_PCSTR NextLines(GUI_PCSTR pText);
 	
-	uint16_t NumCharsLine(const char *pText);
-	uint16_t NumChars(const char *pText);
-	uint16_t BytesChars(const char *pText);
-
-	uint16_t NextChar(const char *&pText);
-	const char *NextChars(const char *pText, uint16_t NumChars);
-	uint16_t Char(const char *pText) { return NextChar(pText); }
-
-	void SetText(char **ppText, const char *pText);
+	void SetText(GUI_PSTR *ppText, GUI_PCSTR pText);
 
 #pragma region Properties
 public: // Property - Font
 	/* R */ inline auto Font() const { return Props.pFont; }
-	/* W */ inline void Font(CFont *pFont) { Props.pFont = pFont; }
+	/* W */ inline void Font(CFont *pFont) { Props.pFont = pFont, pEncoder = &pFont->encoder; }
 public: // Property - TextAlign
 	/* R */ inline auto TextAlign() const { return Props.TextAlign; }
 	/* W */ inline void TextAlign(TEXTALIGN Align) { Props.TextAlign = Align; }
@@ -258,29 +249,29 @@ public: // Property - ClipRect
 #pragma endregion
 
 };
-extern GUI_PANEL GUI;
+extern GUI_Panel GUI;
 
 struct GUI_ISTRING {
-	mutable char *pText = nullptr;
+	mutable GUI_PSTR pText = nullptr;
 public:
 	GUI_ISTRING() {}
-	GUI_ISTRING(char *pText) : pText(pText) {}
+	GUI_ISTRING(GUI_PSTR pText) : pText(pText) {}
 public:
 	inline auto Chars() const { return GUI.NumChars(pText); }
-	inline auto Bytes() const { return GUI.BytesChars(pText); }
+	inline auto Bytes() const { return GUI.NumBytes(pText); }
 public:
-	inline GUI_ISTRING operator()(uint16_t num) {}
+//	inline GUI_ISTRING operator()(uint16_t num) {}
 	inline GUI_ISTRING operator[](uint16_t bytes) { return pText + bytes; }
-	inline char **operator&() { return &pText; }
-	inline uint16_t operator*() const { return GUI.Char(pText); }
-	inline uint16_t operator++() const { return GUI.NextChar((const char *&)pText); }
-	inline operator char *() { return pText; }
-	inline operator const char *() const { return pText; }
+	inline GUI_PSTR *operator&() { return &pText; }
+	inline GUI_CHAR operator*() const { return GUI.Char(pText); }
+	inline GUI_CHAR operator++() const { return GUI.CharNext((GUI_PCSTR &)pText); }
+	inline operator GUI_PSTR() { return pText; }
+	inline operator GUI_PCSTR() const { return pText; }
 };
 struct GUI_STRING : GUI_ISTRING {
 	GUI_STRING() {}
 	GUI_STRING(const GUI_STRING &s) { GUI.SetText(&pText, s); }
-	GUI_STRING(const char *s) { GUI.SetText(&pText, s); }
+	GUI_STRING(GUI_PCSTR s) { GUI.SetText(&pText, s); }
 	~GUI_STRING() {
 		if (pText) {
 			GUI_MEM_Free(pText);
@@ -288,5 +279,5 @@ struct GUI_STRING : GUI_ISTRING {
 		}
 	}
 	uint16_t operator++() = delete;
-	inline void operator=(const char *s) { GUI.SetText(&pText, s); }
+	inline void operator=(GUI_PCSTR s) { GUI.SetText(&pText, s); }
 };

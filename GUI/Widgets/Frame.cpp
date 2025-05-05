@@ -32,7 +32,7 @@ uint16_t Frame::_CalcTitleHeight() const {
 		return 0;
 	return Props.TitleHeight ?
 		Props.TitleHeight :
-		2 + Props.pFont->YSize;
+		2 + Props.pFont->YDist;
 }
 Frame::Positions Frame::_CalcPositions() const {
 	auto &&size = Size();
@@ -141,7 +141,7 @@ uint8_t Frame::_CheckReactBorder(Point Pos) {
 	}
 	return Mode;
 }
-bool Frame::_OnTouchResize(const PID_STATE *pState) {
+bool Frame::_OnTouchResize(const MOUSE_STATE *pState) {
 	if (!pState) return false;
 	Point Pos = *pState;
 	auto Mode = _CheckReactBorder(Pos);
@@ -170,7 +170,7 @@ bool Frame::_OnTouchResize(const PID_STATE *pState) {
 	}
 	return false;
 }
-bool Frame::_ForwardMouseOverMsg(int MsgId, PID_STATE State) {
+bool Frame::_ForwardMouseOverMsg(int MsgId, MOUSE_STATE State) {
 	State = Client2Screen(State);
 	if (auto pBelow = WObj::FindOnScreen(State)) {
 		if (pBelow == this) return false;
@@ -180,13 +180,13 @@ bool Frame::_ForwardMouseOverMsg(int MsgId, PID_STATE State) {
 	}
 	return false;
 }
-bool Frame::_HandleResize(int MsgId, const PID_STATE *pState) {
+bool Frame::_HandleResize(int MsgId, const MOUSE_STATE *pState) {
 	if (Captured() && _CaptureFlags == 0)
 		return false;
 	if (Minimized() || Maximized())
 		return false;
 	switch (MsgId) {
-		case WM_MOUSE_KEY:
+		case WM_MOUSE:
 			return _OnTouchResize(pState);
 		case WM_MOUSE_OVER:
 			if (pState) {
@@ -213,13 +213,13 @@ bool Frame::_HandleResize(int MsgId, const PID_STATE *pState) {
 #pragma endregion
 
 constexpr int16_t FRAME__MinVisibility = 5;
-void Frame::_OnTouch(const PID_STATE *pState) {
+void Frame::_OnMouse(const MOUSE_STATE *pState) {
 	if (pState)
 		if (pState->Pressed) {
 			if (!(StatusEx & FRAME_CF_ACTIVE))
 				Focus();
 			BringToTop();
-			if (StatusEx & FRAME_CF_MOVEABLE)
+			if (!(StatusEx & FRAME_CF_UNMOVEABLE))
 				CaptureMove(*pState, FRAME__MinVisibility);
 		}
 }
@@ -243,6 +243,8 @@ void Frame::_OnPaint() const {
 	GUI.BkColor(Props.aBarColor[Index]);
 	GUI.PenColor(Props.aTextColor[Index]);
 	GUI.Clear(r);
+	if (Props.Border && !Index)
+		GUI.DrawLineH(r.x0, r.y1, r.x1);
 	GUI.TextAlign(Props.Align);
 	GUI.DrawStringIn(Title, Pos.rTitleText);
 	GUI.PenColor(Props.FrameColor);
@@ -281,16 +283,17 @@ WM_RESULT Frame::_cbClient(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 			if (cb)
 				cb(pWin, WM_PAINT, Param, nullptr);
 			return 0;
-		case WM_KEY:
-			if (const KEY_STATE *pKeyInfo = Param)
-				if (pKeyInfo->PressedCnt > 0) {
-					switch (pKeyInfo->Key) {
-						case GUI_KEY_TAB:
-							pParent->pFocussedChild = pWin->FocusNextChild();
-							return 0;
-					}
-				}
+		case WM_KEY: {
+			KEY_STATE State = Param;
+			if (State.PressedCnt <= 0)
+				break;
+			switch (State.Key) {
+				case GUI_KEY_TAB:
+					pParent->pFocussedChild = pWin->FocusNextChild();
+					return true;
+			}
 			break;
+		}
 		case WM_FOCUS:
 			return pParent->SendMessage(MsgId, Param, pSrc);
 		case WM_FOCUSSABLE:
@@ -316,12 +319,12 @@ WM_RESULT Frame::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 		case WM_PAINT:
 			pObj->_OnPaint();
 			return 0;
-		case WM_MOUSE_KEY:
-			pObj->_OnTouch(Param);
+		case WM_MOUSE:
+			pObj->_OnMouse(Param);
 			return 0;
 		case WM_MOUSE_CHILD:
 			if (!(pObj->StatusEx & FRAME_CF_ACTIVE))
-				if (const PID_STATE *pState = Param)
+				if (const MOUSE_STATE *pState = Param)
 					if (pState->Pressed)
 						pObj->Focus();
 			return 0;
@@ -391,7 +394,7 @@ WM_RESULT Frame::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 Frame::Frame(const SRect &rc,
 			 PWObj pParent, uint16_t Id,
 			 WM_CF Flags, FRAME_CF FlagsEx,
-			 const char *pTitle, WM_CB cb) :
+			 GUI_PCSTR pTitle, WM_CB cb) :
 	Widget(rc,
 		   _Callback,
 		   pParent, Id,

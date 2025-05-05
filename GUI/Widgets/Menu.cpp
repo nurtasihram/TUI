@@ -1,5 +1,7 @@
 #include "Menu.h"
 
+Menu::Property Menu::DefaultProps; 
+
 bool Menu::_IsTopLevelMenu() {
 	return !_SendMenuMessage(pOwner, MENU_IS_MENU);
 }
@@ -10,7 +12,7 @@ bool Menu::_HasEffect() {
 	return true;
 }
 int Menu::_GetEffectSize() { return _HasEffect() ? EffectSize() : 0; }
-int Menu::_CalcTextWidth(const char *pText) {
+int Menu::_CalcTextWidth(GUI_PCSTR pText) {
 	int TextWidth = 0;
 	if (pText) {
 		auto pOldFont = GUI.Font();
@@ -251,25 +253,25 @@ bool Menu::_ForwardMouseOverMsg(Point Pos) {
 	auto pBelow = FindOnScreen(Client2Screen(Pos));
 	if (!pBelow || pBelow == this)
 		return false;
-	PID_STATE State = pBelow->Screen2Client(Pos);
+	MOUSE_STATE State = pBelow->Screen2Client(Pos);
 	pBelow->SendMessage(WM_MOUSE_OVER, &State);
 	return true;
 }
-void Menu::_ForwardPIDMsgToOwner(int MsgId, PID_STATE *pState) {
+void Menu::_ForwardPIDMsgToOwner(int MsgId, MOUSE_STATE *pState) {
 	if (_IsTopLevelMenu())
 		return;
 	auto pOwner = this->pOwner ? this->pOwner : Parent();
 	if (!pOwner)
 		return;
 	if (pState) {
-		PID_STATE State = *pState;
+		MOUSE_STATE State = *pState;
 		State += pOwner->Screen2Client(PositionScreen());
 		pOwner->SendMessage(MsgId, &State);
 	}
 	else
 		pOwner->SendMessage(MsgId);
 }
-bool Menu::_HandlePID(const PID_STATE &State) {
+bool Menu::_HandleMouse(const MOUSE_STATE &State) {
 	bool bInside = 0;
 	auto &&PrevState = PrevPidState();
 	/* Check if coordinates are inside the widget. */
@@ -355,14 +357,14 @@ WM_RESULT Menu::_OnMenu(const MSG_DAT *pMsgData) {
 	return 0;
 }
 
-bool Menu::_OnTouch(const PID_STATE *pState) {
+bool Menu::_OnMouse(const MOUSE_STATE *pState) {
 	if (pState)  /* Something happened in our area (pressed or released) */
-		return _HandlePID(*pState);
-	return _HandlePID({ -1, -1 }); /* Moved out */
+		return _HandleMouse(*pState);
+	return _HandleMouse({ -1, -1 }); /* Moved out */
 }
-bool Menu::_OnMouseOver(const PID_STATE *pState) {
+bool Menu::_OnMouseOver(const MOUSE_STATE *pState) {
 	if (pState)
-		return _HandlePID({ *pState, -1 });
+		return _HandleMouse({ *pState, -1 });
 	return false;
 }
 
@@ -466,8 +468,8 @@ WM_RESULT Menu::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 		case WM_PAINT:
 			pObj->_OnPaint();
 			return 0;
-		case WM_MOUSE_KEY:
-			if (pObj->_OnTouch(Param))
+		case WM_MOUSE:
+			if (pObj->_OnMouse(Param))
 				pObj->_ForwardPIDMsgToOwner(MsgId, Param);
 			return 0;
 		case WM_MOUSE_OVER:

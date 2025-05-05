@@ -13,14 +13,17 @@
 
 class CtlEdit : public WObj {
 	Widget *pWidget = nullptr;
+
 public:
 	struct Property {
 		RGBC Color = RGB_BLACK;
 		RGBC BkColor = RGB_WHITE;
 		int16_t Border = 4;
 	} static DefaultProps;
+
 private:
-	Property Props;
+	Property Props = DefaultProps;
+
 public:
 	void _Expend(bool);
 	uint8_t _CheckReactBorder(Point Pos) const;
@@ -28,11 +31,13 @@ public:
 	void _SetCapture(Point Pos, uint8_t Mode);
 
 	void _OnPaint() const;
-	bool _HandleResize(int MsgId, const PID_STATE *pState);
+	bool _HandleResize(int MsgId, const MOUSE_STATE *pState);
 
 	static WM_RESULT _Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc);
+
 public:
 	CtlEdit(Widget *pWidget);
+
 };
 
 CtlEdit::Property CtlEdit::DefaultProps;
@@ -131,11 +136,11 @@ void CtlEdit::_ChangeWindowPosSize(Point p) {
 	if (!(_CaptureFlags & SIZE_MOUSEMOVE))
 		Resize(d);
 }
-bool CtlEdit::_HandleResize(int MsgId, const PID_STATE *pState) {
+bool CtlEdit::_HandleResize(int MsgId, const MOUSE_STATE *pState) {
 	if (Captured() && _CaptureFlags == 0)
 		return false;
 	switch (MsgId) {
-		case WM_MOUSE_KEY:
+		case WM_MOUSE:
 			if (pState) {
 				Point Pos = *pState;
 				auto Mode = _CheckReactBorder(Pos);
@@ -221,7 +226,7 @@ WM_RESULT CtlEdit::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) 
 			pObj->_Expend(Param);
 			return true;
 		case WM_MOUSE_CHILD:
-			if (const PID_STATE *pState = Param)
+			if (const MOUSE_STATE *pState = Param)
 				if (pState->Pressed == 1) {
 					if (pWidget->Focussable())
 						pWidget->Focus();
@@ -242,13 +247,82 @@ CtlEdit::CtlEdit(Widget *pWidget) :
 		   WC_VISIBLE, WC_FOCUSSABLE),
 	pWidget(pWidget) {
 	pWidget->Anchor(WC_ANCHOR_MASK);
-	pWidget->Parent(this);
-	pWidget->Position(0);
+	pWidget->Parent(this, 0);
 }
 
-#include "GUI_X_LCD.h"
+void MonoColorStyle() {
+	Widget::DefaultEffect(Widget::EffectItf::Simple);
+	WObj::DesktopColor(RGB_WHITE);
+	/* Button */
+	Button::DefaultProps.aBkColor[BUTTON_CI_UNPRESSED] = RGB_WHITE;
+	Button::DefaultProps.aBkColor[BUTTON_CI_PRESSED] = RGB_BLACK;
+	Button::DefaultProps.aBkColor[BUTTON_CI_DISABLED] = RGB_BLACK; // DISC
+	Button::DefaultProps.aTextColor[BUTTON_CI_UNPRESSED] = RGB_BLACK;
+	Button::DefaultProps.aTextColor[BUTTON_CI_PRESSED] = RGB_WHITE;
+	Button::DefaultProps.aTextColor[BUTTON_CI_DISABLED] = RGB_WHITE; // DISC
+	/* CheckBox */
+	CheckBox::DefaultProps.BkColor = RGB_WHITE;
+	CheckBox::DefaultProps.TextColor = RGB_BLACK;
+	CheckBox::DefaultProps.aBkColorBox[CHECKBOX_CI_INACTIV] = RGB_WHITE;
+	CheckBox::DefaultProps.aBkColorBox[CHECKBOX_CI_ACTIV] = RGB_WHITE;
+	/* Frame */
+	Frame::DefaultProps.Border = 1;
+	Frame::DefaultProps.ClientColor = RGB_WHITE;
+	Frame::DefaultProps.FrameColor = RGB_WHITE;
+	Frame::DefaultProps.aBarColor[FRAME_CI_FOCUSED] = RGB_BLACK;
+	Frame::DefaultProps.aBarColor[FRAME_CI_LOSEFOCUS] = RGB_WHITE;
+	Frame::DefaultProps.aTextColor[FRAME_CI_FOCUSED] = RGB_WHITE;
+	Frame::DefaultProps.aTextColor[FRAME_CI_LOSEFOCUS] = RGB_BLACK;
+	/* Header */
+	Header::DefaultProps.BkColor = RGB_WHITE;
+	Header::DefaultProps.TextColor = RGB_BLACK;
+	/* ListBox */
+	ListBox::DefaultProps.aBkColor[LISTBOX_CI_UNSEL] = RGB_WHITE;
+	ListBox::DefaultProps.aBkColor[LISTBOX_CI_SEL] = RGB_BLACK;
+	ListBox::DefaultProps.aBkColor[LISTBOX_CI_SELFOCUS] = RGB_BLACK;
+	ListBox::DefaultProps.aBkColor[LISTBOX_CI_DISABLED] = RGB_WHITE; // DISC
+	ListBox::DefaultProps.aTextColor[LISTBOX_CI_UNSEL] = RGB_BLACK;
+	ListBox::DefaultProps.aTextColor[LISTBOX_CI_SEL] = RGB_WHITE;
+	ListBox::DefaultProps.aTextColor[LISTBOX_CI_SELFOCUS] = RGB_WHITE;
+	ListBox::DefaultProps.aTextColor[LISTBOX_CI_DISABLED] = RGB_BLACK; // DISC
+	/* ListView */
+	ListView::DefaultProps.aBkColor[LISTVIEW_CI_UNSEL] = RGB_WHITE;
+	ListView::DefaultProps.aBkColor[LISTVIEW_CI_SEL] = RGB_BLACK;
+	ListView::DefaultProps.aBkColor[LISTVIEW_CI_SELFOCUS] = RGB_BLACK;
+	ListView::DefaultProps.aTextColor[LISTVIEW_CI_UNSEL] = RGB_BLACK;
+	ListView::DefaultProps.aTextColor[LISTVIEW_CI_SEL] = RGB_WHITE;
+	ListView::DefaultProps.aTextColor[LISTVIEW_CI_SELFOCUS] = RGB_WHITE;
+	ListView::DefaultProps.GridColor = RGB_BLACK;
+	/* MultiPage */
+	MultiPage::DefaultProps.aBkColor[MULTIPAGE_CI_DISABLED] = RGB_BLACK;
+	MultiPage::DefaultProps.aBkColor[MULTIPAGE_CI_ENABLED] = RGB_WHITE;
+	MultiPage::DefaultProps.aTextColor[0] = RGB_BLACK;
+	MultiPage::DefaultProps.aTextColor[1] = RGB_BLACK;
+	/* ProgBar */
+	ProgBar::DefaultProps.aBkColor[PROGBAR_CI_INACTIV] = RGB_WHITE;
+	ProgBar::DefaultProps.aBkColor[PROGBAR_CI_ACTIV] = RGB_BLACK;
+	ProgBar::DefaultProps.aTextColor[PROGBAR_CI_INACTIV] = RGB_BLACK;
+	ProgBar::DefaultProps.aTextColor[PROGBAR_CI_ACTIV] = RGB_WHITE;
+	/* Radio */
+	Radio::DefaultProps.BkColor = RGB_WHITE;
+	Radio::DefaultProps.TextColor = RGB_BLACK;
+	/* ScrollBar */
+	ScrollBar::DefaultProps.aBkColor[SCROLLBAR_CI_RAIL] = RGB_WHITE;
+	ScrollBar::DefaultProps.aBkColor[SCROLLBAR_CI_BUTTON] = RGB_BLACK;
+	ScrollBar::DefaultProps.aColor = RGB_WHITE;
+	/* Slider */
+	Slider::DefaultProps.BkColor = RGB_WHITE;
+	Slider::DefaultProps.Color = RGB_BLACK;
+	/* Static */
+	Static::DefaultProps.BkColor = RGB_WHITE;
+	Static::DefaultProps.Color = RGB_BLACK;
+}
+
+#include "ext_osk.h"
 
 void MainTask() {
+	MonoColorStyle();
+	ShowOsk(true);
 	auto pStatic = new Static(
 		{ 10, 10, 55, 30 },
 		nullptr, 0,
@@ -282,6 +356,7 @@ void MainTask() {
 		WC_VISIBLE);
 	pProgBar->Text("Progressing...");
 	new CtlEdit(pProgBar);
+	pProgBar->Value(24);
 	auto pScrollBarH = new ScrollBar(
 		{ 10, 130, 95, 145 },
 		nullptr, 0,
@@ -316,7 +391,7 @@ void MainTask() {
 	auto pFrame = new Frame(
 		{ 130, 10, 235, 310 },
 		nullptr, 0,
-		WC_VISIBLE, 0,
+		WC_VISIBLE, FRAME_CF_UNMOVEABLE,
 		"Frame");
 	new CtlEdit(pFrame);
 	auto pHeader = new Header(
@@ -359,10 +434,12 @@ void MainTask() {
 		{ 240, 150, 345, 255 },
 		nullptr, 0,
 		WC_VISIBLE);
-	pPages->Add("1 - Static", new Static(pPages->ClientRect(), nullptr, 0, 0, STATIC_CF_CENTER, "Page 1"));
-	pPages->Add("2 - Button", new Button({ 15, 35, 55, 60 }, nullptr, 0, 0, 0, "Page 2"));
-	pPages->Add("3 - None");
+	pPages->Add("Static - 1", new Static(pPages->ClientRect(), nullptr, 0, WC_VISIBLE, STATIC_CF_CENTER, "Page 1"));
+	pPages->Add("Button - 2", new Button({ 15, 35, 55, 60 }, nullptr, 0, WC_VISIBLE, 0, "Page 2"));
+	pPages->Add("None - 3");
 	new CtlEdit(pPages);
+	printf("GUI Initialized !\n");
+	printf("JavaScript > ");
 	for (;;)
 		WObj::Exec();
 }

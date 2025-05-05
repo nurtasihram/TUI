@@ -1,5 +1,7 @@
 #include "Static.h"
 
+Static::Property Static::DefaultProps;
+
 void Static::_OnPaint() const {
 	GUI.BkColor(BkColorProp(Props.BkColor));
 	GUI.Clear();
@@ -29,7 +31,7 @@ WM_RESULT Static::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 Static::Static(const SRect &rc,
 			   PWObj pParent, uint16_t Id,
 			   WM_CF Flags, STATIC_CF FlagsEx,
-			   const char *pText) :
+			   GUI_PCSTR pText) :
 	Widget(rc,
 		   _Callback,
 		   pParent, Id,

@@ -53,7 +53,7 @@ void Slider::_OnPaint() const {
 		DrawFocus(rFocus);
 	}
 }
-void Slider::_OnTouch(const PID_STATE *pState) {
+void Slider::_OnMouse(const MOUSE_STATE *pState) {
 	if (!pState)
 		return;
 	if (!pState->Pressed) {
@@ -81,20 +81,18 @@ void Slider::_OnTouch(const PID_STATE *pState) {
 	if (!(StatusEx & SLIDER_CF__PRESSED))
 		_SliderPressed();
 }
-void Slider::_OnKey(const KEY_STATE *pKeyInfo) {
-	int Key = pKeyInfo->Key;
-	if (pKeyInfo->PressedCnt <= 0)
-		return;
-	switch (Key) {
+bool Slider::_OnKey(KEY_STATE State) {
+	if (State.PressedCnt <= 0)
+		return false;
+	switch (State.Key) {
 	case GUI_KEY_RIGHT:
 		Inc();
-		break;
+		return true;
 	case GUI_KEY_LEFT:
 		Dec();
-		break;
-	default:
-		return;
+		return true;
 	}
+	return false;
 }
 
 WM_RESULT Slider::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
@@ -105,11 +103,12 @@ WM_RESULT Slider::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 	case WM_PAINT:
 		pObj->_OnPaint();
 		return 0;
-	case WM_MOUSE_KEY:
-		pObj->_OnTouch(Param);
+	case WM_MOUSE:
+		pObj->_OnMouse(Param);
 		return 0;
 	case WM_KEY:
-		pObj->_OnKey(Param);
+		if (pObj->_OnKey(Param))
+			return true;
 		break;
 	case WM_GET_CLASS:
 		return ClassNames[WCLS_SLIDER];

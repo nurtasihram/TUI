@@ -53,14 +53,14 @@ WM_RESULT _cbFrame(PWObj pDlg, int MsgId, WM_PARAM Param, PWObj pSrc) {
 }
 
 static const WM_CREATESTRUCT aDialogCreate[]{
-/*    Class             , x		, y		, xsize	, ysize	, Caption	 , Id			, Flags			, FlagsEx			*/
-	{ WCLS_FRAME		, 0		, 0		, 145	, 100	, "Align"	 , 0			, WC_VISIBLE , FRAME_CF_MOVEABLE	},
-	{ WCLS_BUTTON		, 5		, 5		, 40	, 30	, "Left"	 , ID_LEFT											},
-	{ WCLS_BUTTON		, 50	, 5		, 40	, 30	, "HCenter"	 , ID_HCENTER										},
-	{ WCLS_BUTTON		, 95	, 5		, 40	, 30	, "Right"	 , ID_RIGHT											},
-	{ WCLS_BUTTON		, 5		, 40	, 40	, 30	, "Top"		 , ID_TOP											},
-	{ WCLS_BUTTON		, 50	, 40	, 40	, 30	, "VCenter"	 , ID_VCENTER										},
-	{ WCLS_BUTTON		, 95	, 40	, 40	, 30	, "Bottom"	 , ID_BOTTOM										},
+/*    Class             , x		, y		, xsize	, ysize	, Caption	 , Id			, Flags			*/
+	{ WCLS_FRAME		, 0		, 0		, 145	, 100	, "Align"	 , 0			, WC_VISIBLE  	},
+	{ WCLS_BUTTON		, 5		, 5		, 40	, 30	, "Left"	 , ID_LEFT						},
+	{ WCLS_BUTTON		, 50	, 5		, 40	, 30	, "HCenter"	 , ID_HCENTER					},
+	{ WCLS_BUTTON		, 95	, 5		, 40	, 30	, "Right"	 , ID_RIGHT						},
+	{ WCLS_BUTTON		, 5		, 40	, 40	, 30	, "Top"		 , ID_TOP						},
+	{ WCLS_BUTTON		, 50	, 40	, 40	, 30	, "VCenter"	 , ID_VCENTER					},
+	{ WCLS_BUTTON		, 95	, 40	, 40	, 30	, "Bottom"	 , ID_BOTTOM					},
 	{}
 };
 
@@ -68,12 +68,12 @@ void MainTask() {
 	pFrm1 = new Frame(
 		SRect::left_top({ 150, 100 }, { 100, 120 }),
 		WObj::Desktop(), 0,
-		WC_VISIBLE, FRAME_CF_MOVEABLE | FRAME_CF_RESIZEABLE,
+		WC_VISIBLE, FRAME_CF_RESIZEABLE,
 		"Frame 1");
 	pFrm2 = new Frame(
 		SRect::left_top({ 197, 95 }, { 150, 80 }),
 		WObj::Desktop(), 0,
-		WC_VISIBLE, FRAME_CF_MOVEABLE | FRAME_CF_RESIZEABLE,
+		WC_VISIBLE, FRAME_CF_RESIZEABLE,
 		"Frame 2");
 	pFrm1->AddMaxButton();
 	pFrm1->AddMinButton();

@@ -38,7 +38,7 @@ public:
 	} static DefaultProps;
 
 private:
-	Property Props;
+	Property Props = DefaultProps;
 	GUI_STRING text;
 	GUI_DRAW aDrawObj[3];
 
@@ -47,9 +47,9 @@ private:
 	void _Released(int Notification);
 
 	void _OnPaint() const;
-	void _OnTouch(const PID_STATE *);
-	void _OnPidStateChange(const PID_CHANGED_STATE *);
-	bool _OnKey(const KEY_STATE *);
+	void _OnMouse(const MOUSE_STATE *);
+	void _OnMouseChange(MOUSE_CHANGED_STATE);
+	bool _OnKey(KEY_STATE);
 
 	static WM_RESULT _Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc);
 
@@ -57,7 +57,7 @@ public:
 	Button(const SRect &rc = {},
 		   PWObj pParent = nullptr, uint16_t Id = 0,
 		   WM_CF Flags = WC_HIDE, BUTTON_CF FlagsEx = 0,
-		   const char *pText = nullptr);
+		   GUI_PCSTR pText = nullptr);
 	Button(const WM_CREATESTRUCT &wc) : Button(
 		wc.rect(),
 		wc.pParent, wc.Id,
@@ -94,8 +94,8 @@ public: // Property - Pressed
 	/* R */ inline bool Pressed() const { return StatusEx & _BUTTON_STATE_PRESSED; }
 	/* W */ void Pressed(bool bPressed);
 public: // Property - Text
-	/* R */ inline const char *Text() const { return text; }
-	/* W */ inline void Text(const char *pText) {
+	/* R */ inline GUI_PCSTR Text() const { return text; }
+	/* W */ inline void Text(GUI_PCSTR pText) {
 		text = pText;
 		Invalidate();
 	}

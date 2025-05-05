@@ -4,20 +4,11 @@
     <Filter Include="GUI">
       <UniqueIdentifier>{1e71d23b-ba10-4d64-b0ee-6c766f2b19db}</UniqueIdentifier>
     </Filter>
-    <Filter Include="tests">
-      <UniqueIdentifier>{de1c55d6-989f-4081-b89d-594e4c4eaec3}</UniqueIdentifier>
-    </Filter>
     <Filter Include="GUI\Resources">
       <UniqueIdentifier>{0df0d7fb-2e9c-43ef-9387-4b5eae5e8764}</UniqueIdentifier>
     </Filter>
     <Filter Include="GUI\Widgets">
       <UniqueIdentifier>{ae0b581c-15b7-4d6b-ae36-0f243ef12aab}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="duktape">
-      <UniqueIdentifier>{08cf5063-1624-4551-b5c6-825d3976d25d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="GUI_X_JS">
-      <UniqueIdentifier>{cf5685d3-5e25-4b9f-8ea3-9d0d30a3fe5c}</UniqueIdentifier>
     </Filter>
     <Filter Include="GUI_X_LCD">
       <UniqueIdentifier>{206fdd61-b446-4ded-be6c-4021f972e1d1}</UniqueIdentifier>
@@ -28,20 +19,17 @@
     <Filter Include="GUI_X_SIM">
       <UniqueIdentifier>{aced53ed-9183-4b03-9f90-0da81369a5c0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="GUI_EXT">
+      <UniqueIdentifier>{6f9f436b-b208-4f92-9e0f-ccb9ec53821d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GUI_EXT\duktape">
+      <UniqueIdentifier>{08cf5063-1624-4551-b5c6-825d3976d25d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GUI_test">
+      <UniqueIdentifier>{17621e2a-e488-4d2b-b6f0-9a38513bd3fd}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="tests\test_listbox_dropdown.cpp">
-      <Filter>tests</Filter>
-    </ClCompile>
-    <ClCompile Include="tests\test_osk.cc">
-      <Filter>tests</Filter>
-    </ClCompile>
-    <ClCompile Include="tests\test_checkbox_radio.cpp">
-      <Filter>tests</Filter>
-    </ClCompile>
-    <ClCompile Include="tests\test_slider_progbar.cpp">
-      <Filter>tests</Filter>
-    </ClCompile>
     <ClCompile Include="GUI\GUI.cpp">
       <Filter>GUI</Filter>
     </ClCompile>
@@ -90,20 +78,8 @@
     <ClCompile Include="GUI\Resources\GUI_Font13_ASCII.cpp">
       <Filter>GUI\Resources</Filter>
     </ClCompile>
-    <ClCompile Include="tests\test_frame.cpp">
-      <Filter>tests</Filter>
-    </ClCompile>
-    <ClCompile Include="tests\test_menu.cpp">
-      <Filter>tests</Filter>
-    </ClCompile>
-    <ClCompile Include="tests\test_static.cpp">
-      <Filter>tests</Filter>
-    </ClCompile>
     <ClCompile Include="GUI\Resources\GUI_CursorResize.cpp">
       <Filter>GUI\Resources</Filter>
-    </ClCompile>
-    <ClCompile Include="tests\test_ctl_edit.cpp">
-      <Filter>tests</Filter>
     </ClCompile>
     <ClCompile Include="GUI\Widgets\ListView.cpp">
       <Filter>GUI\Widgets</Filter>
@@ -114,25 +90,52 @@
     <ClCompile Include="GUI\Widgets\MultiPage.cpp">
       <Filter>GUI\Widgets</Filter>
     </ClCompile>
-    <ClCompile Include="duktape\duktape.c">
-      <Filter>duktape</Filter>
-    </ClCompile>
-    <ClCompile Include="GUI_X_JS\GUI_X_JS.cpp">
-      <Filter>GUI_X_JS</Filter>
-    </ClCompile>
-    <ClCompile Include="tests\test_js.cpp">
-      <Filter>tests</Filter>
-    </ClCompile>
     <ClCompile Include="GUI_X_LCD\GUI_X_LCD_SIM.cpp">
       <Filter>GUI_X_LCD</Filter>
     </ClCompile>
-    <ClCompile Include="GUI_MAIN_SIM.cpp" />
     <ClCompile Include="GUI\Widgets\Edit.cpp">
       <Filter>GUI\Widgets</Filter>
     </ClCompile>
     <ClCompile Include="main.c" />
     <ClCompile Include="GUI_X_MEM\GUI_X_MEM_SIM.cpp">
       <Filter>GUI_X_MEM</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI_MAIN_SIM.cpp" />
+    <ClCompile Include="GUI_EXT\ext_osk.cpp">
+      <Filter>GUI_EXT</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI_EXT\ext_duktape.cpp">
+      <Filter>GUI_EXT</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI_EXT\duktape\duktape.c">
+      <Filter>GUI_EXT\duktape</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI_test\test_checkbox_radio.cpp">
+      <Filter>GUI_test</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI_test\test_ctl_edit.cpp">
+      <Filter>GUI_test</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI_test\test_frame.cpp">
+      <Filter>GUI_test</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI_test\test_js.cpp">
+      <Filter>GUI_test</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI_test\test_listbox_dropdown.cpp">
+      <Filter>GUI_test</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI_test\test_menu.cpp">
+      <Filter>GUI_test</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI_test\test_osk.cc">
+      <Filter>GUI_test</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI_test\test_slider_progbar.cpp">
+      <Filter>GUI_test</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI_test\test_static.cpp">
+      <Filter>GUI_test</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -187,15 +190,6 @@
     <ClInclude Include="GUI\Widgets\MultiPage.h">
       <Filter>GUI\Widgets</Filter>
     </ClInclude>
-    <ClInclude Include="duktape\duktape.h">
-      <Filter>duktape</Filter>
-    </ClInclude>
-    <ClInclude Include="GUI_X_JS\duk_config.h">
-      <Filter>GUI_X_JS</Filter>
-    </ClInclude>
-    <ClInclude Include="GUI_X_JS\GUI_X_JS.h">
-      <Filter>GUI_X_JS</Filter>
-    </ClInclude>
     <ClInclude Include="GUI_X_LCD\GUI_X_LCD.h">
       <Filter>GUI_X_LCD</Filter>
     </ClInclude>
@@ -212,7 +206,21 @@
     <ClInclude Include="GUI\GUI_Types.h">
       <Filter>GUI</Filter>
     </ClInclude>
-    <ClInclude Include="resource.h" />
+    <ClInclude Include="GUI_EXT\ext_osk.h">
+      <Filter>GUI_EXT</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI_EXT\duk_config.h">
+      <Filter>GUI_EXT</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI_EXT\ext_duktape.h">
+      <Filter>GUI_EXT</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI_EXT\duktape\duktape.h">
+      <Filter>GUI_EXT\duktape</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI_X_SIM\resource.h">
+      <Filter>GUI_X_SIM</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="GUI\GUI.inl">
@@ -226,9 +234,11 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="Ni.ico" />
+    <ResourceCompile Include="GUI_X_SIM\GUI.rc">
+      <Filter>GUI_X_SIM</Filter>
+    </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="TUI.rc" />
+    <Image Include="Ni.ico" />
   </ItemGroup>
 </Project>

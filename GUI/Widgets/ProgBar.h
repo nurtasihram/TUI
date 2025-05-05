@@ -2,8 +2,8 @@
 #include "WM.h"
 
 enum PROGBAR_CI {
-	PROGBAR_CI_INACTIV = 0,
-	PROGBAR_CI_ACTIV
+	PROGBAR_CI_ACTIV = 0,
+	PROGBAR_CI_INACTIV
 };
 
 struct ProgBar : public Widget {
@@ -12,27 +12,27 @@ public:
 	struct Property {
 		CFont *pFont{ &GUI_Font13_1 };
 		RGBC aBkColor[2]{
-			/* Inactive */ RGB_DARKBLUE,
-			/* Active */ RGBC_GRAY(0x55)
+			/* Active */ RGB_DARKBLUE,
+			/* Inactive  */ RGBC_GRAY(0x55)
 		};
 		RGBC aTextColor[2]{
-			/* Inactive */ RGB_WHITE,
-			/* Active */ RGB_BLACK
+			/* Active */ RGB_WHITE,
+			/* Inactive */ RGB_BLACK
 		};
 		TEXTALIGN Align{ TEXTALIGN_HCENTER };
 	} static DefaultProps;
 
 private:
-	Property Props;
+	Property Props = DefaultProps;
 	GUI_STRING text;
 	Point Off;
 	int16_t Min, Max, v;
 
 private:
 	int _Value2X(int v) const;
-	void _DrawPart(int Index, Point ptText, const char *pText) const;
-	const char *_GetText(char *pBuffer) const;
-	SRect _GetTextRect(const char *pText) const;
+	void _DrawPart(int Index, SRect rText, GUI_PCSTR pText) const;
+	GUI_PCSTR _GetText(GUI_PSTR pBuffer) const;
+	SRect _GetTextRect(GUI_PCSTR pText) const;
 
 	void _OnPaint() const;
 
@@ -42,7 +42,7 @@ public:
 	ProgBar(const SRect &rc = {},
 			PWObj pParent = nullptr, uint16_t Id = 0,
 			WM_CF Flags = WC_HIDE, WC_EX FlagsEx = 0,
-			int16_t Min = 0, int16_t Max = 100, int16_t v = 0, const char *s = nullptr);
+			int16_t Min = 0, int16_t Max = 100, int16_t v = 0, GUI_PCSTR s = nullptr);
 	ProgBar(const WM_CREATESTRUCT &wc) :
 		ProgBar(wc.rect(),
 				wc.pParent, wc.Id,
@@ -80,8 +80,8 @@ public: // Property - Value
 	/* R */ inline auto Value() const { return v; }
 	/* W */ void Value(int16_t v);
 public: // Property - Text
-	/* R */ inline const char *Text() const { return text; }
-	/* W */ void Text(const char *s);
+	/* R */ inline GUI_PCSTR Text() const { return text; }
+	/* W */ void Text(GUI_PCSTR s);
 public: // Property - TextPos
 	/* W */ void TextPos(Point Off) {
 		this->Off = Off;

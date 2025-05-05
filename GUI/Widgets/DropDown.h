@@ -32,7 +32,7 @@ public:
 
 private:
 	GUI_Array<GUI_STRING> Handles;
-	Property Props;
+	Property Props = DefaultProps;
 	ListBox *pListbox = nullptr;
 	SCROLL_STATE ScrollState;
 	uint16_t ItemSpacing = 0;
@@ -47,8 +47,8 @@ private:
 	void _AdjustHeight();
 
 	void _OnPaint() const;
-	bool _OnTouch(const PID_STATE *pState);
-	bool _OnKey(const KEY_STATE *pKi);
+	bool _OnMouse(const MOUSE_STATE *pState);
+	bool _OnKey(KEY_STATE);
 
 	static WM_RESULT _Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc);
 
@@ -72,11 +72,11 @@ public:
 	void Collapse();
 	void Expand();
 
-	inline void Add(const char *s) {
+	inline void Add(GUI_PCSTR s) {
 		Handles.Add() = s;
 		Invalidate();
 	}
-	void Insert(uint16_t Index, const char *s);
+	void Insert(uint16_t Index, GUI_PCSTR s);
 	void Delete(uint16_t Index);
 
 #pragma region Properties

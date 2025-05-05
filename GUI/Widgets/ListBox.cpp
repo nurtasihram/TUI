@@ -209,11 +209,11 @@ void ListBox::_OnPaint(SRect rClip) {
 	WIDGET_ITEM_DRAW_INFO ItemInfo;
 	ItemInfo.Cmd = WIDGET_ITEM_DRAW;
 	ItemInfo.pWin = this;
-	ItemInfo.x0 = rInside.x0 - scrollStateH.v;
-	ItemInfo.y0 = rInside.y0;
+	ItemInfo.Pos.x = rInside.x0 - scrollStateH.v;
+	ItemInfo.Pos.y = rInside.y0;
 	for (int i = scrollStateV.v,
 		 NumItems = ItemArray.NumItems(); i < NumItems; ++i) {
-		rItem.y0 = ItemInfo.y0;
+		rItem.y0 = ItemInfo.Pos.y;
 		if (rItem.y0 > rClip.y1)
 			break;
 		int ItemDistY = _GetItemSize(i, WIDGET_ITEM_GET_YSIZE);
@@ -226,16 +226,16 @@ void ListBox::_OnPaint(SRect rClip) {
 			else
 				OwnerDrawProc(&ItemInfo);
 		}
-		ItemInfo.y0 += ItemDistY;
+		ItemInfo.Pos.y += ItemDistY;
 	}
 	WObj::UserClip(nullptr);
-	rItem.y0 = ItemInfo.y0;
+	rItem.y0 = ItemInfo.Pos.y;
 	rItem.y1 = rInside.y1;
 	GUI.BkColor(Props.aBkColor[0]);
 	GUI.Clear(rItem);
 	DrawDown();
 }
-void ListBox::_OnTouch(const PID_STATE *pState) {
+void ListBox::_OnMouse(const MOUSE_STATE *pState) {
 	if (pState) {
 		if (pState->Pressed == 0)
 			_NotifyOwner(WN_RELEASED);
@@ -243,7 +243,12 @@ void ListBox::_OnTouch(const PID_STATE *pState) {
 	else
 		_NotifyOwner(WN_MOVED_OUT);
 }
-void ListBox::_OnMouseOver(const PID_STATE *pState) {
+bool ListBox::_OnKey(KEY_STATE State) {
+	if (State.PressedCnt <= 0)
+		return false;
+	return AddKey(State.Key);
+}
+void ListBox::_OnMouseOver(const MOUSE_STATE *pState) {
 	if (!pOwner)
 		return;
 	if (pState) {
@@ -266,29 +271,27 @@ WM_RESULT ListBox::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) 
 		case WM_PAINT:
 			pObj->_OnPaint(Param);
 			return 0;
-		case WM_MOUSE_KEY:
-			pObj->_OnTouch(Param);
+		case WM_MOUSE:
+			pObj->_OnMouse(Param);
 			return 0;
-		case WM_MOUSE_CHANGED:
-			if (const PID_CHANGED_STATE *pInfo = Param) {
-				if (!pInfo->Pressed)
-					break;
-				int sel = pObj->_GetItemFromPos(pInfo->x, pInfo->y);
-				if (sel >= 0) {
-					pObj->_ToggleMultiSel(sel);
-					pObj->Sel(sel);
-				}
-				pObj->_NotifyOwner(WN_CLICKED);
-				return 0;
+		case WM_MOUSE_CHANGED: {
+			MOUSE_CHANGED_STATE State = Param;
+			if (!State.Pressed)
+				break;
+			int sel = pObj->_GetItemFromPos(State.x, State.y);
+			if (sel >= 0) {
+				pObj->_ToggleMultiSel(sel);
+				pObj->Sel(sel);
 			}
+			pObj->_NotifyOwner(WN_CLICKED);
+			return 0;
+		}
 		case WM_MOUSE_OVER:
 			pObj->_OnMouseOver(Param);
 			return 0;
 		case WM_KEY:
-			if (const KEY_STATE *ki = Param)
-				if (ki->PressedCnt > 0)
-					if (pObj->AddKey(ki->Key))
-						return 0;
+			if (pObj->_OnKey(Param))
+				return true;
 			break;
 		case WM_DELETE:
 			pObj->~ListBox();
@@ -334,7 +337,7 @@ ListBox::ListBox(const SRect &rc,
 ListBox::ListBox(const SRect &rc,
 				 PWObj pParent, uint16_t Id,
 				 WM_CF Flags, LISTBOX_CF FlagsEx,
-				 const char *pItems) :
+				 GUI_PCSTR pItems) :
 	ListBox(rc,
 			pParent, Id,
 			Flags, FlagsEx,
@@ -394,7 +397,7 @@ bool ListBox::AddKey(int Key) {
 	return false;
 }
 
-void ListBox::Add(const char *s) {
+void ListBox::Add(GUI_PCSTR s) {
 	if (!s)
 		return;
 	auto Index = ItemArray.NumItems() - 1;
@@ -403,7 +406,7 @@ void ListBox::Add(const char *s) {
 	_UpdateScrollers();
 	_InvalidateItem(Index);
 }
-void ListBox::Insert(uint16_t Index, const char *s) {
+void ListBox::Insert(uint16_t Index, GUI_PCSTR s) {
 	if (!s)
 		return;
 	if (Index >= ItemArray.NumItems())
@@ -457,14 +460,14 @@ int ListBox::OwnerDrawProc(const WIDGET_ITEM_DRAW_INFO *pDrawItemInfo) {
 			GUI.BkColor(pObj->Props.aBkColor[ColorIndex]);
 			GUI.PenColor(pObj->Props.aTextColor[ColorIndex]);
 			GUI.Clear();
-			GUI.DrawStringAt(pObj->ItemArray[ItemIndex].Text, { pDrawItemInfo->x0 + 1, pDrawItemInfo->y0 });
+			SRect rFocus;
+			rFocus.left_top(pDrawItemInfo->Pos);
+			rFocus.x1 = pObj->WObj::InsideRect().x1;
+			rFocus.y1 = pDrawItemInfo->Pos.y + FontDistY - 1;
+			rFocus.x0 += 1;
+			GUI.DrawStringIn(pObj->ItemArray[ItemIndex].Text, rFocus);
 			if (!(pObj->StatusEx & LISTBOX_CF_MULTISEL) || ItemIndex != pObj->sel)
 				return 0;
-			SRect rFocus;
-			rFocus.x0 = pDrawItemInfo->x0;
-			rFocus.y0 = pDrawItemInfo->y0;
-			rFocus.x1 = pObj->WObj::InsideRect().x1;
-			rFocus.y1 = pDrawItemInfo->y0 + FontDistY - 1;
 			GUI.PenColor(RGB_WHITE - pObj->Props.aBkColor[ColorIndex]);
 			GUI.DrawFocus(rFocus);
 		}
@@ -569,7 +572,7 @@ void ListBox::ItemEnabled(uint16_t Index, bool bEnabled) {
 	_InvalidateItem(Index);
 }
 
-void ListBox::ItemText(uint16_t Index, const char *s) {
+void ListBox::ItemText(uint16_t Index, GUI_PCSTR s) {
 	if (Index < ItemArray.NumItems()) {
 		ItemArray[Index].Text = s;
 		_InvalidateItemSize(Index);
