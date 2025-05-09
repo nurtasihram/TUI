@@ -2,10 +2,9 @@
 
 #include "GUI_Types.h"
 
-#include "GUI_X_LCD.h"
-#include "GUI_X_MEM.h"
+#include "GUI_X.h"
 
-#include "Resources.inl"
+#include "Resources/Resources.inl"
 
 /// @brief 光標控制類
 class CursorCtl {
@@ -80,9 +79,6 @@ public:
 	}
 };
 #pragma endregion
-
-void GUI__strcpy(GUI_PSTR s, GUI_PCSTR c);
-void GUI__memcpy(void *sDest, const void *pSrc, size_t Len);
 
 /// @brief 繪圖面板
 class GUI_Panel {
@@ -196,13 +192,6 @@ public: // 字串繪製方法
 
 #pragma endregion
 
-	/// @brief 反轉筆刷前景色背景色
-	inline void RevColor() {
-		auto tmp = Props.aColor[0];
-		Props.aColor[0] = Props.aColor[1];
-		Props.aColor[1] = tmp;
-	}
-
 	int XDist(GUI_PCSTR pString, int NumChars) { return Props.pFont->XDist(pString, NumChars); }
 	inline int XDist(GUI_PCSTR pString) { return XDist(pString, NumChars(pString)); }
 
@@ -244,8 +233,8 @@ public: // Property - Off
 	/* R */ inline auto Off() const { return off; }
 	/* W */ inline void Off(Point off) { this->off = off; }
 public: // Property - ClipRect
-	/* W */ inline void ClipRect(const SRect &r) { rClip = LCD_Rect() & r; }
-	/* A */ inline void ClipRect() { rClip = LCD_Rect(); }
+	/* W */ inline void ClipRect(const SRect &r) { rClip = GUI_X_LCD_Rect() & r; }
+	/* A */ inline void ClipRect() { rClip = GUI_X_LCD_Rect(); }
 #pragma endregion
 
 };

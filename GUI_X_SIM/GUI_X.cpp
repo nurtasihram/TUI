@@ -1,14 +1,14 @@
 #define DLL_IMPORTS
 
-#include "GUI.h"
+#include "GUI_X.h"
 #include "GUI_X_SIM.h"
-#include "GUI_X_LCD.h"
 
-static inline void LCD_SetPixel(uint16_t x, uint16_t y, RGBC Color) {
+#pragma region LCD
+static inline void GUI_X_LCD_SetPixel(uint16_t x, uint16_t y, RGBC Color) {
 	GUI_X_SIM::Dot(x, y, Color);
 }
 
-#pragma region LCD_SetBitmap
+#pragma region GUI_X_LCD_SetBitmap
 template<bool HasTrans>
 static void _LCD_BMP_1BPP(
 	int x0, int y0, int x1, int y1,
@@ -24,10 +24,10 @@ static void _LCD_BMP_1BPP(
 			auto Index = Pix & 1;
 			if constexpr (HasTrans) {
 				if (Index)
-					LCD_SetPixel(x, y, C1);
+					GUI_X_LCD_SetPixel(x, y, C1);
 			}
 			else
-				LCD_SetPixel(x, y, Index ? C1 : C0);
+				GUI_X_LCD_SetPixel(x, y, Index ? C1 : C0);
 			Pix >>= 1;
 			if (++diff >= 8) {
 				diff = 0;
@@ -51,10 +51,10 @@ static void _LCD_BMP_2BPP(
 			auto Index = Pix & 3;
 			if constexpr (HasTrans) {
 				if (Index)
-					LCD_SetPixel(x, y, pTrans[Index]);
+					GUI_X_LCD_SetPixel(x, y, pTrans[Index]);
 			}
 			else
-				LCD_SetPixel(x, y, pTrans[Index]);
+				GUI_X_LCD_SetPixel(x, y, pTrans[Index]);
 			Pix >>= 2;
 			if (++diff >= 4) {
 				diff = 0;
@@ -66,7 +66,7 @@ static void _LCD_BMP_2BPP(
 }
 #pragma endregion
 
-void LCD_SetBitmap(const BitmapRect &br) {
+void GUI_X_LCD_SetBitmap(const BitmapRect &br) {
 	switch (br.BitsPerPixel) {
 		case 1:
 			if (br.HasTrans)
@@ -91,10 +91,10 @@ void LCD_SetBitmap(const BitmapRect &br) {
 			break;
 	}
 }
-void LCD_GetBitmap(BitmapRect &br) {
+void GUI_X_LCD_GetBitmap(BitmapRect &br) {
 	GUI_X_SIM::GetBitmap(br.x0, br.y0, br.x1, br.y1, (uint32_t *)br.pData, br.BytesPerLine);
 }
-void LCD_FillRect(const SRect &r) {
+void GUI_X_LCD_FillRect(const SRect &r, RGBC c) {
 	//auto color = GUI.PenColor();
 	//if (color != RGB_BLACK && color != RGB_WHITE) {
 	//	for (int x0 = r.x0; x0 <= r.x1; ++x0)
@@ -102,17 +102,17 @@ void LCD_FillRect(const SRect &r) {
 	//			GUI_X_SIM::Fill(x0, y0, x0, y0, ((x0 & 1) ^ (y0 & 1)) ? RGB_BLACK : RGB_WHITE);
 	//	return;
 	//}
-	GUI_X_SIM::Fill(r.x0, r.y0, r.x1, r.y1, GUI.PenColor());
+	GUI_X_SIM::Fill(r.x0, r.y0, r.x1, r.y1, c);
 }
 
-BitmapRect LCD_AllocBitmap(const SRect &r) {
+BitmapRect GUI_X_LCD_AllocBitmap(const SRect &r) {
 	BitmapRect br = r;
 	br.BytesPerLine = br.xsize() * 4;
 	br.BitsPerPixel = 24;
 	br.pData = GUI_MEM_Alloc(br.ysize() * br.BytesPerLine);
 	return br;
 }
-void LCD_FreeBitmap(BitmapRect &br) {
+void GUI_X_LCD_FreeBitmap(BitmapRect &br) {
 	if (br.pData) {
 		GUI_MEM_Free(br.pData);
 		br.pData = nullptr;
@@ -120,13 +120,49 @@ void LCD_FreeBitmap(BitmapRect &br) {
 }
 
 static uint16_t xSizeDisp = 0, ySizeDisp = 0;
-SRect LCD_Rect() {
+SRect GUI_X_LCD_Rect() {
 	return { 0, 0, xSizeDisp, ySizeDisp };
 }
+#pragma endregion
 
-void GUI_X_LCD_Init() {
+#pragma region Memory
+void GUI__strcpy(char *s, const char *c) {
+	strcpy(s, c);
+}
+void GUI__memcpy(void *sDest, const void *pSrc, size_t Len) {
+	memcpy(sDest, pSrc, Len);
+}
+
+void *GUI_MEM_Alloc(size_t Size) {
+	return Size ? malloc(Size) : nullptr;
+}
+void *GUI_MEM_AllocZero(size_t Size) {
+	if (auto ptr = GUI_MEM_Alloc(Size)) {
+		memset(ptr, 0, Size);
+		return ptr;
+	}
+	return nullptr;
+}
+void *GUI_MEM_Realloc(void *pOld, size_t NewSize) {
+	return realloc(pOld, NewSize);
+}
+void GUI_MEM_Free(void *ptr) {
+	if (ptr)
+		free(ptr);
+}
+#pragma endregion
+
+void GUI_X_Init() {
 	GUI_X_SIM::LoadDll(_T("GUI_X_SIM.dll"));
-	GUI_X_SIM::BindSize(&xSizeDisp, &ySizeDisp);
-	GUI_X_SIM::BindMouse(&GUI.MouseState.x, &GUI.MouseState.y, &GUI.MouseState.Pressed);
+	GUI_X_SIM::IntResize = [](uint16_t cx, uint16_t cy) {
+		xSizeDisp = cx;
+		ySizeDisp = cy;
+	};
+	GUI_X_SIM::IntMouse = [](int16_t x, int16_t y, int8_t key) {
+		GUI_X_MOUSE_SetState({ { x, y }, key });
+	};
+	GUI_X_SIM::IntKey = [](UINT vk, BOOL bPressed) {
+		GUI_X_KEY_SetState({ (uint16_t)vk, (uint16_t)bPressed });
+	};
 	GUI_X_SIM::CreateDisplay(L"TUI - User Interface", 800, 480);
 }

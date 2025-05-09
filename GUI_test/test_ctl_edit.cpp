@@ -1,15 +1,4 @@
-#include "Static.h"
-#include "Button.h"
-#include "CheckBox.h"
-#include "ProgBar.h"
-#include "ScrollBar.h"
-#include "Slider.h"
-#include "Radio.h"
-#include "ListBox.h"
-#include "Frame.h"
-#include "Header.h"
-#include "ListView.h"
-#include "MultiPage.h"
+#include "Widgets/Widgets.inl"
 
 class CtlEdit : public WObj {
 	Widget *pWidget = nullptr;

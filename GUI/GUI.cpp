@@ -15,18 +15,18 @@ void CursorCtl::_Hide() {
 	}
 }
 void CursorCtl::_Draw() {
-	auto brClipCursor = brCursor & LCD_Rect();
+	auto brClipCursor = brCursor & GUI_X_LCD_Rect();
 	brClip = (SRect)brClipCursor;
-	LCD_GetBitmap(brClip);
-	LCD_SetBitmap(brClipCursor);
+	GUI_X_LCD_GetBitmap(brClip);
+	GUI_X_LCD_SetBitmap(brClipCursor);
 }
 void CursorCtl::_Undraw() {
-	LCD_SetBitmap(brClip);
+	GUI_X_LCD_SetBitmap(brClip);
 }
 bool CursorCtl::_TempHide(const SRect *pRect) {
 	if (!_CursorIsVis || !pRect)
 		return false;
-	if (!(pRect && LCD_Rect()))
+	if (!(pRect && GUI_X_LCD_Rect()))
 		return false;
 	_Hide();
 	return true;
@@ -42,13 +42,13 @@ CCursor *CursorCtl::operator()(CCursor *pCursor) {
 	if (pCursor == _pCursor)
 		return _pCursor;
 	_Hide();
-	LCD_AllocBitmap(brClip);
+	GUI_X_LCD_AllocBitmap(brClip);
 	if (pCursor) {
 		_CursorOn = true;
 		_pCursor = pCursor;
 		brCursor = *pCursor;
 		brCursor.move_to(Pos - pCursor->Hot);
-		brClip = LCD_AllocBitmap(brCursor);
+		brClip = GUI_X_LCD_AllocBitmap(brCursor);
 		_TempShow();
 	}
 	else
@@ -116,15 +116,13 @@ void GUI_Panel::Clear(SRect r) {
 	r += off;
 	r &= rClip;
 	if (!r) return;
-	RevColor();
-	LCD_FillRect(r);
-	RevColor();
+	GUI_X_LCD_FillRect(r, BkColor());
 }
 void GUI_Panel::Fill(SRect r) {
 	r += off;
 	r &= rClip;
 	if (!r) return;
-	LCD_FillRect(r);
+	GUI_X_LCD_FillRect(r, PenColor());
 }
 void GUI_Panel::DrawFocus(SRect r, int Dist) {
 	r /= Dist;
@@ -148,11 +146,11 @@ void GUI_Panel::DrawBitmap(CBitmap &bmp, Point Pos) {
 	Pos += off;
 	auto &&bc = bmp + Pos;
 	if (bc &= rClip)
-		LCD_SetBitmap(bc);
+		GUI_X_LCD_SetBitmap(bc);
 }
 void GUI_Panel::DrawBitmap(BitmapRect bc) {
 	if (bc &= rClip)
-		LCD_SetBitmap(bc);
+		GUI_X_LCD_SetBitmap(bc);
 }
 #pragma endregion
 

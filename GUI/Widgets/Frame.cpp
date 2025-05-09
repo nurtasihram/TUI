@@ -428,7 +428,7 @@ void Frame::Maximize() {
 	auto pParent = Parent();
 	auto rParent = pParent->Rect();
 	if (!pParent->Parent())
-		rParent = LCD_Rect();
+		rParent = GUI_X_LCD_Rect();
 	rRestore = Rect();
 	PositionScreen(rParent.left_top());
 	Size(rParent.size());
