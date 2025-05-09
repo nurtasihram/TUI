@@ -8,7 +8,7 @@ extern CPalette GUI_PalCursor, GUI_PalCursorI;
 /* Cursors */
 extern CCursor
 	  GUI_CursorArrow,   GUI_CursorArrowI,
-	  GUI_CursorHeader, GUI_CursorMove,
+	  /* GUI_CursorHeader, */GUI_CursorMove,
 	  GUI_CursorResizeH,  GUI_CursorResizeV,
 	  GUI_CursorResizeDD, GUI_CursorResizeDU;
 #pragma endregion

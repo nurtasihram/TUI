@@ -273,7 +273,7 @@ void Menu::_ForwardPIDMsgToOwner(int MsgId, MOUSE_STATE *pState) {
 }
 bool Menu::_HandleMouse(const MOUSE_STATE &State) {
 	bool bInside = 0;
-	auto &&PrevState = PrevPidState();
+	auto &&PrevState = GUI.Mouse();
 	/* Check if coordinates are inside the widget. */
 	if (State.x >= 0 && State.y >= 0)
 		if (WObj::ClientRect() <= State)

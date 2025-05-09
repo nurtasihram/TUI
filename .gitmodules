@@ -1,3 +1,9 @@
 [submodule "SimDisp"]
 	path = SimDisp
 	url = https://github.com/nurtasihram/SimDisp.git
+[submodule "freetype"]
+	path = freetype
+	url = https://gitlab.freedesktop.org/freetype/freetype.git
+[submodule "Tools/font_maker/freetype"]
+	path = Tools/font_maker/freetype
+	url = https://gitlab.freedesktop.org/freetype/freetype.git

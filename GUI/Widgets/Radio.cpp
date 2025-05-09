@@ -127,8 +127,6 @@ void Radio::_OnMouse(const MOUSE_STATE *pState) {
 	else
 		Notification = WN_MOVED_OUT;
 	NotifyParent(Notification);
-	if (Hit)
-		GUI.Key(Id);
 }
 bool Radio::_OnKey(KEY_STATE State) {
 	if (State.PressedCnt <= 0)

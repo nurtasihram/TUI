@@ -25,6 +25,7 @@ int SCROLL_STATE::Value(int v) {
 }
 #pragma endregion
 
+#pragma region WObj Basic
 PWObj WObj::pWinFirst = nullptr;
 uint16_t WObj::nWindows = 0;
 PWObj WObj::pWinActive = nullptr;
@@ -159,7 +160,10 @@ void WObj::Destroy() {
 		--nInvalidWindows;
 	--nWindows;
 	GUI_MEM_Free(this);
-	pWinFirst->Select();
+	if (pDesktop == this)
+		pWinFirst = pWinActive = pWinFocus = pWinCapture = pDesktop = nullptr;
+	else
+		pWinFirst->Select();
 }
 void WObj::Select() {
 	pWinActive = this;
@@ -186,6 +190,16 @@ void WObj::BringToBottom() {
 	}
 }
 
+bool WObj::IsAncestor(PWObj pParent) const {
+	if (!pParent)
+		return false;
+	for (auto iWin = this; iWin; iWin = iWin->Parent())
+		if (iWin->Parent() == pParent)
+			return true;
+	return false;
+}
+
+#pragma region Paint
 #pragma region Invalidate 
 bool WObj::_ClipAtParentBorders(SRect &r) const {
 	for (auto pWin = this; pWin->Status & WC_VISIBLE; pWin = pWin->pParent) {
@@ -224,8 +238,6 @@ void WObj::InvalidateDescs() {
 		pChild->InvalidateDescs();
 }
 #pragma endregion
-
-#pragma region Paint
 uint8_t WObj::nPaintCallback = 0;
 PWObj WObj::pWinNextDraw = nullptr;
 void WObj::_Paint1() {
@@ -267,6 +279,101 @@ bool WObj::PaintNext() {
 	}
 	pWinNextDraw = pWin;
 	return true;
+}
+#pragma endregion
+
+#pragma region Resize & Move
+void WObj::_MoveDescendents(Point d) {
+	for (auto i = this; i; i = i->pNext) {
+		i->rsWin += d;
+		i->rsInvalid += d;
+		if (auto pChild = i->pFirstChild)
+			pChild->_MoveDescendents(d);
+		i->SendMessage(WM_MOVE);
+	}
+}
+void WObj::RectScreen(const SRect &rsNew) {
+	auto rsOld = rsWin;
+	rsWin = rsNew;
+	rsInvalid = rsNew;
+	if (Status & WC_VISIBLE) {
+		InvalidateArea(rsWin);
+		InvalidateArea(rsOld);
+	}
+	auto &&dRect = rsOld - rsNew;
+	if (dRect.left_top())
+		SendMessage(WM_MOVE);
+	if (dRect.size())
+		SendMessage(WM_SIZE);
+}
+void WObj::Move(Point dPos) {
+	if (!dPos) return;
+	auto rOld = rsWin;
+	rsWin += dPos;
+	rsInvalid += dPos;
+	if (pFirstChild)
+		pFirstChild->_MoveDescendents(dPos);
+	if (Status & WC_VISIBLE) {
+		InvalidateArea(rsWin);
+		InvalidateArea(rOld);
+	}
+	SendMessage(WM_MOVE);
+}
+
+void WObj::_UpdateChildPositions(SRect d) {
+	for (auto pChild = pFirstChild; pChild; pChild = pChild->pNext) {
+		SRect rNew = pChild->rsWin;
+		switch (pChild->Status & (WC_ANCHOR_RIGHT | WC_ANCHOR_LEFT)) {
+			case WC_ANCHOR_RIGHT:
+				rNew.x0 += d.x1;
+				rNew.x1 += d.x1;
+				break;
+			case WC_ANCHOR_RIGHT | WC_ANCHOR_LEFT:
+				rNew.x0 += d.x0;
+				rNew.x1 += d.x1;
+				break;
+			default:
+				rNew.x0 += d.x0;
+				rNew.x1 += d.x0;
+		}
+		switch (pChild->Status & (WC_ANCHOR_TOP | WC_ANCHOR_BOTTOM)) {
+			case WC_ANCHOR_BOTTOM:
+				rNew.y0 += d.y1;
+				rNew.y1 += d.y1;
+				break;
+			case WC_ANCHOR_BOTTOM | WC_ANCHOR_TOP:
+				rNew.y0 += d.y0;
+				rNew.y1 += d.y1;
+				break;
+			default:
+				rNew.y0 += d.y0;
+				rNew.y1 += d.y0;
+		}
+		pChild->Size(rNew.size());
+		pChild->PositionScreen(rNew.left_top());
+	}
+}
+void WObj::Resize(Point dSize) {
+	if (!dSize) return;
+	SRect rOld = rsWin, rNew = rOld;
+	if (dSize.x) {
+		if ((Status & WC_ANCHOR_RIGHT) && !(Status & WC_ANCHOR_LEFT))
+			rNew.x0 -= dSize.x;
+		else
+			rNew.x1 += dSize.x;
+	}
+	if (dSize.y) {
+		if ((Status & WC_ANCHOR_BOTTOM) && !(Status & WC_ANCHOR_TOP))
+			rNew.y0 -= dSize.y;
+		else
+			rNew.y1 += dSize.y;
+	}
+	rsWin = rNew;
+	InvalidateArea(rOld | rNew);
+	rNew -= rOld;
+	_UpdateChildPositions(rNew);
+	rsInvalid &= rsWin;
+	SendMessage(WM_SIZE);
 }
 #pragma endregion
 
@@ -405,11 +512,21 @@ bool WObj::IVR_Init(const SRect *pMaxRect) {
 }
 #pragma endregion
 
+PWObj WObj::FindOnScreen(Point Pos, PWObj pStop, PWObj pWin) {
+	if (!pWin->Visible()) return nullptr;
+	if (pWin->RectScreen() > Pos) return nullptr;
+	for (auto pChild = pWin->pFirstChild;
+		 pChild && pChild != pStop;
+		 pChild = pChild->pNext)
+		if (auto pHit = FindOnScreen(Pos, pStop, pChild))
+			pWin = pHit;
+	return pWin;
+}
 
 void WObj::Init() {
 	if (pDesktop) return;
 	pWinActive = pDesktop = new WObj(
-		LCD_Rect(),
+		GUI.Rect(),
 		DesktopCallback,
 		nullptr, 0,
 		WC_VISIBLE);
@@ -421,7 +538,7 @@ void WObj::Init() {
 bool WObj::Exec() {
 	if (HandleMouse())
 		return true;
-	if (GUI.PollKeyMsg())
+	if (HandleKey())
 		return true;
 	if (PaintNext())
 		return true;
@@ -472,6 +589,14 @@ WM_RESULT WObj::DefCallback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 	return 0;
 }
 
+bool WObj::OnKey(KEY_STATE State) {
+	if (pWinFocus)
+		return pWinFocus->_SendMessage(WM_KEY, State);
+	return true;
+}
+
+PWObj WObj::pDesktop = nullptr;
+RGBC WObj::clDesktop = RGB_GRAY;
 WM_RESULT WObj::DesktopCallback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 	switch (MsgId) {
 		case WM_KEY:
@@ -486,38 +611,6 @@ WM_RESULT WObj::DesktopCallback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSr
 			return clDesktop;
 	}
 	return DefCallback(pWin, MsgId, Param, pSrc);
-}
-
-PWObj WObj::FindOnScreen(Point Pos, PWObj pStop, PWObj pWin) {
-	if (!pWin->Visible()) return nullptr;
-	if (pWin->RectScreen() > Pos) return nullptr;
-	for (auto pChild = pWin->pFirstChild;
-		 pChild && pChild != pStop;
-		 pChild = pChild->pNext)
-		if (auto pHit = FindOnScreen(Pos, pStop, pChild))
-			pWin = pHit;
-	return pWin;
-}
-
-PWObj WObj::pDesktop = nullptr;
-RGBC WObj::clDesktop = RGB_GRAY;
-
-bool WObj::IsAncestor(PWObj pParent) const {
-	if (!pParent)
-		return false;
-	for (auto iWin = this; iWin; iWin = iWin->Parent())
-		if (iWin->Parent() == pParent)
-			return true;
-	return false;
-}
-
-PWObj WObj::DialogItem(uint16_t Id) {
-	for (auto pObj = pFirstChild; pObj; pObj = pObj->pNext)
-		if (pObj->ID() == Id)
-			return pObj;
-		else if (auto pItem = pObj->DialogItem(Id))
-			return pItem;
-	return nullptr;
 }
 
 #pragma region Focus
@@ -573,16 +666,6 @@ PWObj WObj::FocusNextChild() {
 }
 #pragma endregion
 
-bool WObj::OnKey(uint16_t Key, int Pressed) {
-	if (!pWinFocus)
-		return false;
-	KEY_STATE Info;
-	Info.Key = Key;
-	Info.PressedCnt = Pressed;
-	pWinFocus->_SendMessage(WM_KEY, Info);
-	return true;
-}
-
 #pragma region Capture
 PWObj WObj::pWinCapture = nullptr;
 bool WObj::bCaptureAutoRelease = false;
@@ -625,102 +708,7 @@ void WObj::CaptureMove(Point Pos, int MinVisibility) {
 }
 #pragma endregion
 
-#pragma region Resize & Move
-void WObj::_MoveDescendents(Point d) {
-	for (auto i = this; i; i = i->pNext) {
-		i->rsWin += d;
-		i->rsInvalid += d;
-		if (auto pChild = i->pFirstChild)
-			pChild->_MoveDescendents(d);
-		i->SendMessage(WM_MOVE);
-	}
-}
-void WObj::RectScreen(const SRect &rsNew) {
-	auto rsOld = rsWin;
-	rsWin = rsNew;
-	rsInvalid = rsNew;
-	if (Status & WC_VISIBLE) {
-		InvalidateArea(rsWin);
-		InvalidateArea(rsOld);
-	}
-	auto &&dRect = rsOld - rsNew;
-	if (dRect.left_top())
-		SendMessage(WM_MOVE);
-	if (dRect.size())
-		SendMessage(WM_SIZE);
-}
-void WObj::Move(Point dPos) {
-	if (!dPos) return;
-	auto rOld = rsWin;
-	rsWin += dPos;
-	rsInvalid += dPos;
-	if (pFirstChild)
-		pFirstChild->_MoveDescendents(dPos);
-	if (Status & WC_VISIBLE) {
-		InvalidateArea(rsWin);
-		InvalidateArea(rOld);
-	}
-	SendMessage(WM_MOVE);
-}
-
-void WObj::_UpdateChildPositions(SRect d) {
-	for (auto pChild = pFirstChild; pChild; pChild = pChild->pNext) {
-		SRect rNew = pChild->rsWin;
-		switch (pChild->Status & (WC_ANCHOR_RIGHT | WC_ANCHOR_LEFT)) {
-			case WC_ANCHOR_RIGHT:
-				rNew.x0 += d.x1;
-				rNew.x1 += d.x1;
-				break;
-			case WC_ANCHOR_RIGHT | WC_ANCHOR_LEFT:
-				rNew.x0 += d.x0;
-				rNew.x1 += d.x1;
-				break;
-			default:
-				rNew.x0 += d.x0;
-				rNew.x1 += d.x0;
-		}
-		switch (pChild->Status & (WC_ANCHOR_TOP | WC_ANCHOR_BOTTOM)) {
-			case WC_ANCHOR_BOTTOM:
-				rNew.y0 += d.y1;
-				rNew.y1 += d.y1;
-				break;
-			case WC_ANCHOR_BOTTOM | WC_ANCHOR_TOP:
-				rNew.y0 += d.y0;
-				rNew.y1 += d.y1;
-				break;
-			default:
-				rNew.y0 += d.y0;
-				rNew.y1 += d.y0;
-		}
-		pChild->Size(rNew.size());
-		pChild->PositionScreen(rNew.left_top());
-	}
-}
-void WObj::Resize(Point dSize) {
-	if (!dSize) return;
-	SRect rOld = rsWin, rNew = rOld;
-	if (dSize.x) {
-		if ((Status & WC_ANCHOR_RIGHT) && !(Status & WC_ANCHOR_LEFT))
-			rNew.x0 -= dSize.x;
-		else
-			rNew.x1 += dSize.x;
-	}
-	if (dSize.y) {
-		if ((Status & WC_ANCHOR_BOTTOM) && !(Status & WC_ANCHOR_TOP))
-			rNew.y0 -= dSize.y;
-		else
-			rNew.y1 += dSize.y;
-	}
-	rsWin = rNew;
-	InvalidateArea(rOld | rNew);
-	rNew -= rOld;
-	_UpdateChildPositions(rNew);
-	rsInvalid &= rsWin;
-	SendMessage(WM_SIZE);
-}
-#pragma endregion
-
-#pragma region Touch
+#pragma region Mouse
 bool WObj::_IsInModalArea() {
 	if (!CriticalHandles::Modal.pWin)
 		return true;
@@ -771,30 +759,44 @@ void WObj::CriticalHandles::Check(PWObj pWin) {
 		if (pCH->pWin == pWin)
 			pCH->pWin = nullptr;
 }
-MOUSE_STATE WObj::_StateLast;
 
-bool WObj::HandleMouse() {
-	MOUSE_STATE StateNew = GUI.MouseState;
-	if (_StateLast == StateNew)
+#include "GUI_X.h"
+
+bool WObj::HandleRect() {
+	if (GUI.RectNA())
 		return false;
-	GUI.Cursor.Position(StateNew);
+	if (pDesktop)
+		pDesktop->RectScreen(GUI.RectN());
+	return true;
+}
+bool WObj::HandleKey() {
+	if (GUI.KeyNA())
+		return false;
+	WObj::OnKey(GUI.Key());
+	return true;
+}
+bool WObj::HandleMouse() {
+	if (GUI.MouseNA())
+		return false;
+	auto StateOld = GUI.MousePrev(), StateNow = GUI.Mouse();
+	GUI.Cursor.Position(StateNow);
 	bool r = false;
-	CriticalHandles CHWin = pWinCapture ? pWinCapture : WObj::FindOnScreen(StateNew);
+	CriticalHandles CHWin = pWinCapture ? pWinCapture : WObj::FindOnScreen(StateNow);
 	if (CHWin.pWin->_IsInModalArea()) {
-		if (_StateLast.Pressed != StateNew.Pressed && CHWin.pWin)
+		if (StateOld.Pressed != StateNow.Pressed && CHWin.pWin)
 			CHWin.pWin->_SendMessageIfEnabled(WM_MOUSE_CHANGED, 
 				MOUSE_CHANGED_STATE{
-					 CHWin.pWin->Screen2Client(StateNew), 
-					 StateNew.Pressed, _StateLast.Pressed });
-		if (_StateLast.Pressed | StateNew.Pressed) { /* Only if pressed or just released */
+					 CHWin.pWin->Screen2Client(StateNow), 
+					 StateNow.Pressed, StateOld.Pressed });
+		if (StateOld.Pressed | StateNow.Pressed) { /* Only if pressed or just released */
 			r = true;
 			MOUSE_STATE State;
 			if (CriticalHandles::Last.pWin != CHWin.pWin)
 				if (CriticalHandles::Last.pWin != nullptr) {
 					MOUSE_STATE *pState = nullptr;
-					if (!StateNew.Pressed) {
-						State.x = _StateLast.x;
-						State.y = _StateLast.y;
+					if (!StateNow.Pressed) {
+						State.x = StateOld.x;
+						State.y = StateOld.y;
 						State.Pressed = 0;
 						pState = &State;
 					}
@@ -802,7 +804,7 @@ bool WObj::HandleMouse() {
 					CriticalHandles::Last.pWin = nullptr;
 				}
 			if (CHWin.pWin) {
-				State = StateNew;
+				State = StateNow;
 				if (State.Pressed)
 					CriticalHandles::Last.pWin = CHWin.pWin;
 				else {
@@ -815,177 +817,11 @@ bool WObj::HandleMouse() {
 		}
 		else if (CHWin.pWin)
 			if (CHWin.pWin->Enable())
-				CHWin.pWin->_SendMouseMessage(WM_MOUSE_OVER, &StateNew);
+				CHWin.pWin->_SendMouseMessage(WM_MOUSE_OVER, &StateNow);
 	}
-	_StateLast = StateNew;
 	return r;
 }
-#pragma endregion
 
-#pragma region Dialog
-void WObj::DialogEnd(int r) {
-	if (auto pStatus = DialogStatusPtr()) {
-		pStatus->ReturnValue = r;
-		pStatus->Done = 1;
-	}
-	Destroy();
-}
-int WObj::DialogExec() {
-	DIALOG_STATE Status;
-	DialogStatusPtr(&Status);
-	while (!Status.Done)
-		WObj::Exec();
-	return Status.ReturnValue;
-}
-
-#include "Button.h"
-#include "CheckBox.h"
-#include "DropDown.h"
-//#include "Edit.h"
-#include "Header.h"
-#include "ListBox.h"
-#include "ListView.h"
-#include "Menu.h"
-//#include "MultiEdit.h"
-#include "MultiPage.h"
-#include "ProgBar.h"
-#include "Radio.h"
-#include "ScrollBar.h"
-#include "Slider.h"
-#include "Static.h"
-#include "Frame.h"
-
-GUI_PCSTR ClassNames[]{
-	"",
-	"BUTTON",
-	"CHECKBOX",
-	"DROPDOWN",
-	"EDIT",
-	"HEADER",
-	"LISTBOX",
-	"LISTVIEW",
-	"MENU",
-	"MULTIEDIT",
-	"MULTIPAGE",
-	"PROGBAR",
-	"RADIO",
-	"SCROLLBAR",
-	"SLIDER",
-	"STATIC",
-	"FRAME"
-};
-
-PWObj WM_CREATESTRUCT::Create() const {
-	switch (Class) {
-		case WCLS_BUTTON:
-			return new Button(*this);
-		case WCLS_CHECKBOX:
-			return new CheckBox(*this);
-		case WCLS_DROPDOWN:
-			return new DropDown(*this);
-		//case WCLS_EDIT:
-		//	return new Edit(*this.x, *this.y, *this.xsize, *this.ysize, *this.pParent, *this.Flags);
-		//case WCLS_HEADER:
-		//	return new Header(*this.x, *this.y, *this.xsize, *this.ysize, *this.pParent, *this.Flags);
-		case WCLS_LISTBOX:
-			return new ListBox(*this);
-		//case WCLS_LISTVIEW:
-		//	return new ListView(*this.x, *this.y, *this.xsize, *this.ysize, *this.pParent, *this.Flags);
-		//case WCLS_MENU:
-		//	return new Menu(*this.x, *this.y, *this.xsize, *this.ysize, *this.pParent, *this.Flags);
-		//case WCLS_MULTIEDIT:
-		//	return new MultiEdit(*this.x, *this.y, *this.xsize, *this.ysize, *this.pParent, *this.Flags);
-		//case WCLS_MULTIPAGE:
-		//	return new MultiPage(*this.x, *this.y, *this.xsize, *this.ysize, *this.pParent, *this.Flags);
-		case WCLS_PROGBAR:
-			return new ProgBar(*this);
-		case WCLS_RADIO:
-			return new Radio(*this);
-		case WCLS_SCROLLBAR:
-			return new ScrollBar(*this);
-		case WCLS_SLIDER:
-			return new Slider(*this);
-		case WCLS_STATIC:
-			return new Static(*this);
-		case WCLS_FRAME:
-			return new Frame(*this);
-		default:
-			break;
-	}
-	return nullptr;
-}
-
-PWObj WM_CREATESTRUCT::CreateDialog(WM_CB cb, Point Pos, PWObj pParent) const {
-	auto wc0 = *this;
-	wc0.pParent = pParent;
-	if (cb)
-		wc0.Para = (uint64_t)cb;
-	auto pDialog = wc0.Create();
-	auto pDialogClient = pDialog->Client();
-	for (auto pWC = this + 1; pWC->Class != WCLS_EOF; ++pWC) {
-		auto wc = *pWC;
-		wc.pParent = pDialogClient;
-		if (auto pChild = wc.Create())
-			pChild->Visible(true);
-	}
-	pDialog->Visible(true);
-	pDialogClient->Visible(true);
-	pDialog->Focus();
-	pDialog->FocusNextChild();
-	pDialogClient->SendMessage(WM_INIT_DIALOG);
-	return pDialog;
-}
-int WM_CREATESTRUCT::DialogBox(WM_CB cb, Point Pos, PWObj pParent) const {
-	return CreateDialog(cb, Pos, pParent)->DialogExec();
-}
-#pragma endregion
-
-#pragma region ScrollBar
-#include "ScrollBar.h"
-
-static ScrollBar *_SetScrollBar(PWObj pWin, bool bEnable, uint16_t Id) {
-	auto pBar = (ScrollBar *)pWin->DialogItem(Id);
-	if (bEnable) {
-		if (!pBar)
-			pBar = new ScrollBar(pWin, Id);
-		pBar->Visible(true);
-		return pBar;
-	}
-	else if (pBar) {
-		pBar->Visible(false);
-		pBar->Destroy();
-	}
-	return nullptr;
-}
-void WObj::ScrollBarV(bool bEnable) { _SetScrollBar(this, bEnable, GUI_ID_VSCROLL); }
-void WObj::ScrollBarH(bool bEnable) { _SetScrollBar(this, bEnable, GUI_ID_HSCROLL); }
-
-static void _SetScrollState(PWObj pWin, SCROLL_STATE s, uint16_t Id) {
-	auto pScroll = (ScrollBar *)pWin->DialogItem(Id);
-	if (pWin->Styles() & WC_AUTOSCROLL_V) {
-		if (!pScroll)
-			pScroll = new ScrollBar(pWin, Id);
-		pScroll->Visible(s.NeedScroll());
-	}
-	if (pScroll)
-		pScroll->ScrollState(s);
-}
-void WObj::ScrollStateH(SCROLL_STATE s) {
-	_SetScrollState(this, s, GUI_ID_HSCROLL);
-}
-SCROLL_STATE WObj::ScrollStateH() const {
-	if (auto pScroll = const_cast<WObj *>(this)->ScrollBarH())
-		return pScroll->ScrollState();
-	return {};
-}
-void WObj::ScrollStateV(SCROLL_STATE s) {
-	_SetScrollState(this, s, GUI_ID_VSCROLL);
-}
-SCROLL_STATE WObj::ScrollStateV() const {
-	if (auto pScroll = const_cast<PWObj>(this)->ScrollBarV())
-		return pScroll->ScrollState();
-	return {};
-}
 #pragma endregion
 
 #pragma region Properties
@@ -1063,6 +899,164 @@ PWObj WObj::PrevSibling() {
 			return pObj;
 	return nullptr;
 }
+#pragma endregion
+
+#pragma region Dialog
+void WObj::DialogEnd(int r) {
+	if (auto pStatus = DialogStatusPtr()) {
+		pStatus->ReturnValue = r;
+		pStatus->Done = 1;
+	}
+	Destroy();
+}
+int WObj::DialogExec() {
+	DIALOG_STATE Status;
+	DialogStatusPtr(&Status);
+	while (!Status.Done)
+		WObj::Exec();
+	return Status.ReturnValue;
+}
+
+#include "Widgets/Widgets.inl"
+
+GUI_PCSTR ClassNames[]{
+	"",
+	"BUTTON",
+	"CHECKBOX",
+	"DROPDOWN",
+	"EDIT",
+	"HEADER",
+	"LISTBOX",
+	"LISTVIEW",
+	"MENU",
+	"MULTIEDIT",
+	"MULTIPAGE",
+	"PROGBAR",
+	"RADIO",
+	"SCROLLBAR",
+	"SLIDER",
+	"STATIC",
+	"FRAME"
+};
+
+PWObj WM_CREATESTRUCT::Create() const {
+	switch (Class) {
+		case WCLS_BUTTON:
+			return new Button(*this);
+		case WCLS_CHECKBOX:
+			return new CheckBox(*this);
+		case WCLS_DROPDOWN:
+			return new DropDown(*this);
+			//case WCLS_EDIT:
+			//	return new Edit(*this.x, *this.y, *this.xsize, *this.ysize, *this.pParent, *this.Flags);
+			//case WCLS_HEADER:
+			//	return new Header(*this.x, *this.y, *this.xsize, *this.ysize, *this.pParent, *this.Flags);
+		case WCLS_LISTBOX:
+			return new ListBox(*this);
+			//case WCLS_LISTVIEW:
+			//	return new ListView(*this.x, *this.y, *this.xsize, *this.ysize, *this.pParent, *this.Flags);
+			//case WCLS_MENU:
+			//	return new Menu(*this.x, *this.y, *this.xsize, *this.ysize, *this.pParent, *this.Flags);
+			//case WCLS_MULTIEDIT:
+			//	return new MultiEdit(*this.x, *this.y, *this.xsize, *this.ysize, *this.pParent, *this.Flags);
+			//case WCLS_MULTIPAGE:
+			//	return new MultiPage(*this.x, *this.y, *this.xsize, *this.ysize, *this.pParent, *this.Flags);
+		case WCLS_PROGBAR:
+			return new ProgBar(*this);
+		case WCLS_RADIO:
+			return new Radio(*this);
+		case WCLS_SCROLLBAR:
+			return new ScrollBar(*this);
+		case WCLS_SLIDER:
+			return new Slider(*this);
+		case WCLS_STATIC:
+			return new Static(*this);
+		case WCLS_FRAME:
+			return new Frame(*this);
+		default:
+			break;
+	}
+	return nullptr;
+}
+PWObj WM_CREATESTRUCT::CreateDialog(WM_CB cb, Point Pos, PWObj pParent) const {
+	auto wc0 = *this;
+	wc0.pParent = pParent;
+	if (cb)
+		wc0.Para = (uint64_t)cb;
+	auto pDialog = wc0.Create();
+	auto pDialogClient = pDialog->Client();
+	for (auto pWC = this + 1; pWC->Class != WCLS_EOF; ++pWC) {
+		auto wc = *pWC;
+		wc.pParent = pDialogClient;
+		if (auto pChild = wc.Create())
+			pChild->Visible(true);
+	}
+	pDialog->Visible(true);
+	pDialogClient->Visible(true);
+	pDialog->Focus();
+	pDialog->FocusNextChild();
+	pDialogClient->SendMessage(WM_INIT_DIALOG);
+	return pDialog;
+}
+int WM_CREATESTRUCT::DialogBox(WM_CB cb, Point Pos, PWObj pParent) const {
+	return CreateDialog(cb, Pos, pParent)->DialogExec();
+}
+PWObj WObj::DialogItem(uint16_t Id) {
+	for (auto pObj = pFirstChild; pObj; pObj = pObj->pNext)
+		if (pObj->ID() == Id)
+			return pObj;
+		else if (auto pItem = pObj->DialogItem(Id))
+			return pItem;
+	return nullptr;
+}
+#pragma endregion
+
+#pragma region ScrollBar
+static ScrollBar *_SetScrollBar(PWObj pWin, bool bEnable, uint16_t Id) {
+	auto pBar = (ScrollBar *)pWin->DialogItem(Id);
+	if (bEnable) {
+		if (!pBar)
+			pBar = new ScrollBar(pWin, Id);
+		pBar->Visible(true);
+		return pBar;
+	}
+	else if (pBar) {
+		pBar->Visible(false);
+		pBar->Destroy();
+	}
+	return nullptr;
+}
+void WObj::ScrollBarV(bool bEnable) { _SetScrollBar(this, bEnable, GUI_ID_VSCROLL); }
+void WObj::ScrollBarH(bool bEnable) { _SetScrollBar(this, bEnable, GUI_ID_HSCROLL); }
+
+static void _SetScrollState(PWObj pWin, SCROLL_STATE s, uint16_t Id) {
+	auto pScroll = (ScrollBar *)pWin->DialogItem(Id);
+	if (pWin->Styles() & WC_AUTOSCROLL_V) {
+		if (!pScroll)
+			pScroll = new ScrollBar(pWin, Id);
+		pScroll->Visible(s.NeedScroll());
+	}
+	if (pScroll)
+		pScroll->ScrollState(s);
+}
+void WObj::ScrollStateH(SCROLL_STATE s) {
+	_SetScrollState(this, s, GUI_ID_HSCROLL);
+}
+SCROLL_STATE WObj::ScrollStateH() const {
+	if (auto pScroll = const_cast<WObj *>(this)->ScrollBarH())
+		return pScroll->ScrollState();
+	return {};
+}
+void WObj::ScrollStateV(SCROLL_STATE s) {
+	_SetScrollState(this, s, GUI_ID_VSCROLL);
+}
+SCROLL_STATE WObj::ScrollStateV() const {
+	if (auto pScroll = const_cast<PWObj>(this)->ScrollBarV())
+		return pScroll->ScrollState();
+	return {};
+}
+#pragma endregion
+
 #pragma endregion
 
 #pragma region Widget

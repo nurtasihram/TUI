@@ -51,8 +51,6 @@ void CheckBox::_OnMouse(const MOUSE_STATE *pState) {
 	else
 		Notification = WN_MOVED_OUT;
 	NotifyParent(Notification);
-	if (Hit == 1)
-		GUI.Key(Id);
 }
 bool CheckBox::_OnKey(KEY_STATE State) {
 	if (!Enable()) return false;

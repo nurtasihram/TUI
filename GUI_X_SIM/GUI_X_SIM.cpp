@@ -8,49 +8,46 @@
 #include "wx_window.h"
 #include "wx_realtime.h"
 
-Ayxandar SimDisp::Ayx;
-
-int16_t *pMouseX = nullptr, *pMouseY = nullptr;
-int8_t *pMouseKey = 0;
-uint16_t *pSizeX = nullptr, *pSizeY = nullptr;
-
 #pragma region Function Exportation 
-REG_FUNC(void, BindSize, uint16_t *xSize, uint16_t *ySize) {
-	pSizeX = xSize;
-	pSizeY = ySize;
+GUI_X_SIM_pfnOnSize pfnIntResize;
+GUI_X_SIM_pfnOnMouse pfnIntMouse;
+GUI_X_SIM_pfnOnKey pfnIntKey;
+
+REG_FUNC(void, IntResize, GUI_X_SIM_pfnOnSize pfnOnSize) {
+	pfnIntResize = pfnOnSize;
 }
-REG_FUNC(void, BindMouse, int16_t *xMouse, int16_t *yMouse, int8_t *keyMouse) {
-	pMouseX = xMouse;
-	pMouseY = yMouse;
-	pMouseKey = keyMouse;
+REG_FUNC(void, IntMouse, GUI_X_SIM_pfnOnMouse pfnOnMouse) {
+	pfnIntMouse = pfnOnMouse;
 }
-REG_FUNC(void, BindKey, void(*pfnOnKey)(UINT vk, BOOL bPressed)) {
-	SimDisp::SetOnKey(pfnOnKey);
+REG_FUNC(void, IntKey, GUI_X_SIM_pfnOnKey pfnOnKey) {
+	pfnIntKey = pfnOnKey;
 }
+
 REG_FUNC(void, CreateDisplay, const wchar_t *lpTitle, uint16_t xSize, uint16_t ySize) {
 	using namespace SimDisp;
 	LoadDll(_T("SimClient.dll"));
 	assertl(Open(L"TUI - User Interface", xSize, ySize));
+	SetOnResize([](uint16_t nSizeX, uint16_t nSizeY) -> uint8_t {
+		pfnIntResize(nSizeX, nSizeY);
+		return TRUE;
+	});
 	SetOnMouse([](int16_t xPos, int16_t yPos, int16_t zPos,
-						   tSimDisp_MouseKey mk) {
+				  tSimDisp_MouseKey mk) {
 		if (xPos < 0 || yPos < 0)
 			return;
-		*pMouseX = xPos;
-		*pMouseY = yPos;
-		*pMouseKey = mk.Left;
+		pfnIntMouse(xPos, yPos, mk.Left);
+	});
+	SetOnKey([](uint16_t vk, uint8_t bPressed) {
+		pfnIntKey(vk, bPressed);
 	});
 	SetOnClose([] {
 	});
-	SetOnResize([](uint16_t nSizeX, uint16_t nSizeY) -> BOOL {
-		*pSizeX = nSizeX;
-		*pSizeY = nSizeY;
-		return TRUE;
-	});
-	GetSize(pSizeX, pSizeY);
 	HideCursor(true);
 	Show(true);
 	Ayx.Init();
+	pfnIntResize(xSize, ySize);
 }
+
 REG_FUNC(void, Dot, uint16_t x, uint16_t y, uint32_t rgb) {
 	SimDisp::Ayx.Dot({ x, y }, rgb);
 }

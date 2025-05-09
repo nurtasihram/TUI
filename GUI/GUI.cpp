@@ -15,18 +15,18 @@ void CursorCtl::_Hide() {
 	}
 }
 void CursorCtl::_Draw() {
-	auto brClipCursor = brCursor & LCD_Rect();
+	auto brClipCursor = brCursor & GUI.Rect();
 	brClip = (SRect)brClipCursor;
-	LCD_GetBitmap(brClip);
-	LCD_SetBitmap(brClipCursor);
+	GUI_X_LCD_GetBitmap(brClip);
+	GUI_X_LCD_SetBitmap(brClipCursor);
 }
 void CursorCtl::_Undraw() {
-	LCD_SetBitmap(brClip);
+	GUI_X_LCD_SetBitmap(brClip);
 }
 bool CursorCtl::_TempHide(const SRect *pRect) {
 	if (!_CursorIsVis || !pRect)
 		return false;
-	if (!(pRect && LCD_Rect()))
+	if (!(pRect && GUI.Rect()))
 		return false;
 	_Hide();
 	return true;
@@ -42,13 +42,13 @@ CCursor *CursorCtl::operator()(CCursor *pCursor) {
 	if (pCursor == _pCursor)
 		return _pCursor;
 	_Hide();
-	LCD_AllocBitmap(brClip);
+	GUI_X_LCD_AllocBitmap(brClip);
 	if (pCursor) {
 		_CursorOn = true;
 		_pCursor = pCursor;
 		brCursor = *pCursor;
 		brCursor.move_to(Pos - pCursor->Hot);
-		brClip = LCD_AllocBitmap(brCursor);
+		brClip = GUI_X_LCD_AllocBitmap(brCursor);
 		_TempShow();
 	}
 	else
@@ -116,15 +116,13 @@ void GUI_Panel::Clear(SRect r) {
 	r += off;
 	r &= rClip;
 	if (!r) return;
-	RevColor();
-	LCD_FillRect(r);
-	RevColor();
+	GUI_X_LCD_FillRect(r, BkColor());
 }
 void GUI_Panel::Fill(SRect r) {
 	r += off;
 	r &= rClip;
 	if (!r) return;
-	LCD_FillRect(r);
+	GUI_X_LCD_FillRect(r, PenColor());
 }
 void GUI_Panel::DrawFocus(SRect r, int Dist) {
 	r /= Dist;
@@ -148,11 +146,11 @@ void GUI_Panel::DrawBitmap(CBitmap &bmp, Point Pos) {
 	Pos += off;
 	auto &&bc = bmp + Pos;
 	if (bc &= rClip)
-		LCD_SetBitmap(bc);
+		GUI_X_LCD_SetBitmap(bc);
 }
 void GUI_Panel::DrawBitmap(BitmapRect bc) {
 	if (bc &= rClip)
-		LCD_SetBitmap(bc);
+		GUI_X_LCD_SetBitmap(bc);
 }
 #pragma endregion
 
@@ -372,33 +370,12 @@ bool FontMono::IsInFont(GUI_CHAR c) const {
 #pragma endregion
 
 void GUI_Panel::Init() {
+	RectN();
 	ClipRect();
 	Cursor(Props.pCursor);
 	Font(Props.pFont);
 	WObj::Init();
 }
-
-#pragma region Key
-void GUI_Panel::StoreKeyMsg(uint16_t Key, int PressedCnt) {
-	_KeyLast.Key = Key;
-	_KeyLast.PressedCnt = PressedCnt;
-	_KeyNow.PressedCnt = 1;
-}
-bool GUI_Panel::PollKeyMsg() {
-	if (!_KeyNow.PressedCnt)
-		return false;
-	int key = _KeyLast.Key;
-	--_KeyNow.PressedCnt;
-	WObj::OnKey(key, _KeyLast.PressedCnt);
-	if (_KeyLast.PressedCnt == 1)
-		Key(key);
-	return true;
-}
-void GUI_Panel::SendKeyMsg(uint16_t Key, int PressedCnt) {
-	if (!WObj::OnKey(Key, PressedCnt))
-		StoreKeyMsg(Key, PressedCnt);
-}
-#pragma endregion
 
 #pragma region GUI_DRAW_BASE Classes
 #include <memory>
@@ -412,7 +389,7 @@ GUI_DRAW::~GUI_DRAW() {
 }
 #pragma endregion
 
-#pragma region LCD
+#pragma region Misc
 BitmapRect::BitmapRect(CBitmap &bmp, Point Pos) :
 	SRect(bmp.Rect(Pos)),
 	pData(const_cast<void *>(bmp.pData)),
@@ -457,3 +434,16 @@ SRect &SRect::AlignTo(ALIGN a, const SRect &r2) {
 	return*this;
 }
 #pragma endregion
+
+bool GUI_MOUSE_Store(MOUSE_STATE State) {
+	GUI.Mouse(State);
+	return true;
+}
+bool GUI_KEY_Store(KEY_STATE State) {
+	GUI.Key(State);
+	return true;
+}
+bool GUI_RECT_Store(SRect r) {
+	GUI.Rect(r);
+	return true;
+}

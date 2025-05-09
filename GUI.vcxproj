@@ -168,14 +168,14 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="GUI_X_LCD\GUI_X_LCD_SIM.cpp" />
-    <ClCompile Include="GUI_X_MEM\GUI_X_MEM_SIM.cpp" />
+    <ClCompile Include="GUI_X_SIM\GUI_X.cpp" />
     <ClCompile Include="main.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GUI\GUI.h" />
     <ClInclude Include="GUI\GUI_Array.h" />
     <ClInclude Include="GUI\GUI_Types.h" />
+    <ClInclude Include="GUI\GUI_X.h" />
     <ClInclude Include="GUI\Widgets\Button.h" />
     <ClInclude Include="GUI\Widgets\CheckBox.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
@@ -224,14 +224,13 @@
     <ClInclude Include="GUI_EXT\ext_duktape.h" />
     <ClInclude Include="GUI_EXT\ext_osk.h" />
     <ClInclude Include="GUI_MAIN.h" />
-    <ClInclude Include="GUI_X_LCD\GUI_X_LCD.h" />
-    <ClInclude Include="GUI_X_MEM\GUI_X_MEM.h" />
     <ClInclude Include="GUI_X_SIM\GUI_X_SIM.h" />
     <ClInclude Include="GUI_X_SIM\resource.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="GUI\GUI.inl" />
     <None Include="GUI\Resources\Resources.inl" />
+    <None Include="GUI\Widgets\Widgets.inl" />
     <None Include="GUI\WM.inl" />
   </ItemGroup>
   <ItemGroup>
@@ -342,7 +341,7 @@
       <SDLCheck>false</SDLCheck>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)\GUI;$(SolutionDir)\GUI\Resources;$(SolutionDir)\GUI\Widgets;$(SolutionDir)\GUI_X_LCD;$(SolutionDir)\GUI_X_MEM;$(SolutionDir)\GUI_X_SIM;$(SolutionDir)\GUI_EXT;$(SolutionDir)\GUI_X_SIM\SimDisp\wx;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\GUI;$(SolutionDir)\GUI_EXT;$(SolutionDir)\GUI_X_SIM;$(SolutionDir)\Tools\wx;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
@@ -359,7 +358,7 @@
       <SDLCheck>false</SDLCheck>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)\GUI;$(SolutionDir)\GUI\Resources;$(SolutionDir)\GUI\Widgets;$(SolutionDir)\GUI_X_LCD;$(SolutionDir)\GUI_X_MEM;$(SolutionDir)\GUI_X_SIM;$(SolutionDir)\GUI_EXT;$(SolutionDir)\GUI_X_SIM\SimDisp\wx;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\GUI;$(SolutionDir)\GUI_EXT;$(SolutionDir)\GUI_X_SIM;$(SolutionDir)\Tools\wx;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
@@ -378,7 +377,7 @@
       <SDLCheck>false</SDLCheck>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)\GUI;$(SolutionDir)\GUI\Resources;$(SolutionDir)\GUI\Widgets;$(SolutionDir)\GUI_X_LCD;$(SolutionDir)\GUI_X_MEM;$(SolutionDir)\GUI_X_SIM;$(SolutionDir)\GUI_EXT;$(SolutionDir)\GUI_X_SIM\SimDisp\wx;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\GUI;$(SolutionDir)\GUI_EXT;$(SolutionDir)\GUI_X_SIM;$(SolutionDir)\Tools\wx;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
@@ -395,7 +394,7 @@
       <SDLCheck>false</SDLCheck>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)\GUI;$(SolutionDir)\GUI\Resources;$(SolutionDir)\GUI\Widgets;$(SolutionDir)\GUI_X_LCD;$(SolutionDir)\GUI_X_MEM;$(SolutionDir)\GUI_X_SIM;$(SolutionDir)\GUI_EXT;$(SolutionDir)\GUI_X_SIM\SimDisp\wx;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\GUI;$(SolutionDir)\GUI_EXT;$(SolutionDir)\GUI_X_SIM;$(SolutionDir)\Tools\wx;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <BrowseInformation>true</BrowseInformation>
@@ -416,7 +415,7 @@
       <SDLCheck>false</SDLCheck>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)\GUI;$(SolutionDir)\GUI\Resources;$(SolutionDir)\GUI\Widgets;$(SolutionDir)\GUI_X_LCD;$(SolutionDir)\GUI_X_MEM;$(SolutionDir)\GUI_X_SIM;$(SolutionDir)\GUI_EXT;$(SolutionDir)\GUI_X_SIM\SimDisp\wx;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\GUI;$(SolutionDir)\GUI_EXT;$(SolutionDir)\GUI_X_SIM;$(SolutionDir)\Tools\wx;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
@@ -435,7 +434,7 @@
       <SDLCheck>false</SDLCheck>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)\GUI;$(SolutionDir)\GUI\Resources;$(SolutionDir)\GUI\Widgets;$(SolutionDir)\GUI_X_LCD;$(SolutionDir)\GUI_X_MEM;$(SolutionDir)\GUI_X_SIM;$(SolutionDir)\GUI_EXT;$(SolutionDir)\GUI_X_SIM\SimDisp\wx;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\GUI;$(SolutionDir)\GUI_EXT;$(SolutionDir)\GUI_X_SIM;$(SolutionDir)\Tools\wx;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
@@ -448,7 +447,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(SolutionDir)\GUI;$(SolutionDir)\GUI\Resources;$(SolutionDir)\GUI\Widgets;$(SolutionDir)\GUI_X_LCD;$(SolutionDir)\GUI_X_MEM;$(SolutionDir)\GUI_X_SIM;$(SolutionDir)\GUI_EXT;$(SolutionDir)\GUI_X_SIM\SimDisp\wx;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\GUI;$(SolutionDir)\GUI_EXT;$(SolutionDir)\GUI_X_SIM;$(SolutionDir)\Tools\wx;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <Optimization>Disabled</Optimization>
@@ -460,7 +459,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(SolutionDir)\GUI;$(SolutionDir)\GUI\Resources;$(SolutionDir)\GUI\Widgets;$(SolutionDir)\GUI_X_LCD;$(SolutionDir)\GUI_X_MEM;$(SolutionDir)\GUI_X_SIM;$(SolutionDir)\GUI_EXT;$(SolutionDir)\GUI_X_SIM\SimDisp\wx;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\GUI;$(SolutionDir)\GUI_EXT;$(SolutionDir)\GUI_X_SIM;$(SolutionDir)\Tools\wx;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <Optimization>Disabled</Optimization>

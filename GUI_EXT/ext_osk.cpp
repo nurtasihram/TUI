@@ -1,5 +1,6 @@
+#include "Widgets/Frame.h"
+
 #include "ext_osk.h"
-#include "Frame.h"
 
 #define ID_BUTTON (GUI_ID_USER + 0)
 enum KeyType {
@@ -193,17 +194,17 @@ static void _OSK_updateButtons(PWObj pWin, Point size) {
 static void _OSK_onKey(uint16_t Id, bool bPressed) {
 	auto inf = _aButtonData + Id - ID_BUTTON;
 	uint8_t ab = 0;
-	int c = 0;
+	KEY_STATE State;
+	State.PressedCnt = bPressed;
 	switch (inf->type) {
 		case K_CHAR_FN:
 			if (FnSel) {
-				c = inf->acLabel1[0];
-				switch (c) {
+				switch (State.Key = inf->acLabel1[0]) {
 					case '1':
-						c = GUI_KEY_F1;
+						State.Key = GUI_KEY_F1;
 						break;
 					case '2':
-						c = GUI_KEY_F2;
+						State.Key = GUI_KEY_F2;
 						break;
 					default:
 						;
@@ -217,16 +218,16 @@ static void _OSK_onKey(uint16_t Id, bool bPressed) {
 			ab = Caps;
 		case K_CHAR:
 		_K_CHAR:
-			c = ab ^ fn_keys.LShift ? inf->acLabel2[0] : inf->acLabel1[0];
+			State.Key = ab ^ fn_keys.LShift ? inf->acLabel2[0] : inf->acLabel1[0];
 			if (fn_keys.LShift && !fn_keys.RShift) {
 				fn_keys.LShift = 0;
 				_OSK_updateShiftCaps();
 			}
 			break;
-		case K_BACKSPACE: c = GUI_KEY_BACKSPACE; break;
-		case K_TAB:       c = GUI_KEY_TAB;       break;
-		case K_ENTER:     c = GUI_KEY_ENTER;     break;
-		case K_ESC:       c = GUI_KEY_ESCAPE;    break;
+		case K_BACKSPACE: State.Key = GUI_KEY_BACKSPACE; break;
+		case K_TAB:       State.Key = GUI_KEY_TAB;       break;
+		case K_ENTER:     State.Key = GUI_KEY_ENTER;     break;
+		case K_ESC:       State.Key = GUI_KEY_ESCAPE;    break;
 		case K_FN_CASE:
 			FnSel = !FnSel;
 			_OSK_updateShiftCaps();
@@ -239,45 +240,45 @@ static void _OSK_onKey(uint16_t Id, bool bPressed) {
 			fn_keys.RCtrl = 0;
 			fn_keys.LCtrl = !fn_keys.LCtrl;
 			_OSK_updateShiftCaps();
-			c = GUI_KEY_CONTROL;
+			State.Key = GUI_KEY_CONTROL;
 			break;
 		case K_RCTRL:
 			fn_keys.RCtrl = fn_keys.LCtrl = ~fn_keys.LCtrl;
 			_OSK_updateShiftCaps();
-			c = GUI_KEY_CONTROL;
+			State.Key = GUI_KEY_CONTROL;
 			break;
 		case K_LALT:
 			fn_keys.RAlt = 0;
 			fn_keys.LAlt = ~fn_keys.LAlt;
 			_OSK_updateShiftCaps();
-			//		c = GUI_KEY_CONTROL;
+			//		State.Key = GUI_KEY_CONTROL;
 			break;
 		case K_RALT:
 			fn_keys.RAlt = fn_keys.LAlt = ~fn_keys.LAlt;
 			_OSK_updateShiftCaps();
-			//		c = GUI_KEY_CONTROL;
+			//		State.Key = GUI_KEY_CONTROL;
 			break;
 		case K_LSHIFT:
 			fn_keys.RShift = 0;
 			fn_keys.LShift = ~fn_keys.LShift;
 			_OSK_updateShiftCaps();
-			c = GUI_KEY_SHIFT;
+			State.Key = GUI_KEY_SHIFT;
 			return;
 		case K_RSHIFT:
 			fn_keys.RShift = fn_keys.LShift = ~fn_keys.LShift;
 			_OSK_updateShiftCaps();
-			c = GUI_KEY_SHIFT;
+			State.Key = GUI_KEY_SHIFT;
 			return;
 		case K_UP:
 		case K_DOWN:
 		case K_LEFT:
 		case K_RIGHT:
-			c = inf->type;
+			State.Key = inf->type;
 			break;
 		default:
 			;
 	}
-	GUI.StoreKeyMsg(c, bPressed);
+	GUI.Key(State);
 }
 
 WM_RESULT _OSK_callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {

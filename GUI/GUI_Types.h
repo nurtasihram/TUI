@@ -266,6 +266,8 @@ inline const BitmapRect Bitmap::operator+(Point Pos) const {
 /// @brief 按鍵數據結構
 struct KEY_STATE {
 	uint16_t Key = 0, PressedCnt = 0;
+	inline bool operator==(KEY_STATE State) const { return Key == State.Key && PressedCnt == State.PressedCnt; }
+	inline bool operator!=(KEY_STATE State) const { return Key != State.Key || PressedCnt != State.PressedCnt; }
 };
 
 /// @brief 鼠標數據結構

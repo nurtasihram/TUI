@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Frame.h"
+#include "Widgets/Frame.h"
 
 class WndOsk : public Frame {
 

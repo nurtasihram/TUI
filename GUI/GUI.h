@@ -2,10 +2,9 @@
 
 #include "GUI_Types.h"
 
-#include "GUI_X_LCD.h"
-#include "GUI_X_MEM.h"
+#include "GUI_X.h"
 
-#include "Resources.inl"
+#include "Resources/Resources.inl"
 
 /// @brief 光標控制類
 class CursorCtl {
@@ -81,12 +80,8 @@ public:
 };
 #pragma endregion
 
-void GUI__strcpy(GUI_PSTR s, GUI_PCSTR c);
-void GUI__memcpy(void *sDest, const void *pSrc, size_t Len);
-
 /// @brief 繪圖面板
 class GUI_Panel {
-	friend class WObj;
 
 private:
 	struct Property {
@@ -100,40 +95,23 @@ private:
 	} Props;
 	/// @brief 繪圖矩形裁剪區域
 	SRect rClip;
+	SRect rScreen, rnScreen;
 	/// @brief 繪圖偏移量
 	Point off;
 	/// @brief 字串顯示開始位置
 	Point dispPos;
 	/// @brief 編碼器
 	GUI_Encoder *pEncoder = nullptr;
+	/// @brief 光標數據結構
+	MOUSE_STATE _MouseLast, _MouseNow;
+	/// @brief 
+	KEY_STATE _KeyLast, _KeyNow;
 
 public:
 	/// @brief 光標控制器
 	CursorCtl Cursor;
-	/// @brief 光標數據結構
-	MOUSE_STATE MouseState;
 
-private:
-	KEY_STATE _KeyLast, _KeyNow;
-
-public:
 	void Init();
-
-public:
-	void StoreKeyMsg(uint16_t Key, int Pressed);
-	void SendKeyMsg(uint16_t Key, int Pressed);
-	bool PollKeyMsg();
-
-public:
-	inline uint16_t Key() {
-		uint16_t r = _KeyNow.Key;
-		_KeyNow.Key = 0;
-		return r;
-	}
-	inline void Key(uint16_t Key) {
-		if (!_KeyNow.Key)
-			_KeyNow.Key = Key;
-	}
 
 #pragma region Graphics
 public: // 基礎繪圖方法
@@ -196,13 +174,6 @@ public: // 字串繪製方法
 
 #pragma endregion
 
-	/// @brief 反轉筆刷前景色背景色
-	inline void RevColor() {
-		auto tmp = Props.aColor[0];
-		Props.aColor[0] = Props.aColor[1];
-		Props.aColor[1] = tmp;
-	}
-
 	int XDist(GUI_PCSTR pString, int NumChars) { return Props.pFont->XDist(pString, NumChars); }
 	inline int XDist(GUI_PCSTR pString) { return XDist(pString, NumChars(pString)); }
 
@@ -244,8 +215,33 @@ public: // Property - Off
 	/* R */ inline auto Off() const { return off; }
 	/* W */ inline void Off(Point off) { this->off = off; }
 public: // Property - ClipRect
-	/* W */ inline void ClipRect(const SRect &r) { rClip = LCD_Rect() & r; }
-	/* A */ inline void ClipRect() { rClip = LCD_Rect(); }
+	/* W */ inline void ClipRect(const SRect &r) { rClip = rScreen & r; }
+	/* A */ inline void ClipRect() { rClip = rScreen; }
+public: // Property - Mouse
+	/* W */ inline auto Mouse(MOUSE_STATE State) {
+		auto old = _MouseLast;
+		_MouseLast = _MouseNow;
+		_MouseNow = State;
+		return old;
+	}
+	/* R */ inline auto MouseNA() { return _MouseLast == _MouseNow; }
+	/* R */ inline auto Mouse() { return _MouseLast = _MouseNow; }
+	/* R */ inline auto MousePrev() { return _MouseLast; }
+public: // Property - Key
+	/* W */ inline auto Key(KEY_STATE State) {
+		auto old = _KeyLast;
+		_KeyLast = _KeyNow;
+		_KeyNow = State;
+		return old;
+	}
+	/* R */ inline auto KeyNA() { return _KeyLast == _KeyNow; }
+	/* R */ inline auto Key() { return _KeyLast = _KeyNow; }
+	/* R */ inline auto KeyPrev() { return _KeyLast; }
+public: // Property - Rect
+	/* W */ inline void Rect(SRect rs) { rnScreen = rs; }
+	/* W */ inline auto RectNA() { return rScreen == rnScreen; }
+	/* A */ inline auto RectN() { return rScreen = rnScreen; }
+	/* R */ inline auto Rect() { return rScreen; }
 #pragma endregion
 
 };

@@ -1,92 +1,194 @@
-#pragma once
+ï»¿#pragma once
+
+/// @brief æŽ§ä»¶æ¨£æœ¬IDæžšæ“§
+enum GUI_ID : int {
+	GUI_ID_OK                = 1,
+	GUI_ID_CANCEL            = 2,
+	GUI_ID_YES               = 3,
+	GUI_ID_NO                = 4,
+	GUI_ID_CLOSE             = 5,
+	GUI_ID_HELP              = 6,
+	GUI_ID_MAXIMIZE          = 7,
+	GUI_ID_MINIMIZE          = 8,
+	GUI_ID_VSCROLL  = 0xFE,
+	GUI_ID_HSCROLL  = 0xFF,
+	GUI_ID_EDIT0    = 0x100,
+	GUI_ID_EDIT1    = 0x101,
+	GUI_ID_EDIT2    = 0x102,
+	GUI_ID_EDIT3    = 0x103,
+	GUI_ID_EDIT4    = 0x104,
+	GUI_ID_EDIT5    = 0x105,
+	GUI_ID_EDIT6    = 0x106,
+	GUI_ID_EDIT7    = 0x107,
+	GUI_ID_EDIT8    = 0x108,
+	GUI_ID_EDIT9    = 0x109,
+	GUI_ID_LISTBOX0 = 0x110,
+	GUI_ID_LISTBOX1 = 0x111,
+	GUI_ID_LISTBOX2 = 0x112,
+	GUI_ID_LISTBOX3 = 0x113,
+	GUI_ID_LISTBOX4 = 0x114,
+	GUI_ID_LISTBOX5 = 0x115,
+	GUI_ID_LISTBOX6 = 0x116,
+	GUI_ID_LISTBOX7 = 0x117,
+	GUI_ID_LISTBOX8 = 0x118,
+	GUI_ID_LISTBOX9 = 0x119,
+	GUI_ID_CHECK0   = 0x120,
+	GUI_ID_CHECK1   = 0x121,
+	GUI_ID_CHECK2   = 0x122,
+	GUI_ID_CHECK3   = 0x123,
+	GUI_ID_CHECK4   = 0x124,
+	GUI_ID_CHECK5   = 0x125,
+	GUI_ID_CHECK6   = 0x126,
+	GUI_ID_CHECK7   = 0x127,
+	GUI_ID_CHECK8   = 0x128,
+	GUI_ID_SLIDER0  = 0x130,
+	GUI_ID_SLIDER1  = 0x131,
+	GUI_ID_SLIDER2  = 0x132,
+	GUI_ID_SLIDER3  = 0x133,
+	GUI_ID_SLIDER4  = 0x134,
+	GUI_ID_SLIDER5  = 0x135,
+	GUI_ID_SLIDER6  = 0x136,
+	GUI_ID_SLIDER7  = 0x137,
+	GUI_ID_SLIDER8  = 0x138,
+	GUI_ID_SLIDER9  = 0x139,
+	GUI_ID_SCROLLBAR0 = 0x140,
+	GUI_ID_SCROLLBAR1 = 0x141,
+	GUI_ID_SCROLLBAR2 = 0x142,
+	GUI_ID_SCROLLBAR3 = 0x142,
+	GUI_ID_RADIO0 = 0x150,
+	GUI_ID_RADIO1 = 0x151,
+	GUI_ID_RADIO2 = 0x152,
+	GUI_ID_RADIO3 = 0x153,
+	GUI_ID_RADIO4 = 0x154,
+	GUI_ID_RADIO5 = 0x155,
+	GUI_ID_RADIO6 = 0x156,
+	GUI_ID_RADIO7 = 0x157,
+	GUI_ID_TEXT0  = 0x160,
+	GUI_ID_TEXT1  = 0x161,
+	GUI_ID_TEXT2  = 0x162,
+	GUI_ID_TEXT3  = 0x163,
+	GUI_ID_TEXT4  = 0x164,
+	GUI_ID_TEXT5  = 0x165,
+	GUI_ID_TEXT6  = 0x166,
+	GUI_ID_TEXT7  = 0x167,
+	GUI_ID_TEXT8  = 0x168,
+	GUI_ID_TEXT9  = 0x169,
+	GUI_ID_BUTTON0 = 0x170,
+	GUI_ID_BUTTON1 = 0x171,
+	GUI_ID_BUTTON2 = 0x172,
+	GUI_ID_BUTTON3 = 0x173,
+	GUI_ID_BUTTON4 = 0x174,
+	GUI_ID_BUTTON5 = 0x175,
+	GUI_ID_BUTTON6 = 0x176,
+	GUI_ID_BUTTON7 = 0x177,
+	GUI_ID_BUTTON8 = 0x178,
+	GUI_ID_BUTTON9 = 0x179,
+	GUI_ID_DROPDOWN0  = 0x180,
+	GUI_ID_DROPDOWN1  = 0x181,
+	GUI_ID_DROPDOWN2  = 0x182,
+	GUI_ID_DROPDOWN3  = 0x183,
+	GUI_ID_MULTIEDIT0 = 0x190,
+	GUI_ID_MULTIEDIT1 = 0x191,
+	GUI_ID_MULTIEDIT2 = 0x192,
+	GUI_ID_MULTIEDIT3 = 0x193,
+	GUI_ID_LISTVIEW0  = 0x200,
+	GUI_ID_LISTVIEW1  = 0x201,
+	GUI_ID_LISTVIEW2  = 0x202,
+	GUI_ID_LISTVIEW3  = 0x203,
+	GUI_ID_PROGBAR0   = 0x210,
+	GUI_ID_PROGBAR1   = 0x211,
+	GUI_ID_PROGBAR2   = 0x212,
+	GUI_ID_PROGBAR3   = 0x213,
+	GUI_ID_USER     = 0x800
+};
 
 enum WM_MESSSAGES : uint16_t {
 	 WM_NULL = 0,
 
-	 /// @brief §¹¦¨³Ð«Øµ¡Åé«áÅTÀ³
+	 /// @brief å®Œæˆå‰µå»ºçª—é«”å¾ŒéŸ¿æ‡‰
 	 WM_CREATE,
-	 /// @brief §¹¦¨§R°£µ¡Åé«áÅTÀ³
+	 /// @brief å®Œæˆåˆªé™¤çª—é«”å¾ŒéŸ¿æ‡‰
 	 WM_DELETE,
-	 /// @brief Ã¸»sµ¡Åé«eÅTÀ³
+	 /// @brief ç¹ªè£½çª—é«”å‰éŸ¿æ‡‰
 	 /// @param SRect rInvalid
 	 WM_PAINT,
 
-	 /// @brief §¹¦¨²¾°Êµ¡Åé«áÅTÀ³
+	 /// @brief å®Œæˆç§»å‹•çª—é«”å¾ŒéŸ¿æ‡‰
 	 WM_MOVE,
-	 /// @brief §¹¦¨µô°Åµ¡Åé«áÅTÀ³
+	 /// @brief å®Œæˆè£å‰ªçª—é«”å¾ŒéŸ¿æ‡‰
 	 WM_SIZE,
 
-	 /// @brief Áä½L¦bµ¡Åé¤W¬¡ÅD®ÉÅTÀ³
-	 /// @param KEY_STATE «öÁäª¬ºA
+	 /// @brief éµç›¤åœ¨çª—é«”ä¸Šæ´»èºæ™‚éŸ¿æ‡‰
+	 /// @param KEY_STATE æŒ‰éµç‹€æ…‹
 	 WM_KEY,
 
-	 /// @brief ¹«Áä¦bµ¡Åé¤W¬¡ÅD®ÉÅTÀ³
-	 /// @param MOUSE_STATE PID¬Û¹ïª¬ºA
+	 /// @brief é¼ éµåœ¨çª—é«”ä¸Šæ´»èºæ™‚éŸ¿æ‡‰
+	 /// @param MOUSE_STATE PIDç›¸å°ç‹€æ…‹
 	 WM_MOUSE,
-	 /// @brief ¹«¼Ð¦b¤lµ¡Åé¤W¬¡ÅD®ÉÅTÀ³
-	 /// @param MOUSE_STATE PID¬Û¹ïª¬ºA
-	 /// @param pSrc ¤lµ¡Åé
+	 /// @brief é¼ æ¨™åœ¨å­çª—é«”ä¸Šæ´»èºæ™‚éŸ¿æ‡‰
+	 /// @param MOUSE_STATE PIDç›¸å°ç‹€æ…‹
+	 /// @param pSrc å­çª—é«”
 	 WM_MOUSE_CHILD,
-	 /// @brief ¹«¼Ð¦bµ¡Åé¤W¬¡ÅD®ÉÅTÀ³
-	 /// @param MOUSE_STATE PID¬Û¹ïª¬ºA
+	 /// @brief é¼ æ¨™åœ¨çª—é«”ä¸Šæ´»èºæ™‚éŸ¿æ‡‰
+	 /// @param MOUSE_STATE PIDç›¸å°ç‹€æ…‹
 	 WM_MOUSE_OVER,
-	 /// @brief ¹«¼Ð¦bµ¡Åé¤W
-	 /// @param MOUSE_CHANGED_STATE PID¬Û¹ï§ïÅÜª¬ºA
+	 /// @brief é¼ æ¨™åœ¨çª—é«”ä¸Š
+	 /// @param MOUSE_CHANGED_STATE PIDç›¸å°æ”¹è®Šç‹€æ…‹
 	 WM_MOUSE_CHANGED,
 
-	 /// @brief µ¡Åé®·ÀòÄÀ©ñ«áÅTÀ³
+	 /// @brief çª—é«”æ•ç²é‡‹æ”¾å¾ŒéŸ¿æ‡‰
 	 WM_CAPTURE_RELEASED,
 
-	 /// @brief ¦¬¨úµ¡Åé¨Ï¯àª¬ºA§ïÅÜ³qª¾
-	 /// @param bool ¬O§_¨Ï¯à
+	 /// @brief æ”¶å–çª—é«”ä½¿èƒ½ç‹€æ…‹æ”¹è®Šé€šçŸ¥
+	 /// @param bool æ˜¯å¦ä½¿èƒ½
 	 WM_NOTIFY_ENABLE,
-	 /// @brief ¦¬¨úµ¡ÅéµJÂIª¬ºA§ïÅÜ³qª¾
-	 /// @param FOCUS_CHANGED_STATE µJÂIª¬ºA
+	 /// @brief æ”¶å–çª—é«”ç„¦é»žç‹€æ…‹æ”¹è®Šé€šçŸ¥
+	 /// @param FOCUS_CHANGED_STATE ç„¦é»žç‹€æ…‹
 	 WM_NOTIFY_CHILD_HAS_FOCUS,
-	 /// @brief ¦¬¨ú«È¤áµ¡Åé§ïÅÜ³qª¾
+	 /// @brief æ”¶å–å®¢æˆ¶çª—é«”æ”¹è®Šé€šçŸ¥
 	 WM_NOTIFY_CLIENT_CHANGE,
-	 /// @brief ¦¬¨ú¤lµ¡Åé°T®§³qª¾
-	 /// @param uint16_t ³qª¾ID
+	 /// @brief æ”¶å–å­çª—é«”è¨Šæ¯é€šçŸ¥
+	 /// @param uint16_t é€šçŸ¥ID
 	 WM_NOTIFY_CHILD,
-	 /// @brief ¦¬¨ú¤lµ¡Åé°T®§³qª¾¤Ï®g
-	 /// @param uint16_t ³qª¾ID
+	 /// @brief æ”¶å–å­çª—é«”è¨Šæ¯é€šçŸ¥åå°„
+	 /// @param uint16_t é€šçŸ¥ID
 	 WM_NOTIFY_CHILD_REFLECT,
 
-	 /// @brief Àò¨úµ¡ÅéÃþ¦W
-	 /// @return «ü¦VÀRºA¥uÅªªºµ¡ÅéÃþ¦W¦r¦ê
+	 /// @brief ç²å–çª—é«”é¡žå
+	 /// @return æŒ‡å‘éœæ…‹åªè®€çš„çª—é«”é¡žåå­—ä¸²
 	 WM_GET_CLASS,
-	 /// @brief Àò¨úµ¡Åé«È¤áµ¡Åé
-	 /// @return WObj«ü°w
+	 /// @brief ç²å–çª—é«”å®¢æˆ¶çª—é«”
+	 /// @return WObjæŒ‡é‡
 	 WM_GET_CLIENT_WINDOW,
-	 /// @brief Àò¨úµ¡Åé?³¡¯x§Î
+	 /// @brief ç²å–çª—é«”?éƒ¨çŸ©å½¢
 	 /// @return SRect 8 bytes
 	 WM_GET_INSIDE_RECT,
-	 /// @brief Àò¨úµ¡Åé«È¤á¯x§Î
+	 /// @brief ç²å–çª—é«”å®¢æˆ¶çŸ©å½¢
 	 /// @return SRect 8 bytes
 	 WM_GET_SERVE_RECT,
-	 /// @brief Àò¨úµ¡Åé­I´ºÃC¦â
-	 /// @return uint32_t R8G8B8A8®æ¦¡ªº¦â±m
+	 /// @brief ç²å–çª—é«”èƒŒæ™¯é¡è‰²
+	 /// @return uint32_t R8G8B8A8æ ¼å¼çš„è‰²å½©
 	 WM_GET_BKCOLOR,
-	 /// @brief Àò¨úµ¡ÅéID
+	 /// @brief ç²å–çª—é«”ID
 	 /// @return uint16_t ID
 	 WM_GET_ID,
-	 /// @brief ³]¸mµ¡ÅéID
+	 /// @brief è¨­ç½®çª—é«”ID
 	 /// @param uint16_t ID
 	 WM_SET_ID,
-	 /// @brief µ¡Åé¹ïµJ
-	 /// @param bool ³]¸m/­«¸mµJÂI
+	 /// @brief çª—é«”å°ç„¦
+	 /// @param bool è¨­ç½®/é‡ç½®ç„¦é»ž
 	 WM_FOCUS,
-	 /// @brief Àò¨úµ¡Åé¬O§_¯à¹ïµJ
-	 /// @return bool ¬O§_¯à¹ïµJ
+	 /// @brief ç²å–çª—é«”æ˜¯å¦èƒ½å°ç„¦
+	 /// @return bool æ˜¯å¦èƒ½å°ç„¦
 	 WM_FOCUSSABLE,
 
 	 WM_MENU,
 
-	 /// @brief ªì©l¤Æ¹ï¸Ü®Ø
+	 /// @brief åˆå§‹åŒ–å°è©±æ¡†
 	 WM_INIT_DIALOG,
-	 /// @brief «ü¦V¹ï¸Ü®Øª¬ºA
-	 /// @param DIALOG_STATE* «ü¦V­n³]©wªº¹ï¸Ü®Øª¬ºA¡A­Y¬°NULL«hªð¦^·í«eª¬ºA
-	 /// @return DIALOG_STATE* «ü¦V·í«e¹ï¸Ü®Øª¬ºA
+	 /// @brief æŒ‡å‘å°è©±æ¡†ç‹€æ…‹
+	 /// @param DIALOG_STATE* æŒ‡å‘è¦è¨­å®šçš„å°è©±æ¡†ç‹€æ…‹ï¼Œè‹¥ç‚ºNULLå‰‡è¿”å›žç•¶å‰ç‹€æ…‹
+	 /// @return DIALOG_STATE* æŒ‡å‘ç•¶å‰å°è©±æ¡†ç‹€æ…‹
 	 WM_HANDLE_DIALOG_STATUS,
 
 	_WM_WIDGET_BEGIN = 0x0300,

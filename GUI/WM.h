@@ -247,14 +247,14 @@ public:
 	/// @param Notification 通知ID
 	inline void NotifyParent(int Notification) { SendToParent(WM_NOTIFY_CHILD, Notification); }
 
+	static bool HandleRect();
+	static bool HandleKey();
 	static bool HandleMouse();
-	static inline MOUSE_STATE PrevPidState() { return _StateLast; }
 
 	/// @brief 鍵盤事件
-	/// @param Key 鍵位
-	/// @param Pressed 按下或釋放
+	/// @param State 鍵位
 	/// @return 鍵位是否被處理
-	static bool OnKey(uint16_t Key, int Pressed);
+	static bool OnKey(KEY_STATE State);
 
 	/// @brief 默認窗體消息事件迴調
 	/// @param pWin 窗體對象
@@ -271,12 +271,13 @@ public:
 	/// @return 是否活動
 	static bool Exec();
 
+	static inline bool Online() { return pDesktop; }
+
 private:
 	WM_RESULT _SendMessage(int MsgId, WM_PARAM Param = 0, PWObj pSrc = nullptr);
 	void _SendMessageIfEnabled(int MsgId, WM_PARAM Param, PWObj pSrc = nullptr);
 	void _SendMouseMessage(int MsgId, MOUSE_STATE *pState);
 	bool _IsInModalArea();
-	static MOUSE_STATE _StateLast;
 	struct CriticalHandles {
 		static CriticalHandles *pFirst, Last, Modal;
 		PWObj pWin = nullptr;

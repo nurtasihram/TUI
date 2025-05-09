@@ -17,8 +17,6 @@ void Button::_Released(int Notification) {
 	Invalidate();
 	if (Status & WC_VISIBLE)
 		NotifyParent(Notification);
-	if (Notification == WN_RELEASED)
-		GUI.Key(Id);
 }
 
 void Button::_OnPaint() const {

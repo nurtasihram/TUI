@@ -1,15 +1,4 @@
-#include "Static.h"
-#include "Button.h"
-#include "CheckBox.h"
-#include "ProgBar.h"
-#include "ScrollBar.h"
-#include "Slider.h"
-#include "Radio.h"
-#include "ListBox.h"
-#include "Frame.h"
-#include "Header.h"
-#include "ListView.h"
-#include "MultiPage.h"
+#include "Widgets/Widgets.inl"
 
 class CtlEdit : public WObj {
 	Widget *pWidget = nullptr;
@@ -321,7 +310,7 @@ void MonoColorStyle() {
 #include "ext_osk.h"
 
 void MainTask() {
-	MonoColorStyle();
+//	MonoColorStyle();
 	ShowOsk(true);
 	auto pStatic = new Static(
 		{ 10, 10, 55, 30 },
@@ -440,6 +429,6 @@ void MainTask() {
 	new CtlEdit(pPages);
 	printf("GUI Initialized !\n");
 	printf("JavaScript > ");
-	for (;;)
+	while (WObj::Online())
 		WObj::Exec();
 }

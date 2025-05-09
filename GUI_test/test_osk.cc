@@ -280,7 +280,7 @@ static void _OSK_onKey(uint16_t Id, bool bPressed) {
 	default:
 		;
 	}
-	GUI.StoreKeyMsg(c, bPressed);
+	GUI.StoreKey(c, bPressed);
 }
 
 WM_RESULT _OSK_callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {

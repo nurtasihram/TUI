@@ -33,7 +33,7 @@ void Header::_HandleMouse(MOUSE_STATE State) {
 	/* set mouse cursor and capture () */
 	if (Hit >= 0 && !Captured()) {
 		Capture(true);
-		GUI.Cursor(&GUI_CursorHeader);
+		GUI.Cursor(&GUI_CursorResizeH);
 	}
 	/* modify header */
 	if (CapturePosX >= 0 && State.x != CapturePosX && State.Pressed == 1) {
