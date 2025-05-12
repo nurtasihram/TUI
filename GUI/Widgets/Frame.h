@@ -43,7 +43,7 @@ public:
 
 private:
 	Property Props = DefaultProps;
-	WM_CB cb = nullptr;
+	WM_HANDLE_CB hcb = nullptr;
 	Menu *pMenu = nullptr;
 	GUI_STRING Title;
 	SRect rRestore;
@@ -72,11 +72,11 @@ private:
 	void _RestoreMinimized();
 	void _RestoreMaximized();
 
-	void _OnMouse(const MOUSE_STATE *pState);
-	bool _OnTouchResize(const MOUSE_STATE *pState);
+	void _OnMouse(MOUSE_STATE);
+	bool _OnTouchResize(MOUSE_STATE);
 	void _OnPaint() const;
 	void _OnChildHasFocus(const FOCUS_CHANGED_STATE *pInfo);
-	bool _HandleResize(int MsgId, const MOUSE_STATE *pState);
+	bool _HandleResize(int MsgId, MOUSE_STATE);
 
 	static WM_RESULT _cbClient(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc);
 	static WM_RESULT _Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc);
@@ -85,12 +85,14 @@ public:
 	Frame(const SRect &rc = {},
 		  PWObj pParent = nullptr, uint16_t Id = 0,
 		  WM_CF Flags = WC_HIDE, FRAME_CF FlagsEx = 0,
-		  GUI_PCSTR pTitle = nullptr, WM_CB cb = nullptr);
+		  GUI_PCSTR pTitle = nullptr, WM_HANDLE_CB hcb = nullptr);
 	Frame(const WM_CREATESTRUCT &wc) : Frame(
 		wc.rect(),
 		wc.pParent, wc.Id,
 		wc.Flags, wc.FlagsEx,
-		wc.pCaption, (WM_CB)wc.Para.ptr) {}
+		wc.pCaption, (WM_HANDLE_CB)wc.Para.ptr) {}
+public:
+	~Frame();
 
 public:
 	Button *AddButton(FRAME_BUTTON Flags, int Off, uint16_t Id);

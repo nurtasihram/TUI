@@ -133,9 +133,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="GUI\GUI.h">
-      <Filter>GUI</Filter>
-    </ClInclude>
     <ClInclude Include="GUI\GUI_Array.h">
       <Filter>GUI</Filter>
     </ClInclude>
@@ -212,6 +209,9 @@
     <ClInclude Include="GUI_EXT\ext_duktape.h">
       <Filter>GUI_EXT\duktape</Filter>
     </ClInclude>
+    <ClInclude Include="GUI\GUI.h">
+      <Filter>GUI</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="GUI\GUI.inl">
@@ -233,6 +233,8 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="Ni.ico" />
+    <Image Include="Ni.ico">
+      <Filter>GUI_X_SIM</Filter>
+    </Image>
   </ItemGroup>
 </Project>

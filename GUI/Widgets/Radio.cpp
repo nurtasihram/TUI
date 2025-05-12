@@ -53,7 +53,7 @@ void Radio::_SetValue(int v) {
 		return;
 	sel = v;
 	Invalidate();
-	NotifyParent(WN_VALUE_CHANGED);
+	NotifyOwner(WN_VALUE_CHANGED);
 }
 
 void Radio::_OnPaint() const {
@@ -105,12 +105,12 @@ void Radio::_OnPaint() const {
 		GUI.DrawFocus(rFocus);
 	}
 }
-void Radio::_OnMouse(const MOUSE_STATE *pState) {
+void Radio::_OnMouse(MOUSE_STATE State) {
 	int Notification;
 	bool Hit = 0;
-	if (pState) {
-		if (pState->Pressed) {
-			int y = pState->y,
+	if (State) {
+		if (State.Pressed) {
+			int y = State.y,
 				sel = y / spacing;
 			y -= sel * spacing;
 			if (y <= height)
@@ -126,7 +126,7 @@ void Radio::_OnMouse(const MOUSE_STATE *pState) {
 	}
 	else
 		Notification = WN_MOVED_OUT;
-	NotifyParent(Notification);
+	NotifyOwner(Notification);
 }
 bool Radio::_OnKey(KEY_STATE State) {
 	if (State.PressedCnt <= 0)

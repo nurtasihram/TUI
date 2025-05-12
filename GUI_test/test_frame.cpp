@@ -1,6 +1,4 @@
-#include "Frame.h"
-#include "CheckBox.h"
-#include "Radio.h"
+#include "Widgets/Widgets.inl"
 
 enum {
 	ID_LEFT = GUI_ID_BUTTON0,
@@ -12,7 +10,7 @@ enum {
 };
 
 Frame *pFrm1, *pFrm2;
-WM_RESULT _cbFrame(PWObj pDlg, int MsgId, WM_PARAM Param, PWObj pSrc) {
+bool _cbFrame(PWObj pDlg, int MsgId, WM_PARAM &Param, PWObj pSrc) {
 	switch (MsgId) {
 		case WM_NOTIFY_CHILD:
 			switch ((int)Param) {
@@ -47,9 +45,9 @@ WM_RESULT _cbFrame(PWObj pDlg, int MsgId, WM_PARAM Param, PWObj pSrc) {
 			}
 			break;
 		default:
-			return WObj::DefCallback(pDlg, MsgId, Param, pSrc);
+			return false;
 	}
-	return 0;
+	return true;
 }
 
 static const WM_CREATESTRUCT aDialogCreate[]{
@@ -65,6 +63,19 @@ static const WM_CREATESTRUCT aDialogCreate[]{
 };
 
 void MainTask() {
+
+	new Button(SRect::left_top(0, { 30, 80 }), WObj::Desktop(), GUI_ID_BUTTON9 + 1, WC_VISIBLE);
+	WObj::Desktop()->Callback([](PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) -> WM_RESULT {
+		if (MsgId == WM_NOTIFY_CHILD)
+			if ((int)Param == WN_RELEASED)
+				switch (pSrc->ID()) {
+					case GUI_ID_BUTTON9 + 1:
+						WObj::Desktop()->Destroy();
+						return 0;
+				}
+		return WObj::DesktopCallback(pWin, MsgId, Param, pSrc);
+	});
+
 	pFrm1 = new Frame(
 		SRect::left_top({ 150, 100 }, { 100, 120 }),
 		WObj::Desktop(), 0,
@@ -78,6 +89,6 @@ void MainTask() {
 	pFrm1->AddMaxButton();
 	pFrm1->AddMinButton();
 	aDialogCreate->CreateDialog(_cbFrame);
-	for (;;)
+	while (WObj::Online())
 		WObj::Exec();
 }

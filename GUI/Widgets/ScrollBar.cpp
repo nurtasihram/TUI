@@ -61,21 +61,21 @@ void ScrollBar::_InvalidatePartner() {
 }
 void ScrollBar::_DrawTriangle(int x, int y, int Size, int Inc) const {
 	if (StatusEx & WC_EX_VERTICAL)
-		for (; Size >= 0; Size--, x += Inc)
+		for (; Size >= 0; --Size, x += Inc)
 			GUI.DrawLineH(y - Size, x, y + Size);
 	else
-		for (; Size >= 0; Size--, x += Inc)
+		for (; Size >= 0; --Size, x += Inc)
 			GUI.DrawLineV(x, y - Size, y + Size);
 }
 void ScrollBar::_ScrollbarPressed() {
 	OrState(SCROLLBAR_CF__PRESSED);
 	if (Status & WC_VISIBLE)
-		NotifyParent(WN_CLICKED);
+		NotifyOwner(WN_CLICKED);
 }
 void ScrollBar::_ScrollbarReleased() {
 	MaskState(SCROLLBAR_CF__PRESSED);
 	if (Status & WC_VISIBLE)
-		NotifyParent(WN_RELEASED);
+		NotifyOwner(WN_RELEASED);
 }
 
 SRect ScrollBar::_AutoSize(PWObj pParent, uint16_t FlagsEx) const {
@@ -121,7 +121,7 @@ void ScrollBar::_OnPaint() {
 	r.x1 = Pos.x1_RightArrow;
 	Fill(r);
 	GUI.PenColor(Props.aBkColor[1]);
-	_DrawTriangle(r.x1 - ArrowOff, r.dy() >> 1, ArrowSize, 1);
+	_DrawTriangle(r.x1 - ArrowOff, r.dy() / 2, ArrowSize, 1);
 	DrawUp(r);
 	/* Overlap Area */
 	if (Pos.x1_RightArrow == Pos.x1)
@@ -131,18 +131,18 @@ void ScrollBar::_OnPaint() {
 	GUI.PenColor(Props.aColor);
 	Fill(r);
 }
-void ScrollBar::_OnMouse(const MOUSE_STATE *pState) {
-	if (!pState)
+void ScrollBar::_OnMouse(MOUSE_STATE State) {
+	if (!State)
 		return;
-	if (!pState->Pressed) {
+	if (!State.Pressed) {
 		if (StatusEx & SCROLLBAR_CF__PRESSED)
 			_ScrollbarReleased();
 		return;
 	}
-	int Sel = state.v;
+	auto Sel = state.v;
 	auto &&Pos = _CalcPositions();
-	int Range = state.NumItems - state.PageSize;
-	int x = StatusEx & WC_EX_VERTICAL ? pState->y : pState->x;
+	auto Range = state.NumItems - state.PageSize;
+	auto x = StatusEx & WC_EX_VERTICAL ? State.y : State.x;
 	if (x <= Pos.x1_LeftArrow)
 		Sel--;
 	else if (x < Pos.x0_Thumb)
@@ -194,7 +194,7 @@ WM_RESULT ScrollBar::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc
 			return true;
 		break;
 	case WM_DELETE:
-		pObj->_InvalidatePartner();
+		pObj->~ScrollBar();
 		return 0;
 	case WM_GET_CLASS:
 		return ClassNames[WCLS_SCROLLBAR];
@@ -218,7 +218,8 @@ ScrollBar::ScrollBar(PWObj pParent, uint16_t Id) :
 			  (Id == GUI_ID_VSCROLL ? WC_ANCHOR_TOP : WC_ANCHOR_LEFT) |
 				(WC_STAYONTOP | WC_ANCHOR_RIGHT | WC_ANCHOR_BOTTOM),
 			  (Id == GUI_ID_VSCROLL ? SCROLLBAR_CF_VERTICAL : 0))
-{ NotifyParent(WN_SCROLLBAR_ADDED); }
+{ NotifyOwner(WN_SCROLLBAR_ADDED); }
+ScrollBar::~ScrollBar() { _InvalidatePartner(); }
 
 ScrollBar *ScrollBar::Partner() {
 	uint16_t Id = this->Id;

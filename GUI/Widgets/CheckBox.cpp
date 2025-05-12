@@ -31,12 +31,12 @@ void CheckBox::_OnPaint() {
 	}
 	DrawDown(rBox);
 }
-void CheckBox::_OnMouse(const MOUSE_STATE *pState) {
+void CheckBox::_OnMouse(MOUSE_STATE State) {
 	int Notification = 0;
 	int Hit = 0;
-	if (pState) {
+	if (State) {
 		if (!Captured()) {
-			if (pState->Pressed) {
+			if (State.Pressed) {
 				Capture(true);
 				CurrentState = (CurrentState + 1) % Props.NumStates;
 				Invalidate();
@@ -50,17 +50,21 @@ void CheckBox::_OnMouse(const MOUSE_STATE *pState) {
 	}
 	else
 		Notification = WN_MOVED_OUT;
-	NotifyParent(Notification);
+	NotifyOwner(Notification);
 }
 bool CheckBox::_OnKey(KEY_STATE State) {
 	if (!Enable()) return false;
-	if (State.PressedCnt <= 0)
-		return false;
 	switch (State.Key) {
-	case GUI_KEY_SPACE:
-		CurrentState = (CurrentState + 1) % Props.NumStates;
-		Invalidate();
-		return true;
+		case GUI_KEY_SPACE: {
+			auto Notification = WN_CLICKED;
+			if (State.PressedCnt > 0)
+				CurrentState = (CurrentState + 1) % Props.NumStates;
+			else
+				Notification = WN_RELEASED;
+			NotifyOwner(Notification);
+			Invalidate();
+			return true;
+		}
 	}
 	return false;
 }

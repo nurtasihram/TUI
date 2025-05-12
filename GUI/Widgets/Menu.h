@@ -116,12 +116,12 @@ private:
 	void _ActivateItem(unsigned Index);
 	void _ActivateMenu(unsigned Index);
 	void _DeactivateMenu();
-	bool _ForwardMouseOverMsg(Point Pos);
-	bool _HandleMouse(const MOUSE_STATE &pid);
-	void _ForwardPIDMsgToOwner(int MsgId, MOUSE_STATE *pState);
+	bool _ForwardMouseOverMsg(Point);
+	bool _HandleMouse(MOUSE_STATE);
+	void _ForwardPIDMsgToOwner(int MsgId, MOUSE_STATE);
 	WM_RESULT _OnMenu(const MSG_DAT *pMsgData);
-	bool _OnMouse(const MOUSE_STATE *pState);
-	bool _OnMouseOver(const MOUSE_STATE *pState);
+	bool _OnMouse(MOUSE_STATE);
+	bool _OnMouseOver(MOUSE_STATE);
 	void _OnPaint();
 	void _SetPaintColors(const Menu::Item &Item, int ItemIndex) const;
 
@@ -133,7 +133,7 @@ public:
 		 WM_CF Flags = WC_HIDE, MENU_CF FlagsEx = 0);
 	Menu(MENU_CF FlagsEx = 0, uint16_t Id = 0, WM_CF Flags = WC_HIDE) :
 		Menu({},
-			 WM_UNATTACHED, Id,
+			 nullptr, Id,
 			 Flags, FlagsEx) {}
 private:
 	~Menu() = default;

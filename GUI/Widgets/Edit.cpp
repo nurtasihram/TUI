@@ -78,7 +78,7 @@ void Edit::_DeleteChar() {
 	int NumBytes = text. GUI_UC_GetCharSize(pText);
 	char *pstrCur = pText + CursorOffset;
 	GUI__strcpy(pstrCur, pstrCur + NumBytes);
-	NotifyParent(WN_VALUE_CHANGED);
+	NotifyOwner(WN_VALUE_CHANGED);
 }
 int Edit::_InsertChar(uint16_t Char) {
 	if (!_IsCharsAvailable(1))
@@ -90,7 +90,7 @@ int Edit::_InsertChar(uint16_t Char) {
 	pText += CursorOffset;
 	memmove(pText + BytesNeeded, pText, GUI__strlen(pText) + 1);
 	GUI_UC_Encode(pText, Char);
-	NotifyParent(WN_VALUE_CHANGED);
+	NotifyOwner(WN_VALUE_CHANGED);
 	return 1;
 }
 uint16_t Edit::_CurrentChar() {
@@ -161,14 +161,10 @@ void Edit::_OnPaint() {
 	});
 }
 
-void Edit::_OnMouse(const MOUSE_STATE *pState) {
-	if (pState) {
-		static int StartPress = 0;
-		if (pState->Pressed) {
-			CursorAtPixel(pState->x);
-			StartPress = CursorPos;
-		}
-	}
+void Edit::_OnMouse(MOUSE_STATE State) {
+	if (State)
+		if (State.Pressed)
+			CursorAtPixel(State.x);
 }
 bool Edit::_OnKey(KEY_STATE State) {
 	if (!Enable())

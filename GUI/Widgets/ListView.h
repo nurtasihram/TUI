@@ -60,11 +60,10 @@ private:
 	void _InvalidateRow(int sel);
 	void _InvalidateRowAndBelow(int sel);
 	int _UpdateScrollPos();
-	void _NotifyOwner(int Notification);
 	void _SelFromPos(Point Pos);
 
 	void _OnPaint(SRect rClip) const;
-	void _OnMouse(const MOUSE_STATE *pState);
+	void _OnMouse(MOUSE_STATE State);
 	bool _OnKey(KEY_STATE);
 
 	static WM_RESULT _Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc);

@@ -34,6 +34,7 @@ uint16_t WObj::nInvalidWindows = 0;
 #pragma region Window Chain
 void WObj::_InsertWindowIntoList(PWObj pParent) {
 	this->pParent = pParent;
+	if (Popup()) pParent = Desktop();
 	if (!pParent) return;
 	pNext = nullptr;
 	bool bStayOnTop = Status & WC_STAYONTOP;
@@ -66,15 +67,16 @@ void WObj::_InsertWindowIntoList(PWObj pParent) {
 	}
 }
 void WObj::_RemoveWindowFromList() {
-	if (!pParent) return;
-	auto i = pParent->pFirstChild;
-	if (i == this)
-		pParent->pFirstChild = i->pNext;
-	else for (; i; i = i->pNext)
-		if (i->pNext == this) {
-			i->pNext = pNext;
-			break;
-		}
+	if (auto pParent = Parent()) {
+		auto i = pParent->pFirstChild;
+		if (i == this)
+			pParent->pFirstChild = i->pNext;
+		else for (; i; i = i->pNext)
+			if (i->pNext == this) {
+				i->pNext = pNext;
+				break;
+			}
+	}
 }
 
 void WObj::_RemoveFromLinList() {
@@ -115,9 +117,7 @@ WObj::WObj(const SRect &rc,
 	if (!pParent)
 		if (nWindows)
 			pParent = pDesktop;
-	if (pParent == WM_UNATTACHED)
-		pParent = nullptr;
-	if (pParent) {
+	if (pParent && !Popup()) {
 		rsWin = pParent->Client2Screen(rc);
 		if (rsWin.x1 <= rsWin.x0)
 			rsWin.x1 = pParent->rsWin.x1;
@@ -138,6 +138,14 @@ WObj::WObj(const SRect &rc,
 	SendMessage(WM_CREATE);
 }
 
+void WObj::DeleteChildren() {
+	NotifyOwner(WN_CHILD_DELETED);
+	while (pFirstChild) {
+		auto pNext = pFirstChild->pNext;
+		pFirstChild->Destroy();
+		pFirstChild = pNext;
+	}
+}
 void WObj::Destroy() {
 	if (!*this) return;
 	pWinNextDraw = nullptr;
@@ -147,23 +155,18 @@ void WObj::Destroy() {
 		pWinCapture = nullptr;
 	if (CriticalHandles::pFirst)
 		CriticalHandles::pFirst->Check(this);
-	NotifyParent(WN_CHILD_DELETED);
-	for (auto pChild = pFirstChild; pChild; ) {
-		auto pNext = pChild->pNext;
-		pChild->Destroy();
-		pChild = pNext;
-	}
+	DeleteChildren();
 	SendMessage(WM_DELETE);
-	Detach();
+//	Detach();
 	_RemoveFromLinList();
 	if (Status & WC_ACTIVATE)
 		--nInvalidWindows;
-	--nWindows;
 	GUI_MEM_Free(this);
-	if (pDesktop == this)
-		pWinFirst = pWinActive = pWinFocus = pWinCapture = pDesktop = nullptr;
-	else
+	if (--nWindows) {
 		pWinFirst->Select();
+		return;
+	}
+	pWinFirst = pWinActive = pWinFocus = pWinCapture = pDesktop = nullptr;
 }
 void WObj::Select() {
 	pWinActive = this;
@@ -177,7 +180,7 @@ void WObj::BringToTop() {
 		if (pNext->Status & WC_STAYONTOP)
 			return;
 	_RemoveWindowFromList();
-	_InsertWindowIntoList(pParent);
+	_InsertWindowIntoList(Parent());
 	InvalidateDescs();
 }
 void WObj::BringToBottom() {
@@ -202,9 +205,9 @@ bool WObj::IsAncestor(PWObj pParent) const {
 #pragma region Paint
 #pragma region Invalidate 
 bool WObj::_ClipAtParentBorders(SRect &r) const {
-	for (auto pWin = this; pWin->Status & WC_VISIBLE; pWin = pWin->pParent) {
+	for (auto pWin = this; pWin->Status & WC_VISIBLE; pWin = pWin->Parent()) {
 		r &= pWin->rsWin;
-		if (!pWin->pParent)
+		if (!pWin->Parent())
 			return pWin == WObj::Desktop();
 	}
 	return false;
@@ -289,7 +292,7 @@ void WObj::_MoveDescendents(Point d) {
 		i->rsInvalid += d;
 		if (auto pChild = i->pFirstChild)
 			pChild->_MoveDescendents(d);
-		i->SendMessage(WM_MOVE);
+		i->SendMessage(WM_MOVED);
 	}
 }
 void WObj::RectScreen(const SRect &rsNew) {
@@ -300,11 +303,14 @@ void WObj::RectScreen(const SRect &rsNew) {
 		InvalidateArea(rsWin);
 		InvalidateArea(rsOld);
 	}
-	auto &&dRect = rsOld - rsNew;
-	if (dRect.left_top())
-		SendMessage(WM_MOVE);
+	auto &&dRect = rsNew - rsOld;
+	if (auto dPos = dRect.left_top()) {
+		if (pFirstChild)
+			pFirstChild->_MoveDescendents(dRect.left_top());
+		SendMessage(WM_MOVED);
+	}
 	if (dRect.size())
-		SendMessage(WM_SIZE);
+		SendMessage(WM_SIZED);
 }
 void WObj::Move(Point dPos) {
 	if (!dPos) return;
@@ -317,7 +323,7 @@ void WObj::Move(Point dPos) {
 		InvalidateArea(rsWin);
 		InvalidateArea(rOld);
 	}
-	SendMessage(WM_MOVE);
+	SendMessage(WM_MOVED);
 }
 
 void WObj::_UpdateChildPositions(SRect d) {
@@ -373,7 +379,7 @@ void WObj::Resize(Point dSize) {
 	rNew -= rOld;
 	_UpdateChildPositions(rNew);
 	rsInvalid &= rsWin;
-	SendMessage(WM_SIZE);
+	SendMessage(WM_SIZED);
 }
 #pragma endregion
 
@@ -443,13 +449,13 @@ bool WObj::_FindNextIVR() {
 		return false;
 	if (r.x0 == _ClipContext.rClient.x0) {
 		r.right_bottom(_ClipContext.rClient.right_bottom());
-		for (auto pParent = pWinActive; pParent; pParent = pParent->pParent)
+		for (auto pParent = pWinActive; pParent; pParent = pParent->Parent())
 			_Findy1(pParent->pNext, r);
 		_Findy1(pWinActive->pFirstChild, r);
 	}
 Find_x0:
 	r.x1 = r.x0;
-	for (auto pParent = pWinActive; pParent; pParent = pParent->pParent)
+	for (auto pParent = pWinActive; pParent; pParent = pParent->Parent())
 		if (_Findx0(pParent->pNext, r))
 			goto Find_x0;
 	if (_Findx0(pWinActive->pFirstChild, r))
@@ -459,7 +465,7 @@ Find_x0:
 		_ClipContext.CurRect = r;
 		goto NextStripe;
 	}
-	for (auto pParent = pWinActive; pParent; pParent = pParent->pParent)
+	for (auto pParent = pWinActive; pParent; pParent = pParent->Parent())
 		_Findx1(pParent->pNext, r);
 	_Findx1(pWinActive->pFirstChild, r);
 	if (_ClipContext.Cnt > 200)
@@ -540,6 +546,8 @@ bool WObj::Exec() {
 		return true;
 	if (HandleKey())
 		return true;
+	if (HandleRect())
+		return true;
 	if (PaintNext())
 		return true;
 	return false;
@@ -567,13 +575,14 @@ WM_RESULT WObj::DefCallback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 		case WM_KEY:
 			if (!pWin->Parent())
 				break;
-			if (!pWin->SendToParent(MsgId, Param)) {
+			if (!pWin->SendToOwner(MsgId, Param)) {
 				KEY_STATE State = Param;
 				if (State.PressedCnt <= 0)
 					break;
 				switch (State.Key) {
 					case GUI_KEY_TAB:
-						pWin->Parent()->FocusNextChild();
+						if (auto pParent = pWin->Parent())
+							pParent->FocusNextChild();
 						break;
 				}
 			}
@@ -607,6 +616,9 @@ WM_RESULT WObj::DesktopCallback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSr
 				GUI.Clear();
 			}
 			return 0;
+		case WM_DELETE:
+			pDesktop = nullptr;
+			return 0;
 		case WM_GET_BKCOLOR:
 			return clDesktop;
 	}
@@ -618,8 +630,6 @@ PWObj WObj::pWinFocus = nullptr;
 PWObj WObj::Focus() {
 	if (this == pWinFocus)
 		return pWinFocus;
-	if (Status & WC_NOACTIVATE)
-		return nullptr;
 	if (!Focussable())
 		return nullptr;
 	if (pWinFocus)
@@ -627,16 +637,14 @@ PWObj WObj::Focus() {
 	pWinFocus = this;
 	if (SendMessage(WM_FOCUS, true))
 		return this;
-	FOCUS_CHANGED_STATE Info;
-	Info.pOld = pWinFocus;
-	Info.pNew = this;
+	FOCUS_CHANGED_STATE Info{ pWinFocus, this };
 	for (auto pWin = this; (pWin = pWin->Parent());)
 		pWin->SendMessage(WM_NOTIFY_CHILD_HAS_FOCUS, &Info);
 	if (auto pWin = Info.pOld)
 		if (*pWin)
 			while ((pWin = pWin->Parent()) != nullptr)
 				pWin->SendMessage(WM_NOTIFY_CHILD_HAS_FOCUS, &Info);
-	return nullptr;
+	return this;
 }
 PWObj WObj::FocussedChild() {
 	if (pWinFocus)
@@ -644,21 +652,22 @@ PWObj WObj::FocussedChild() {
 			return pWinFocus;
 	return nullptr;
 }
+
+PWObj WObj::NextChild(PWObj pChild) {
+	PWObj pObj = nullptr;
+	if (pChild)
+		pObj = pChild->pNext;
+	if (!pObj)
+		pObj = pFirstChild;
+	return pObj != pChild ? pObj : nullptr;
+}
 PWObj WObj::FocusNextChild() {
-	static auto _GetNextChild = [](PWObj pParent, PWObj pChild) {
-		PWObj pObj = nullptr;
-		if (pChild)
-			pObj = pChild->pNext;
-		if (!pObj)
-			pObj = pParent->pFirstChild;
-		return pObj != pChild ? pObj : nullptr;
-	};
-	auto pChild = _GetNextChild(this, FocussedChild());
+	auto pChild = NextChild(FocussedChild());
 	auto pWin = pChild;
 	while (pWin) {
 		if (pWin->Focussable())
 			break;
-		pWin = _GetNextChild(pParent, pWin);
+		pWin = NextChild(pWin);
 		if (pWin == pChild)
 			break;
 	}
@@ -726,11 +735,11 @@ void WObj::_SendMessageIfEnabled(int MsgId, WM_PARAM Param, PWObj pSrc) {
 	if (Enable())
 		_SendMessage(MsgId, Param, pSrc);
 }
-void WObj::_SendMouseMessage(int MsgId, MOUSE_STATE *pState) {
-	if (pState) *pState -= rsWin.left_top();
-	_SendMessageIfEnabled(MsgId, pState);
-	for (auto i = pParent; IsWindow(i); i = i->pParent)
-		i->_SendMessageIfEnabled(WM_MOUSE_CHILD, pState, this);
+void WObj::_SendMouseMessage(int MsgId, MOUSE_STATE State) {
+	if (State) State -= rsWin.left_top();
+	_SendMessageIfEnabled(MsgId, State);
+	for (auto i = Parent(); IsWindow(i); i = i->Parent())
+		i->_SendMessageIfEnabled(WM_MOUSE_CHILD, State, this);
 }
 
 WObj::CriticalHandles
@@ -780,46 +789,41 @@ bool WObj::HandleMouse() {
 		return false;
 	auto StateOld = GUI.MousePrev(), StateNow = GUI.Mouse();
 	GUI.Cursor.Position(StateNow);
-	bool r = false;
 	CriticalHandles CHWin = pWinCapture ? pWinCapture : WObj::FindOnScreen(StateNow);
-	if (CHWin.pWin->_IsInModalArea()) {
-		if (StateOld.Pressed != StateNow.Pressed && CHWin.pWin)
-			CHWin.pWin->_SendMessageIfEnabled(WM_MOUSE_CHANGED, 
-				MOUSE_CHANGED_STATE{
-					 CHWin.pWin->Screen2Client(StateNow), 
-					 StateNow.Pressed, StateOld.Pressed });
-		if (StateOld.Pressed | StateNow.Pressed) { /* Only if pressed or just released */
-			r = true;
-			MOUSE_STATE State;
-			if (CriticalHandles::Last.pWin != CHWin.pWin)
-				if (CriticalHandles::Last.pWin != nullptr) {
-					MOUSE_STATE *pState = nullptr;
-					if (!StateNow.Pressed) {
-						State.x = StateOld.x;
-						State.y = StateOld.y;
-						State.Pressed = 0;
-						pState = &State;
-					}
-					CriticalHandles::Last.pWin->_SendMouseMessage(WM_MOUSE, pState);
-					CriticalHandles::Last.pWin = nullptr;
-				}
-			if (CHWin.pWin) {
-				State = StateNow;
-				if (State.Pressed)
-					CriticalHandles::Last.pWin = CHWin.pWin;
-				else {
-					if (bCaptureAutoRelease)
-						CaptureRelease();
-					CriticalHandles::Last.pWin = nullptr;
-				}
-				CHWin.pWin->_SendMouseMessage(WM_MOUSE, &State);
+	if (!CHWin.pWin) return false;
+	if (!CHWin.pWin->_IsInModalArea()) return false;
+	if (StateOld.Pressed != StateNow.Pressed && CHWin.pWin)
+		CHWin.pWin->_SendMessageIfEnabled(
+			WM_MOUSE_CHANGED,
+			MOUSE_CHANGED_STATE{
+				CHWin.pWin->Screen2Client(StateNow),
+				StateNow.Pressed, StateOld.Pressed });
+	if (StateOld.Pressed | StateNow.Pressed) { /* Only if pressed or just released */
+		MOUSE_STATE State;
+		if (CriticalHandles::Last.pWin != CHWin.pWin)
+			if (CriticalHandles::Last.pWin) {
+				MOUSE_STATE State;
+				if (!StateNow.Pressed)
+					State = MOUSE_STATE{ StateOld, 0 };
+				CriticalHandles::Last.pWin->_SendMouseMessage(WM_MOUSE, State);
+				CriticalHandles::Last.pWin = nullptr;
 			}
+		if (CHWin.pWin) {
+			State = StateNow;
+			if (State.Pressed)
+				CriticalHandles::Last.pWin = CHWin.pWin;
+			else {
+				if (bCaptureAutoRelease)
+					CaptureRelease();
+				CriticalHandles::Last.pWin = nullptr;
+			}
+			CHWin.pWin->_SendMouseMessage(WM_MOUSE, State);
 		}
-		else if (CHWin.pWin)
-			if (CHWin.pWin->Enable())
-				CHWin.pWin->_SendMouseMessage(WM_MOUSE_OVER, &StateNow);
+		return true;
 	}
-	return r;
+	if (CHWin.pWin->Enable())
+		CHWin.pWin->_SendMouseMessage(WM_MOUSE_OVER, StateNow);
+	return false;
 }
 
 #pragma endregion
@@ -835,6 +839,17 @@ void WObj::StayOnTop(bool bEnable) {
 		return;
 	this->Status = Status;
 	Parent(Parent());
+}
+void WObj::Popup(bool bPopup) {
+	auto Status = this->Status;
+	if (bPopup)
+		Status |= WC_POPUP;
+	else
+		Status &= ~WC_POPUP;
+	if (this->Status == Status)
+		return;
+	this->Status = Status;
+	Parent(nullptr);
 }
 void WObj::Enable(bool bEnable) {
 	auto Status = this->Status;
@@ -875,7 +890,7 @@ void WObj::Visible(bool bVisible) {
 void WObj::Parent(PWObj pParent, Point ptcPosition) {
 	if (pParent == this)
 		return;
-	if (pParent == this->pParent)
+	if (pParent == this->Parent())
 		return;
 	/* Detach */
 	_RemoveWindowFromList();
@@ -907,13 +922,13 @@ void WObj::DialogEnd(int r) {
 		pStatus->ReturnValue = r;
 		pStatus->Done = 1;
 	}
-	Destroy();
 }
 int WObj::DialogExec() {
 	DIALOG_STATE Status;
 	DialogStatusPtr(&Status);
 	while (!Status.Done)
 		WObj::Exec();
+	Destroy();
 	return Status.ReturnValue;
 }
 
@@ -978,11 +993,11 @@ PWObj WM_CREATESTRUCT::Create() const {
 	}
 	return nullptr;
 }
-PWObj WM_CREATESTRUCT::CreateDialog(WM_CB cb, Point Pos, PWObj pParent) const {
+PWObj WM_CREATESTRUCT::CreateDialog(WM_HANDLE_CB hcb, Point Pos, PWObj pParent) const {
 	auto wc0 = *this;
 	wc0.pParent = pParent;
-	if (cb)
-		wc0.Para = (uint64_t)cb;
+	if (hcb)
+		wc0.Para = (uint64_t)hcb;
 	auto pDialog = wc0.Create();
 	auto pDialogClient = pDialog->Client();
 	for (auto pWC = this + 1; pWC->Class != WCLS_EOF; ++pWC) {
@@ -998,8 +1013,8 @@ PWObj WM_CREATESTRUCT::CreateDialog(WM_CB cb, Point Pos, PWObj pParent) const {
 	pDialogClient->SendMessage(WM_INIT_DIALOG);
 	return pDialog;
 }
-int WM_CREATESTRUCT::DialogBox(WM_CB cb, Point Pos, PWObj pParent) const {
-	return CreateDialog(cb, Pos, pParent)->DialogExec();
+int WM_CREATESTRUCT::DialogBox(WM_HANDLE_CB hcb, Point Pos, PWObj pParent) const {
+	return CreateDialog(hcb, Pos, pParent)->DialogExec();
 }
 PWObj WObj::DialogItem(uint16_t Id) {
 	for (auto pObj = pFirstChild; pObj; pObj = pObj->pNext)
@@ -1077,8 +1092,8 @@ bool Widget::HandleActive(int MsgId, WM_PARAM &Param) {
 			return true;
 		}
 		case WM_MOUSE_CHILD:
-			if (const MOUSE_STATE *pState = Param)
-				if (pState->Pressed) {
+			if (MOUSE_STATE State = Param)
+				if (State.Pressed) {
 					BringToTop();
 					return false;
 				}
@@ -1090,7 +1105,7 @@ bool Widget::HandleActive(int MsgId, WM_PARAM &Param) {
 			else
 				Notification = WN_LOST_FOCUS;
 			Invalidate();
-			NotifyParent(Notification);
+			NotifyOwner(Notification);
 			Param = false;
 			return false;
 		}

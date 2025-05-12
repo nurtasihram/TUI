@@ -51,6 +51,7 @@ using WM_RESULT = WM_PARAM;
 class WObj;
 using PWObj = WObj *;
 typedef WM_RESULT(*WM_CB)(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc);
+typedef bool(*WM_HANDLE_CB)(PWObj pWin, int MsgId, WM_PARAM &Param, PWObj pSrc);
 
 struct WM_CREATESTRUCT {
 	uint16_t Class = 0;
@@ -101,9 +102,9 @@ struct WM_CREATESTRUCT {
 		Id(Id), Flags(Flags), FlagsEx(FlagsEx),
 		Para(Para.u64) {}
 public:
-	int DialogBox(WM_CB cb = nullptr, Point Pos = 0, PWObj pParent = nullptr) const;
+	int DialogBox(WM_HANDLE_CB hcb = nullptr, Point Pos = 0, PWObj pParent = nullptr) const;
 	PWObj Create() const;
-	PWObj CreateDialog(WM_CB cb = nullptr, Point Pos = 0, PWObj pParent = nullptr) const;
+	PWObj CreateDialog(WM_HANDLE_CB hcb = nullptr, Point Pos = 0, PWObj pParent = nullptr) const;
 };
 
 class WObj {
@@ -140,9 +141,13 @@ public:
 		 PWObj pParent = nullptr, uint16_t Id = 0,
 		 WM_CF Style = WC_HIDE, uint16_t ExStyle = 0);
 protected:
-	~WObj() {}
+	~WObj() = default;
 
 public:
+
+	/// @brief 銷毀所有子窗體
+	///		析構所有子窗體類並釋放内存
+	void DeleteChildren();
 
 	/// @brief 銷毀窗體
 	///		析構窗體類並釋放内存
@@ -152,8 +157,8 @@ public:
 	void Select();
 
 	operator bool() const;
-	inline void *operator new(size_t size) { return GUI_MEM_Alloc(size); }
-	inline void operator delete(void *pObj) { GUI_MEM_Free(pObj); }
+	static inline void *operator new(size_t size) { return GUI_MEM_Alloc(size); }
+	static inline void operator delete(void *pObj) { GUI_MEM_Free(pObj); }
 
 #pragma region Invalidate
 private:
@@ -233,19 +238,19 @@ public:
 		return 0;
 	}
 
-	/// @brief 發送至父窗體
+	/// @brief 發送至所有者
 	/// @param MsgId 消息ID
 	/// @param Param 參數
 	/// @return 返迴數據
-	inline WM_RESULT SendToParent(int MsgId, WM_PARAM Param) {
-		if (pParent)
-			return pParent->SendMessage(MsgId, Param, this);
+	inline WM_RESULT SendToOwner(int MsgId, WM_PARAM Param) {
+		if (auto pOwner = Owner())
+			return pOwner->SendMessage(MsgId, Param, this);
 		return 0;
 	}
 
 	/// @brief 通知消息
 	/// @param Notification 通知ID
-	inline void NotifyParent(int Notification) { SendToParent(WM_NOTIFY_CHILD, Notification); }
+	inline void NotifyOwner(int Notification) { SendToOwner(WM_NOTIFY_CHILD, Notification); }
 
 	static bool HandleRect();
 	static bool HandleKey();
@@ -271,12 +276,12 @@ public:
 	/// @return 是否活動
 	static bool Exec();
 
-	static inline bool Online() { return pDesktop; }
+	static inline bool Online() { return nWindows; }
 
 private:
 	WM_RESULT _SendMessage(int MsgId, WM_PARAM Param = 0, PWObj pSrc = nullptr);
 	void _SendMessageIfEnabled(int MsgId, WM_PARAM Param, PWObj pSrc = nullptr);
-	void _SendMouseMessage(int MsgId, MOUSE_STATE *pState);
+	void _SendMouseMessage(int MsgId, MOUSE_STATE = nullptr);
 	bool _IsInModalArea();
 	struct CriticalHandles {
 		static CriticalHandles *pFirst, Last, Modal;
@@ -336,6 +341,8 @@ public:
 	/// @brief 聚焦到下一個子窗體
 	/// @return 焦點窗體
 	PWObj FocusNextChild();
+
+	PWObj NextChild(PWObj pChild);
 #pragma endregion
 
 #pragma region Capture
@@ -437,27 +444,43 @@ public:
 	/// @brief 父窗體坐標點轉銀幕坐標點
 	/// @param ptc 父窗體内坐標點
 	/// @return 銀幕内坐標點
-	inline Point Parent2Screen(Point ptc) const { return pParent ? pParent->Client2Screen(ptc) : ptc; }
+	inline Point Parent2Screen(Point ptc) const {
+		if (auto pParent = Parent())
+			return pParent->Client2Screen(ptc);
+		return ptc;
+	}
 
 	/// @brief 父窗體區域轉銀幕區域
 	/// @param rc 父窗體内區域
 	/// @return 銀幕内區域
-	inline SRect Parent2Screen(const SRect &rc) const { return pParent ? pParent->Client2Screen(rc) : rc; }
+	inline SRect Parent2Screen(const SRect &rc) const {
+		if (auto pParent = Parent())
+			return pParent->Client2Screen(rc);
+		return rc;
+	}
 
 	/// @brief 銀幕坐標點轉父窗體坐標點
 	/// @param ptc 父窗體内坐標點
 	/// @return 銀幕内坐標點
-	inline Point Screen2Parent(Point pts) const { return pParent ? pParent->Screen2Client(pts) : pts; }
+	inline Point Screen2Parent(Point pts) const {
+		if (auto pParent = Parent())
+			return pParent->Client2Screen(pts);
+		return pts;
+	}
 
 	/// @brief 銀幕區域轉父窗體區域
 	/// @param rs 父窗體内區域
 	/// @return 銀幕内區域
-	inline SRect Screen2Parent(const SRect &rs) const { return pParent ? pParent->Screen2Client(rs) : rs; }
+	inline SRect Screen2Parent(const SRect &rs) const {
+		if (auto pParent = Parent())
+			return pParent->Client2Screen(rs);
+		return rs;
+	}
 #pragma endregion
 
 	/// @brief 是否為子窗體
 	/// @param pParent 擬定的父窗體
-	inline bool IsChildOf(PWObj pParent) { return this->pParent == pParent; }
+	inline bool IsChildOf(PWObj pParent) { return Parent() == pParent; }
 
 	/// @brief 是否為孫窗體
 	/// @param pParent 擬定的父窗體
@@ -501,8 +524,11 @@ public: // Property - Focussable
 public: // Property - StayOnTop
 	/* R */ inline bool StayOnTop() const { return Status & WC_STAYONTOP; }
 	/* W */ void StayOnTop(bool bEnable);
+public: // Property - Popup
+	/* R */ inline bool Popup() const { return Status & WC_POPUP; }
+	/* W */ void Popup(bool bPopup);
 public: // Property - Visible
-	/* R */ inline bool Visible() const { return Status & WC_VISIBLE; }
+	/* R */ inline bool Visible() const { return (Status & WC_VISIBLE) == WC_VISIBLE; }
 	/* W */ void Visible(bool bVisible);
 public: // Property - RectScreen
 	/* R */ inline SRect RectScreen() const { return rsWin; }
@@ -541,17 +567,22 @@ public: // Property - Client
 	/* R */ inline PWObj Client() { return SendMessage(WM_GET_CLIENT_WINDOW); }
 	/* R */ inline PWObj Client() const { return const_cast<PWObj>(this)->Client(); }
 public: // Property - Parent
-	/* R */ inline PWObj Parent() const { return pParent; }
+	/* R */ inline PWObj Parent() const { return Popup() ? Desktop() : pParent; }
 	/* W */ inline void Parent(PWObj pParent) { Parent(pParent, Position()); }
 	/* W */ void Parent(PWObj pParent, Point ptcPosition);
+//	/* A */ inline void Deatach() {}
+public: // Property - Owner
+	/* R */ inline PWObj Owner() const { return pParent; }
 public: // Property - FirstChild
 	/* R */ inline PWObj FirstChild() { return pFirstChild; }
 	/* R */ inline PWObj FirstChild() const { return pFirstChild; }
 public: // Property - FirstSibling
-	/* R */ inline PWObj FirstSibling() { return pParent ? pParent->pFirstChild : nullptr; }
-	/* R */ inline PWObj FirstSibling() const { return pParent ? pParent->pFirstChild : nullptr; }
+	/* R */ inline PWObj FirstSibling() const {
+		if (auto pParent = Parent())
+			return pParent->pFirstChild;
+		return nullptr;
+	}
 public: // Property - NextSibling
-	/* R */ inline PWObj NextSibling() { return pNext; }
 	/* R */ inline PWObj NextSibling() const { return pNext; }
 public: // Property - LastSibling
 	/* R */ inline PWObj LastSibling();
@@ -587,25 +618,20 @@ public: // Property - Callback
 
 };
 static inline bool IsWindow(PWObj pObj) { return pObj ? *pObj : false; }
-inline PWObj WM_UNATTACHED = reinterpret_cast<PWObj>(-1);
 
 struct FOCUS_CHANGED_STATE {
 	PWObj pOld, pNew;
 };
 
 #pragma region Widget
-#define WIDGET_ITEM_DRAW       0
-#define WIDGET_ITEM_GET_XSIZE  1
-#define WIDGET_ITEM_GET_YSIZE  2
 
-struct WIDGET_ITEM_DRAW_INFO {
-	PWObj pWin;
-	/* WIDGET_ITEM_GET_XSIZE, WIDGET_ITEM_GET_YSIZE, WIDGET_ITEM_DRAW, */
-	int16_t Cmd;
-	int16_t ItemIndex;
-	Point Pos;
+enum WIDGET_ITEM_CMD {
+	WIDGET_ITEM_DRAW = 0,
+	WIDGET_ITEM_GET_XSIZE,
+	WIDGET_ITEM_GET_YSIZE
 };
-typedef int WIDGET_DRAW_ITEM_FUNC(const WIDGET_ITEM_DRAW_INFO *pDrawItemInfo);
+
+typedef int WIDGET_DRAW_ITEM_FUNC(PWObj pWin, WIDGET_ITEM_CMD Cmd, int16_t ItemIndex, SRect rItem);
 
 class Widget : public WObj {
 protected:
@@ -674,9 +700,6 @@ protected:
 			StatusEx = nState;
 			Invalidate();
 		}
-	}
-	inline void EnableState(bool bEnable, uint16_t Flag) {
-
 	}
 
 #pragma region Properties

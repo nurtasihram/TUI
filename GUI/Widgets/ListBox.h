@@ -4,20 +4,21 @@
 
 using		LISTBOX_CF = WC_EX;
 constexpr	LISTBOX_CF
-			LISTBOX_CF_AUTOSCROLLBAR_H = WC_EX_USER(0),
-			LISTBOX_CF_AUTOSCROLLBAR_V = WC_EX_USER(1),
-			LISTBOX_CF_MULTISEL        = WC_EX_USER(2);
+			LISTBOX_CF_AUTOSCROLLBAR_H	 = WC_EX_USER(0),
+			LISTBOX_CF_AUTOSCROLLBAR_V	 = WC_EX_USER(1),
+			LISTBOX_CF_AUTOSCROLLBAR	 = LISTBOX_CF_AUTOSCROLLBAR_H |
+										   LISTBOX_CF_AUTOSCROLLBAR_V,
+			LISTBOX_CF_MULTISEL			 = WC_EX_USER(2);
 enum LISTBOX_CI {
 	LISTBOX_CI_UNSEL = 0,
 	LISTBOX_CI_SEL,
 	LISTBOX_CI_SELFOCUS,
 	LISTBOX_CI_DISABLED
 };
-constexpr int LISTBOX_NOTIFICATION_LOST_FOCUS = WN_WIDGET;
 constexpr int16_t LISTBOX_ALL_ITEMS = -1;
 
 class ListBox : public Widget {
-
+	friend class DropDown;
 public:
 	struct Property {
 		CFont *pFont{ &GUI_Font13_1 };
@@ -44,22 +45,20 @@ private:
 	};
 	Property Props = DefaultProps;
 	GUI_Array<Item> ItemArray;
-	WIDGET_DRAW_ITEM_FUNC *pfDrawItem = nullptr;
-	PWObj pOwner = nullptr;
+	WIDGET_DRAW_ITEM_FUNC *pfnDrawItem = nullptr;
 	SCROLL_STATE scrollStateV, scrollStateH;
 	int16_t sel = 0;
 	uint16_t ItemSpacing = 0;
 	uint8_t ScrollbarWidth = 0;
 
 private:
-	int _CallOwnerDraw(int Cmd, uint16_t ItemIndex);
+	int _CallOwnerDraw(WIDGET_ITEM_CMD Cmd, uint16_t ItemIndex, SRect rItem = {});
 	int _GetYSize();
-	int _GetItemSize(uint16_t Index, uint8_t XY);
+	int _GetItemSize(uint16_t Index, WIDGET_ITEM_CMD XY);
 	int _GetContentsSizeX();
 	int _GetItemPosY(uint16_t Index);
 	bool _IsPartiallyVis();
 	uint16_t _GetNumVisItems();
-	void _NotifyOwner(int Notification);
 	int _UpdateScrollPos();
 	void _InvalidateItemSize(uint16_t Index);
 	void _InvalidateInsideArea();
@@ -71,12 +70,12 @@ private:
 	int _UpdateScrollers();
 	void _SelectByKey(int Key);
 	void _ToggleMultiSel(int sel);
-	int _GetItemFromPos(int x, int y);
+	int _GetItemFromPos(Point);
 
 	void _OnPaint(SRect rClip);
-	void _OnMouse(const MOUSE_STATE *pState);
+	void _OnMouse(MOUSE_STATE);
 	bool _OnKey(KEY_STATE);
-	void _OnMouseOver(const MOUSE_STATE *pState);
+	void _OnMouseOver(MOUSE_STATE);
 	
 	static WM_RESULT _Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc);
 
@@ -98,24 +97,17 @@ protected:
 	~ListBox() = default;
 
 public:
-	bool AddKey(int Key);
-
 	void Add(GUI_PCSTR s);
 	void Insert(uint16_t Index, GUI_PCSTR s);
 	void Delete(uint16_t Index);
 
 	void InvalidateItem(int Index);
 
-	void AutoScroll(bool bEnabled, bool H0V1);
-
-	inline void AutoScrollH(bool bEnabled) { return AutoScroll(bEnabled, false); }
-	inline void AutoScrollV(bool bEnabled) { return AutoScroll(bEnabled, true); }
-
 	void MoveSel(int Dir);
 	inline void IncSel() { MoveSel(1); }
 	inline void DecSel() { MoveSel(-1); }
 
-	static int OwnerDrawProc(const WIDGET_ITEM_DRAW_INFO *pDrawItemInfo);
+	static int DefOwnerDraw(PWObj pWin, WIDGET_ITEM_CMD Cmd, int16_t ItemIndex, SRect rItem);
 
 #pragma region Properties
 public: // Property - Font
@@ -137,8 +129,9 @@ public: // Property - TextColor
 		_InvalidateInsideArea();
 	}
 public: // Property - OwnerDraw
-	/* R */ inline void OwnerDraw(WIDGET_DRAW_ITEM_FUNC *pfDrawItem) {
-		this->pfDrawItem = pfDrawItem;
+	/* R */ inline auto OwnerDraw() { return pfnDrawItem ? pfnDrawItem : DefOwnerDraw; }
+	/* W */ inline void OwnerDraw(WIDGET_DRAW_ITEM_FUNC *pfnDrawItem) {
+		this->pfnDrawItem = pfnDrawItem;
 		InvalidateItem(LISTBOX_ALL_ITEMS);
 	}
 public: // Property - Spacing
@@ -174,12 +167,15 @@ public: // Property - Sel
 public: // Property - MultiSel
 	/* R */ inline bool MultiSel() const { return StatusEx & LISTBOX_CF_MULTISEL; }
 	/* W */ void MultiSel(bool bEnabled);
-public: // Property - Owner
-	/* R */ inline auto Owner() const { return pOwner; }
-	/* W */ inline void Owner(PWObj pOwner) {
-		this->pOwner = pOwner;
-		_InvalidateInsideArea();
-	}
+public: // Property - AutoScroll
+	/* R */ inline LISTBOX_CF AutoScroll() { return StatusEx & LISTBOX_CF_AUTOSCROLLBAR; }
+	/* W */ void AutoScroll(LISTBOX_CF ScrollFlags, bool bEnabled);
+public: // Property - AutoScrollH
+	/* R */ inline bool AutoScrollH() { return StatusEx & LISTBOX_CF_AUTOSCROLLBAR_H; }
+	/* W */ inline void AutoScrollH(bool bEnabled) { AutoScroll(LISTBOX_CF_AUTOSCROLLBAR_H, bEnabled); }
+public: // Property - AutoScrollV
+	/* R */ inline bool AutoScrollV() { return StatusEx & LISTBOX_CF_AUTOSCROLLBAR_V; }
+	/* W */ inline void AutoScrollV(bool bEnabled) { AutoScroll(LISTBOX_CF_AUTOSCROLLBAR_V, bEnabled); }
 #pragma endregion
 
 };

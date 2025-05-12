@@ -47,6 +47,10 @@ REG_FUNC(void, CreateDisplay, const wchar_t *lpTitle, uint16_t xSize, uint16_t y
 	Ayx.Init();
 	pfnIntResize(xSize, ySize);
 }
+REG_FUNC(void, UserClose, void) {
+	SimDisp::Ayx.Fill(RGB(0, 0, 0));
+	ExitProcess(0);
+}
 
 REG_FUNC(void, Dot, uint16_t x, uint16_t y, uint32_t rgb) {
 	SimDisp::Ayx.Dot({ x, y }, rgb);

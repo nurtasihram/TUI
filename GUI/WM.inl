@@ -114,9 +114,9 @@ enum WM_MESSSAGES : uint16_t {
 	 WM_PAINT,
 
 	 /// @brief 完成移動窗體後響應
-	 WM_MOVE,
+	 WM_MOVED,
 	 /// @brief 完成裁剪窗體後響應
-	 WM_SIZE,
+	 WM_SIZED,
 
 	 /// @brief 鍵盤在窗體上活躍時響應
 	 /// @param KEY_STATE 按鍵狀態
@@ -221,9 +221,9 @@ constexpr	WM_CF
 			WC_HIDE              = 0,
 			WC_VISIBLE           = 1 << 0,
 			WC_STAYONTOP         = 1 << 1,
-			WC_DISABLED          = 1 << 2,
-			WC_ACTIVATE          = 1 << 3,
-			WC_NOACTIVATE        = 1 << 4,
+			WC_POPUP             = 1 << 2,
+			WC_DISABLED          = 1 << 3,
+			WC_ACTIVATE          = 1 << 4,
 			WC_FOCUSSABLE        = 1 << 5,
 			WC_ANCHOR_LEFT       = 1 << 6,
 			WC_ANCHOR_RIGHT      = 1 << 7,

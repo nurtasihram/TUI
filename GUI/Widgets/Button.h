@@ -47,7 +47,7 @@ private:
 	void _Released(int Notification);
 
 	void _OnPaint() const;
-	void _OnMouse(const MOUSE_STATE *);
+	void _OnMouse(MOUSE_STATE);
 	void _OnMouseChange(MOUSE_CHANGED_STATE);
 	bool _OnKey(KEY_STATE);
 

@@ -281,17 +281,17 @@ static void _OSK_onKey(uint16_t Id, bool bPressed) {
 	GUI.Key(State);
 }
 
-WM_RESULT _OSK_callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
+bool _OSK_callback(PWObj pWin, int MsgId, WM_PARAM &Param, PWObj pSrc) {
 	switch (MsgId) {
 		case WM_PAINT:
 			GUI.PenColor(RGB_GRAY);
 			GUI.Fill(pWin->ClientRect());
-			return 0;
+			break;
 		case WM_CREATE:
 			GUI.PenColor(RGB_GRAY);
-			return 0;
+			break;
 		case WM_DELETE:
-			return 0;
+			break;
 		case WM_NOTIFY_CHILD:
 			switch ((int)Param) {
 				case WN_CLICKED:
@@ -301,12 +301,17 @@ WM_RESULT _OSK_callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 					_OSK_onKey((int)pSrc->ID(), false);
 					break;
 			}
-			return 0;
-		case WM_SIZE:
+			break;
+		case WM_SIZED:
 			_OSK_updateButtons(pWin->Client(), pWin->Client()->Size());
-			return 0;
+			break;
+		case WM_FOCUSSABLE:
+			Param = false;
+			break;
+		default:
+			return false;
 	}
-	return 0;
+	return true;
 }
 
 static Frame *pWndOsk = nullptr;
@@ -315,7 +320,8 @@ void ShowOsk(bool bVisible) {
 		pWndOsk = new Frame(
 			{ 0, 0, 320, 180 },
 			WObj::Desktop(), 0,
-			WC_STAYONTOP | WC_NOACTIVATE, FRAME_CF_RESIZEABLE,
+			WC_STAYONTOP,
+			FRAME_CF_RESIZEABLE,
 			"Keyboard",
 			_OSK_callback);
 	_OSK_createButtons(pWndOsk->Client(), pWndOsk->Client()->Size());

@@ -1,6 +1,5 @@
-#include "Static.h"
-#include "Radio.h"
-
+#include "Widgets/Static.h"
+#include "Widgets/Radio.h"
 
 void MainTask() {
 	static auto pText = new Static(

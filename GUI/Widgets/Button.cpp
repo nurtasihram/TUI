@@ -8,7 +8,7 @@ void Button::_Pressed() {
 	StatusEx |= _BUTTON_STATE_PRESSED;
 	Invalidate();
 	if (Status & WC_VISIBLE)
-		NotifyParent(WN_CLICKED);
+		NotifyOwner(WN_CLICKED);
 }
 void Button::_Released(int Notification) {
 	if (!(StatusEx & _BUTTON_STATE_PRESSED))
@@ -16,7 +16,7 @@ void Button::_Released(int Notification) {
 	StatusEx &= ~_BUTTON_STATE_PRESSED;
 	Invalidate();
 	if (Status & WC_VISIBLE)
-		NotifyParent(Notification);
+		NotifyOwner(Notification);
 }
 
 void Button::_OnPaint() const {
@@ -53,11 +53,11 @@ void Button::_OnPaint() const {
 	}
 	WObj::UserClip(nullptr);
 }
-void Button::_OnMouse(const MOUSE_STATE *pState) {
-	if (pState) {
+void Button::_OnMouse(MOUSE_STATE State) {
+	if (State) {
 		if (StatusEx & BUTTON_CF_SWITCH)
 			return;
-		if (pState->Pressed)
+		if (State.Pressed)
 			_Pressed();
 		else
 			_Released(WN_RELEASED);

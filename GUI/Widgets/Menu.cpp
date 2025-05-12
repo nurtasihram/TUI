@@ -253,25 +253,24 @@ bool Menu::_ForwardMouseOverMsg(Point Pos) {
 	auto pBelow = FindOnScreen(Client2Screen(Pos));
 	if (!pBelow || pBelow == this)
 		return false;
-	MOUSE_STATE State = pBelow->Screen2Client(Pos);
+	MOUSE_STATE State{ pBelow->Screen2Client(Pos), 0 };
 	pBelow->SendMessage(WM_MOUSE_OVER, &State);
 	return true;
 }
-void Menu::_ForwardPIDMsgToOwner(int MsgId, MOUSE_STATE *pState) {
+void Menu::_ForwardPIDMsgToOwner(int MsgId, MOUSE_STATE State) {
 	if (_IsTopLevelMenu())
 		return;
 	auto pOwner = this->pOwner ? this->pOwner : Parent();
 	if (!pOwner)
 		return;
-	if (pState) {
-		MOUSE_STATE State = *pState;
+	if (State) {
 		State += pOwner->Screen2Client(PositionScreen());
-		pOwner->SendMessage(MsgId, &State);
+		pOwner->SendMessage(MsgId, State);
 	}
 	else
 		pOwner->SendMessage(MsgId);
 }
-bool Menu::_HandleMouse(const MOUSE_STATE &State) {
+bool Menu::_HandleMouse(MOUSE_STATE State) {
 	bool bInside = 0;
 	auto &&PrevState = GUI.Mouse();
 	/* Check if coordinates are inside the widget. */
@@ -357,14 +356,14 @@ WM_RESULT Menu::_OnMenu(const MSG_DAT *pMsgData) {
 	return 0;
 }
 
-bool Menu::_OnMouse(const MOUSE_STATE *pState) {
-	if (pState)  /* Something happened in our area (pressed or released) */
-		return _HandleMouse(*pState);
+bool Menu::_OnMouse(MOUSE_STATE State) {
+	if (State)  /* Something happened in our area (pressed or released) */
+		return _HandleMouse(State);
 	return _HandleMouse({ -1, -1 }); /* Moved out */
 }
-bool Menu::_OnMouseOver(const MOUSE_STATE *pState) {
-	if (pState)
-		return _HandleMouse({ *pState, -1 });
+bool Menu::_OnMouseOver(MOUSE_STATE State) {
+	if (State)
+		return _HandleMouse({ State, -1 });
 	return false;
 }
 

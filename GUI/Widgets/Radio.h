@@ -37,7 +37,7 @@ private:
 	void _HandleSetValue(int16_t v);
 
 	void _OnPaint() const;
-	void _OnMouse(const MOUSE_STATE *pState);
+	void _OnMouse(MOUSE_STATE);
 	bool _OnKey(KEY_STATE);
 
 	static WM_RESULT _Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc);

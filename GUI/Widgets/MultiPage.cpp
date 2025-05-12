@@ -138,7 +138,7 @@ bool MultiPage::_ClickedOnMultipage(Point Pos) {
 		w = _GetPageSizeX(i);
 		if (Pos.x >= x0 && Pos.x <= x0 + w - 1) {
 			Select(i);
-			NotifyParent(WN_VALUE_CHANGED);
+			NotifyOwner(WN_VALUE_CHANGED);
 			return true;
 		}
 	}
@@ -177,18 +177,17 @@ void MultiPage::_OnPaint() {
 	}
 	WObj::UserClip(nullptr);
 }
-void MultiPage::_OnMouse(MOUSE_STATE *pState) {
+void MultiPage::_OnMouse(MOUSE_STATE State) {
 	int Notification;
-	if (pState) {
-		if (pState->Pressed) {
-			Point Pos = *pState;
-			if (_ClickedOnMultipage(Pos))
+	if (State) {
+		if (State.Pressed) {
+			if (_ClickedOnMultipage(State))
 				BringToTop();
 			else {
-				Pos = Client2Screen(Pos);
-				if (auto pBelow = WObj::FindOnScreen(Pos, this)) {
-					*pState = pBelow->Screen2Client(Pos);
-					pBelow->Callback()(pBelow, WM_MOUSE, pState, nullptr);
+				(Point &)State = Client2Screen(State);
+				if (auto pBelow = WObj::FindOnScreen(State, this)) {
+					(Point &)State = pBelow->Screen2Client(State);
+					pBelow->SendMessage(WM_MOUSE, State);
 				}
 			}
 			Notification = WN_CLICKED;
@@ -198,7 +197,7 @@ void MultiPage::_OnMouse(MOUSE_STATE *pState) {
 	}
 	else
 		Notification = WN_MOVED_OUT;
-	NotifyParent(Notification);
+	NotifyOwner(Notification);
 }
 
 WM_PARAM MultiPage::_ClientCb(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
@@ -252,11 +251,11 @@ WM_PARAM MultiPage::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc)
 		if (auto pScroll = pObj->ScrollBarH())
 			pScroll->Effect(*(const EffectItf *)Param);
 		break;
-	case WM_SIZE:
+	case WM_SIZED:
 		pObj->_UpdatePositions();
 		return 0;
 	case WM_DELETE:
-		pObj->Handles.Delete();
+		pObj->~MultiPage();
 		return 0;
 	case WM_GET_CLASS:
 		return ClassNames[WCLS_MULTIPAGE];

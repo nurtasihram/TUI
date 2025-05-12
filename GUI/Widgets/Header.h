@@ -39,8 +39,8 @@ private:
 private:
 	int _GetItemIndex(Point Pos);
 
-	void _HandleMouse(MOUSE_STATE State);
-	bool _HandleDrag(int MsgId, const MOUSE_STATE *pState);
+	void _HandleMouse(MOUSE_STATE);
+	bool _HandleDrag(int MsgId, MOUSE_STATE);
 
 	void _OnPaint();
 

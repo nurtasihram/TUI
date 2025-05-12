@@ -60,7 +60,7 @@ private:
 	bool _ClickedOnMultipage(Point);
 
 	void _OnPaint();
-	void _OnMouse(MOUSE_STATE *);
+	void _OnMouse(MOUSE_STATE);
 
 	static WM_RESULT _ClientCb(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc);
 	static WM_RESULT _Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc);

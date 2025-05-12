@@ -1,7 +1,8 @@
-#include "Frame.h"
-#include "CheckBox.h"
-#include "ListBox.h"
-#include "Radio.h"
+#include "Widgets/Frame.h"
+#include "Widgets/CheckBox.h"
+#include "Widgets/ListBox.h"
+#include "Widgets/DropDown.h"
+#include "Widgets/Radio.h"
 
 const RGBC ColorsSmilie0[]{
 	/* __ */ RGB_INVALID_COLOR,
@@ -76,56 +77,27 @@ static int _GetItemSizeY(ListBox *pWin, int ItemIndex) {
 	return DistY;
 }
 
-static int _OwnerDraw(const WIDGET_ITEM_DRAW_INFO *pDrawItemInfo) {
-	auto pWin = (ListBox *)pDrawItemInfo->pWin;
-	auto Index = pDrawItemInfo->ItemIndex;
-	switch (pDrawItemInfo->Cmd) {
+static int _OwnerDraw(PWObj pWin, WIDGET_ITEM_CMD Cmd, int16_t ItemIndex, SRect rItem) {
+	auto pObj = (ListBox *)pWin;
+	switch (Cmd) {
 		case WIDGET_ITEM_GET_XSIZE:
-			return _GetItemSizeX(pWin, Index);
+			return _GetItemSizeX(pObj, ItemIndex);
 		case WIDGET_ITEM_GET_YSIZE:
-			return _GetItemSizeY(pWin, Index);
+			return _GetItemSizeY(pObj, ItemIndex);
 		case WIDGET_ITEM_DRAW:
 		{
-			auto aColor = ListBox::DefaultProps.aTextColor;
-			auto aBkColor = ListBox::DefaultProps.aBkColor;
-			auto bEnabled = pWin->ItemEnabled(pDrawItemInfo->ItemIndex);
-			auto bSelected = pWin->ItemSel(Index);
-			auto bMultiSel = pWin->MultiSel();
-			auto Sel = pWin->Sel();
-			auto YSize = _GetItemSizeY(pWin, Index);
-			auto ColorIndex =
-				 bMultiSel ? bEnabled ? bSelected ? 2 : 0 : 3 :
-				 bEnabled ? pDrawItemInfo->ItemIndex == Sel ?
-							pDrawItemInfo->pWin->Focussed() ? 2 : 1 : 0 : 3;
-			GUI.BkColor(aBkColor[ColorIndex]);
-			GUI.PenColor(aColor[ColorIndex]);
-			GUI.Clear();
-			auto FontDistY = GUI.Font()->YDist;
-			GUI.DrawString(pWin->ItemText(pDrawItemInfo->ItemIndex),
-							 { pDrawItemInfo->x0 + bmSmilie0.Size.x + 16,
-							   pDrawItemInfo->y0 + (YSize - FontDistY) / 2 });
-			auto pBm = bMultiSel ? bSelected ?
-				&bmSmilie1 : &bmSmilie0 :
-					pDrawItemInfo->ItemIndex == Sel ?
-						&bmSmilie1 : &bmSmilie0;
-			GUI.DrawBitmap(
-				*pBm,
-				{ pDrawItemInfo->x0 + 7,
-				  pDrawItemInfo->y0 + (YSize - pBm->Size.y) / 2 });
-			if (bMultiSel && pDrawItemInfo->ItemIndex == Sel) {
-				SRect rFocus{
-					pDrawItemInfo->x0,
-					pDrawItemInfo->y0,
-					pDrawItemInfo->pWin->InsideRect().x1,
-					pDrawItemInfo->y0 + YSize - 1
-				};
-				GUI.PenColor(RGB_WHITE - aBkColor[ColorIndex]);
-				GUI.DrawFocus(rFocus);
-			}
+			auto pBm = pObj->MultiSel() ?
+				pObj->ItemSel(ItemIndex) ? &bmSmilie1 : &bmSmilie0 :
+				ItemIndex == pObj->Sel() ? &bmSmilie1 : &bmSmilie0;
+			Point posBmp{ rItem.x0 + 2, rItem.y0 + (rItem.ysize() - pBm->Size.y) / 2 };
+			rItem.x0 = posBmp.x + pBm->Size.x;
+			GUI.TextAlign(TEXTALIGN_VCENTER);
+			ListBox::DefOwnerDraw(pObj, Cmd, ItemIndex, rItem);
+			GUI.DrawBitmap(*pBm, posBmp);
 			break;
 		}
 		default:
-			return ListBox::OwnerDrawProc(pDrawItemInfo);
+			return ListBox::DefOwnerDraw(pObj, Cmd, ItemIndex, rItem);
 	}
 	return 0;
 }
@@ -133,30 +105,32 @@ static int _OwnerDraw(const WIDGET_ITEM_DRAW_INFO *pDrawItemInfo) {
 static bool _bMultiSel = false;
 static bool _bOwnerDrawn = true;
 
-static WM_RESULT _cbFrame(PWObj pDlg, int MsgId, WM_PARAM Param, PWObj pSrc) {
-	auto pListBox = (ListBox *)pDlg->DialogItem(GUI_ID_MULTIEDIT0);
+static bool _cbFrame(PWObj pDlg, int MsgId, WM_PARAM &Param, PWObj pSrc) {
 	switch (MsgId) {
-		case WM_INIT_DIALOG:
+		case WM_INIT_DIALOG: {
+			auto pListBox = (ListBox *)pDlg->DialogItem(GUI_ID_MULTIEDIT0);
 			pListBox->ScrollStepH(6);
-			pListBox->AutoScrollH(true);
-			pListBox->AutoScrollV(true);
 			pListBox->OwnerDraw(_OwnerDraw);
 			((CheckBox *)pDlg->DialogItem(GUI_ID_CHECK1))->CheckState(1);
 			break;
+		}
 		case WM_KEY:
-			switch (((KEY_STATE *)Param)->Key) {
+			switch (((KEY_STATE)Param).Key) {
 				case GUI_KEY_ESCAPE:
-					pDlg->DialogEnd(1);
+					pDlg->DialogEnd(0);
+					Param = 1;
 					break;
 				case GUI_KEY_ENTER:
-					pDlg->DialogEnd(0);
+					pDlg->DialogEnd(1);
+					Param = 1;
+					break;
+				default:
+					Param = 0;
 					break;
 			}
 			break;
-		case WM_MOUSE_CHILD:
-			//pListBox->Focus();
-			break;
-		case WM_NOTIFY_PARENT:
+		case WM_NOTIFY_CHILD: {
+			auto pListBox = (ListBox *)pDlg->DialogItem(GUI_ID_MULTIEDIT0);
 			switch ((int)Param) {
 				case WN_SEL_CHANGED:
 					pListBox->InvalidateItem(LISTBOX_ALL_ITEMS);
@@ -171,7 +145,6 @@ static WM_RESULT _cbFrame(PWObj pDlg, int MsgId, WM_PARAM Param, PWObj pSrc) {
 							break;
 						case GUI_ID_CHECK0:
 							pListBox->MultiSel(_bMultiSel = !_bMultiSel);
-							pListBox->Focus();
 							pListBox->InvalidateItem(LISTBOX_ALL_ITEMS);
 							break;
 						case GUI_ID_CHECK1:
@@ -183,32 +156,37 @@ static WM_RESULT _cbFrame(PWObj pDlg, int MsgId, WM_PARAM Param, PWObj pSrc) {
 							break;
 					}
 					break;
+				}
 			}
 			break;
 		default:
-			return WObj::DefCallback(pDlg, MsgId, Param, pSrc);
+			return false;
 	}
-	return 0;
+	return true;
 }
+
+GUI_PCSTR pLang{
+	"English\0"
+	"Deutsch\0"
+	"Francis\0"
+	"Japanese\0"
+	"Italiano\0"
+	"Espan\0"
+	"Greek\0"
+	"Hebrew\0"
+	"Dutch\0"
+	"Other language ...\0"
+};
 
 static const WM_CREATESTRUCT aDialogCreate[]{
 /*    Class             , x		, y		, xsize	, ysize	, Caption				 , Id				, Flags	, FlagsEx				, Para	*/
-	{ WCLS_FRAME		, 50	, 50	, 220	, 165	, "Owner drawn list box" , 0				, 0		, FRAME_CF_MOVEABLE			 	},
-	{ WCLS_LISTBOX		, 10	, 10	, 100	, 100	, "English\0"
-														  "Deutsch\0"
-														  "Francis\0"
-														  "Japanese\0"
-														  "Italiano\0"
-														  "Espan\0"
-														  "Greek\0"
-														  "Hebrew\0"
-														  "Dutch\0"
-														  "Other language ...\0" , GUI_ID_MULTIEDIT0, 0		, LISTBOX_CF_AUTOSCROLLBAR_H	},
-	{ WCLS_CHECKBOX		, 120	, 10	, 80	, 15	, "Multi select"		 , GUI_ID_CHECK0											},
-	{ WCLS_CHECKBOX		, 120	, 35	, 80	, 15	, "Owner drawn"			 , GUI_ID_CHECK1											},
-	{ WCLS_BUTTON		, 120	, 65	, 80	, 20	, "OK"					 , GUI_ID_OK												},
-	{ WCLS_BUTTON		, 120	, 90	, 80	, 20	, "Cancel"				 , GUI_ID_CANCEL											},
-	{ WCLS_DROPDOWN		, 10	, 110	, 100	, 20	, "Alfa\0Beta\0"		 , 0														},
+	{ WCLS_FRAME		, 50	, 50	, 220	, 165	, "Owner drawn list box" , 0				, 0		,							 	},
+	{ WCLS_LISTBOX		, 10	, 10	, 100	, 100	,  pLang				 , GUI_ID_MULTIEDIT0, 0		, LISTBOX_CF_AUTOSCROLLBAR		},
+	{ WCLS_CHECKBOX		, 120	, 10	, 85	, 18	, "Multi select"		 , GUI_ID_CHECK0											},
+	{ WCLS_CHECKBOX		, 120	, 35	, 85	, 18	, "Owner drawn"			 , GUI_ID_CHECK1											},
+	{ WCLS_BUTTON		, 120	, 65	, 85	, 20	, "OK"					 , GUI_ID_OK												},
+	{ WCLS_BUTTON		, 120	, 90	, 85	, 20	, "Cancel"				 , GUI_ID_CANCEL											},
+	{ WCLS_DROPDOWN		, 10	, 110	, 100	, 50	, pLang					 , 0				, 0		, DROPDOWN_CF_AUTOSCROLLBAR		},
 	{}
 };
 

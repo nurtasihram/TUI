@@ -4,6 +4,8 @@
 
 #include "GUI.inl"
 
+using Null = decltype(nullptr);
+
 template<class AnyType>
 inline AnyType Max(AnyType a, AnyType b) { return a > b ? a : b; }
 template<class AnyType>
@@ -265,15 +267,19 @@ inline const BitmapRect Bitmap::operator+(Point Pos) const {
 
 /// @brief 按鍵數據結構
 struct KEY_STATE {
-	uint16_t Key = 0, PressedCnt = 0;
+	uint16_t Key = 0;
+	uint16_t PressedCnt : 15;
 	inline bool operator==(KEY_STATE State) const { return Key == State.Key && PressedCnt == State.PressedCnt; }
 	inline bool operator!=(KEY_STATE State) const { return Key != State.Key || PressedCnt != State.PressedCnt; }
 };
 
 /// @brief 鼠標數據結構
 struct MOUSE_STATE : Point {
-	int8_t Pressed;
-	MOUSE_STATE(Point p = 0, int8_t Pressed = 0) : Point(p), Pressed(Pressed) {}
+	int8_t Pressed = 0;
+	int8_t bValid = 0;
+	MOUSE_STATE(Null = nullptr) {}
+	MOUSE_STATE(Point p, int8_t Pressed) : Point(p), Pressed(Pressed), bValid(1) {}
+	inline operator bool() const { return bValid; }
 	inline MOUSE_STATE operator+(const MOUSE_STATE &pid) const { return{ Point::operator+(pid), pid.Pressed }; }
 	inline bool operator==(const MOUSE_STATE &pid) const { return (const Point &)*this == pid && Pressed == pid.Pressed; }
 	inline bool operator!=(const MOUSE_STATE &pid) const { return (const Point &)*this != pid || Pressed != pid.Pressed; }

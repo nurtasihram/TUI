@@ -20,7 +20,7 @@ public:
 	void _SetCapture(Point Pos, uint8_t Mode);
 
 	void _OnPaint() const;
-	bool _HandleResize(int MsgId, const MOUSE_STATE *pState);
+	bool _HandleResize(int MsgId, MOUSE_STATE);
 
 	static WM_RESULT _Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc);
 
@@ -125,15 +125,15 @@ void CtlEdit::_ChangeWindowPosSize(Point p) {
 	if (!(_CaptureFlags & SIZE_MOUSEMOVE))
 		Resize(d);
 }
-bool CtlEdit::_HandleResize(int MsgId, const MOUSE_STATE *pState) {
+bool CtlEdit::_HandleResize(int MsgId, MOUSE_STATE State) {
 	if (Captured() && _CaptureFlags == 0)
 		return false;
 	switch (MsgId) {
 		case WM_MOUSE:
-			if (pState) {
-				Point Pos = *pState;
+			if (State) {
+				Point Pos = State;
 				auto Mode = _CheckReactBorder(Pos);
-				if (pState->Pressed != 1) {
+				if (State.Pressed != 1) {
 					if (!Captured())
 						return false;
 					_CaptureFlags &= ~SIZE_RESIZE;
@@ -158,9 +158,9 @@ bool CtlEdit::_HandleResize(int MsgId, const MOUSE_STATE *pState) {
 			}
 			return false;
 		case WM_MOUSE_OVER:
-			if (pState) {
-				if (auto Mode = _CheckReactBorder(*pState)) {
-					_SetCapture(*pState, Mode | SIZE_MOUSEOVER);
+			if (State) {
+				if (auto Mode = _CheckReactBorder(State)) {
+					_SetCapture(State, Mode | SIZE_MOUSEOVER);
 					return true;
 				}
 				if (!Captured())

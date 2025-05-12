@@ -57,7 +57,7 @@ private:
 	void _CursorPos(int CursorPos);
 
 	void _OnPaint();
-	void _OnMouse(const MOUSE_STATE *pState);
+	void _OnMouse(MOUSE_STATE);
 	bool _OnKey(KEY_STATE);
 	static WM_RESULT _Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc);
 

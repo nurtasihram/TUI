@@ -48,24 +48,24 @@ void Header::_HandleMouse(MOUSE_STATE State) {
 		if (Hit == -1)
 			CaptureRelease();
 }
-bool Header::_HandleDrag(int MsgId, const MOUSE_STATE *pState) {
+bool Header::_HandleDrag(int MsgId, MOUSE_STATE State) {
 	if (!(StatusEx & HEADER_CF_DRAG))
 		return false;
 	switch (MsgId) {
 		case WM_MOUSE: {
 			int Notification;
-			if (pState) {
-				_HandleMouse(*pState);
-				Notification = pState->Pressed ? WN_CLICKED : WN_RELEASED;
+			if (State) {
+				_HandleMouse(State);
+				Notification = State.Pressed ? WN_CLICKED : WN_RELEASED;
 			}
 			else
 				Notification = WN_MOVED_OUT;
-			NotifyParent(Notification);
+			NotifyOwner(Notification);
 			return true;
 		}
 		case WM_MOUSE_OVER:
-			if (pState)
-				_HandleMouse({ *pState, -1 });
+			if (State)
+				_HandleMouse({ State, -1 });
 			return true;
 		case WM_CAPTURE_RELEASED:
 			CapturePosX = -1;

@@ -525,7 +525,7 @@ void MultiEdit::_DeleteChar() {
 		pLine - pEndLine : GUI_UC_GetCharSize(pCursor);
 	NumChars = GUI_UC__NumBytes2NumChars(pCursor, NumBytes);
 	strcpy(pCursor, pCursor + NumBytes);
-	NotifyParent(WN_VALUE_CHANGED);
+	NotifyOwner(WN_VALUE_CHANGED);
 	this->NumChars -= NumChars;
 	_InvalidateNumLines();
 	_InvalidateTextSizeX();
@@ -545,7 +545,7 @@ int MultiEdit::_InsertChar(uint16_t Char) {
 			pText += CursorOffset;
 			memmove(pText + BytesNeeded, pText, strlen(pText) + 1);
 			GUI_UC_Encode(pText, Char);
-			NotifyParent(WN_VALUE_CHANGED);
+			NotifyOwner(WN_VALUE_CHANGED);
 			this->NumChars += 1;
 			_InvalidateNumLines();
 			_InvalidateTextSizeX();
@@ -639,7 +639,7 @@ void MultiEdit::_OnMouse(WM_PARAM *pData) {
 	else {
 		Notification = WN_MOVED_OUT;
 	}
-	NotifyParent(Notification);
+	NotifyOwner(Notification);
 }
 int MultiEdit::_AddKey(uint16_t Key) {
 	int r = 0;
@@ -746,12 +746,12 @@ void MultiEdit::_Callback(WObj *pWin, int msgid, WM_PARAM *pData, WObj *pWinSrc)
 					if (pData->pWinSrc == pObj->ScrollBarV()) {
 						pObj->scrollStateV.v = ((ScrollBar *)pData->pWinSrc)->ScrollState().v;
 						pObj->Invalidate();
-						pObj->NotifyParent(WN_SCROLL_CHANGED);
+						pObj->NotifyOwner(WN_SCROLL_CHANGED);
 					}
 					else if (pData->pWinSrc == pObj->ScrollBarH()) {
 						pObj->scrollStateH.v = ((ScrollBar *)pData->pWinSrc)->ScrollState().v;
 						pObj->Invalidate();
-						pObj->NotifyParent(WN_SCROLL_CHANGED);
+						pObj->NotifyOwner(WN_SCROLL_CHANGED);
 					}
 					break;
 				case WN_SCROLLBAR_ADDED:

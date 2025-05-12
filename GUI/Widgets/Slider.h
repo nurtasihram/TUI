@@ -22,7 +22,7 @@ private:
 	void _Released();
 
 	void _OnPaint() const;
-	void _OnMouse(const MOUSE_STATE *pState);
+	void _OnMouse(MOUSE_STATE);
 	bool _OnKey(KEY_STATE);
 	
 	static WM_RESULT _Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc);
@@ -43,14 +43,14 @@ public:
 		if (v > Min) {
 			--v;
 			Invalidate();
-			NotifyParent(WN_VALUE_CHANGED);
+			NotifyOwner(WN_VALUE_CHANGED);
 		}
 	}
 	inline void Inc() {
 		if (v < Max) {
 			++v;
 			Invalidate();
-			NotifyParent(WN_VALUE_CHANGED);
+			NotifyOwner(WN_VALUE_CHANGED);
 		}
 	}
 
@@ -72,7 +72,7 @@ public: // Property - Value
 		if (v > Max) v = Max;
 		this->v = v;
 		Invalidate();
-		NotifyParent(WN_VALUE_CHANGED);
+		NotifyOwner(WN_VALUE_CHANGED);
 	}
 public: // Property - NumTicks
 	/* R */ inline auto NumTicks() const { return this->nTicks; }

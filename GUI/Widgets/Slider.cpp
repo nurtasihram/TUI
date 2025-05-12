@@ -5,12 +5,12 @@ Slider::Property Slider::DefaultProps;
 void Slider::_SliderPressed() {
 	OrState(SLIDER_CF__PRESSED);
 	if (Status & WC_VISIBLE)
-		NotifyParent(WN_CLICKED);
+		NotifyOwner(WN_CLICKED);
 }
 void Slider::_Released() {
 	MaskState(SLIDER_CF__PRESSED);
 	if (Status & WC_VISIBLE)
-		NotifyParent(WN_RELEASED);
+		NotifyOwner(WN_RELEASED);
 }
 
 void Slider::_OnPaint() const {
@@ -53,17 +53,17 @@ void Slider::_OnPaint() const {
 		DrawFocus(rFocus);
 	}
 }
-void Slider::_OnMouse(const MOUSE_STATE *pState) {
-	if (!pState)
+void Slider::_OnMouse(MOUSE_STATE State) {
+	if (!State)
 		return;
-	if (!pState->Pressed) {
+	if (!State.Pressed) {
 		if (StatusEx & SLIDER_CF__PRESSED)
 			_Released();
 		return;
 	}
 	int Range = Max - Min;
 	int x0 = 1 + width / 2;  /* 1 pixel focus rectangle + width of actual slider */
-	int x = ((StatusEx & WC_EX_VERTICAL) ? pState->y : pState->x) - x0;
+	int x = ((StatusEx & WC_EX_VERTICAL) ? State.y : State.x) - x0;
 	int xsize = SizeX() - 2 * x0;
 	int Sel;
 	if (x <= 0)

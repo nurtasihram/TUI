@@ -58,10 +58,6 @@ void ListView::_SelFromPos(Point Pos) {
 			Sel(sel);
 	}
 }
-void ListView::_NotifyOwner(int Notification) {
-	auto pOwner = this->pOwner ? this->pOwner : Parent();
-	pOwner->SendMessage(WM_NOTIFY_CHILD, Notification);
-}
 
 int ListView::_UpdateScrollPos() {
 	int PrevScrollStateV = scrollStateV.v;
@@ -161,11 +157,11 @@ void ListView::_OnPaint(SRect rClip) const {
 	}
 	DrawDown();
 }
-void ListView::_OnMouse(const MOUSE_STATE *pState) {
+void ListView::_OnMouse(MOUSE_STATE State) {
 	int Notification;
-	if (pState) {
-		if (pState->Pressed) {
-			_SelFromPos(*pState);
+	if (State) {
+		if (State.Pressed) {
+			_SelFromPos(State);
 			Notification = WN_CLICKED;
 			Focus();
 		}
@@ -174,7 +170,7 @@ void ListView::_OnMouse(const MOUSE_STATE *pState) {
 	}
 	else
 		Notification = WN_MOVED_OUT;
-	_NotifyOwner(Notification);
+	NotifyOwner(Notification);
 }
 bool ListView::_OnKey(KEY_STATE State) {
 	if (State.PressedCnt <= 0)
@@ -207,7 +203,7 @@ WM_RESULT  ListView::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc
 			pObj->~ListView();
 			return 0;
 		case WM_NOTIFY_CLIENT_CHANGE:
-		case WM_SIZE:
+		case WM_SIZED:
 			pObj->_UpdateScrollParas();
 			return 0;
 		case WM_NOTIFY_CHILD:
@@ -220,13 +216,13 @@ WM_RESULT  ListView::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc
 					if (pSrc == (PWObj)pObj->ScrollBarV()) {
 						pObj->scrollStateV.v = ((ScrollBar *)pSrc)->Value();
 						pObj->Invalidate();
-						pObj->_NotifyOwner(WN_SCROLL_CHANGED);
+						pObj->NotifyOwner(WN_SCROLL_CHANGED);
 					}
 					else if (pSrc == (PWObj)pObj->ScrollBarH()) {
 						pObj->scrollStateH.v = ((ScrollBar *)pSrc)->Value();
 						pObj->_UpdateScrollParas();
 						pObj->pHeader->ScrollPos(pObj->scrollStateH.v);
-						pObj->_NotifyOwner(WN_SCROLL_CHANGED);
+						pObj->NotifyOwner(WN_SCROLL_CHANGED);
 					}
 					return 0;
 				case WN_SCROLLBAR_ADDED:
@@ -328,5 +324,5 @@ void ListView::Sel(int16_t NewSel) {
 		_InvalidateRow(OldSel);
 		_InvalidateRow(NewSel);
 	}
-	NotifyParent(WN_SEL_CHANGED);
+	NotifyOwner(WN_SEL_CHANGED);
 }

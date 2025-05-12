@@ -141,11 +141,11 @@ uint8_t Frame::_CheckReactBorder(Point Pos) {
 	}
 	return Mode;
 }
-bool Frame::_OnTouchResize(const MOUSE_STATE *pState) {
-	if (!pState) return false;
-	Point Pos = *pState;
+bool Frame::_OnTouchResize(MOUSE_STATE State) {
+	if (!State) return false;
+	Point Pos = State;
 	auto Mode = _CheckReactBorder(Pos);
-	if (pState->Pressed != 1) {
+	if (State.Pressed != 1) {
 		if (!Captured())
 			return false;
 		_CaptureFlags &= ~SIZE_RESIZE;
@@ -171,28 +171,28 @@ bool Frame::_OnTouchResize(const MOUSE_STATE *pState) {
 	return false;
 }
 bool Frame::_ForwardMouseOverMsg(int MsgId, MOUSE_STATE State) {
-	State = Client2Screen(State);
+	(Point &)State = Client2Screen(State);
 	if (auto pBelow = WObj::FindOnScreen(State)) {
 		if (pBelow == this) return false;
-		State = pBelow->Screen2Client(State);
+		(Point &)State = pBelow->Screen2Client(State);
 		pBelow->SendMessage(MsgId, &State);
 		return true;
 	}
 	return false;
 }
-bool Frame::_HandleResize(int MsgId, const MOUSE_STATE *pState) {
+bool Frame::_HandleResize(int MsgId, MOUSE_STATE State) {
 	if (Captured() && _CaptureFlags == 0)
 		return false;
 	if (Minimized() || Maximized())
 		return false;
 	switch (MsgId) {
 		case WM_MOUSE:
-			return _OnTouchResize(pState);
+			return _OnTouchResize(State);
 		case WM_MOUSE_OVER:
-			if (pState) {
-				if (auto Mode = _CheckReactBorder(*pState)) {
-					if (!_ForwardMouseOverMsg(MsgId, *pState))
-						_SetCapture(*pState, Mode | SIZE_MOUSEOVER);
+			if (State) {
+				if (auto Mode = _CheckReactBorder(State)) {
+					if (!_ForwardMouseOverMsg(MsgId, State))
+						_SetCapture(State, Mode | SIZE_MOUSEOVER);
 					return true;
 				}
 				if (!Captured())
@@ -200,7 +200,7 @@ bool Frame::_HandleResize(int MsgId, const MOUSE_STATE *pState) {
 				if (_CaptureFlags & SIZE_RESIZE)
 					return true;
 				CaptureRelease();
-				_ForwardMouseOverMsg(MsgId, *pState);
+				_ForwardMouseOverMsg(MsgId, State);
 				return true;
 			}
 			return false;
@@ -213,14 +213,14 @@ bool Frame::_HandleResize(int MsgId, const MOUSE_STATE *pState) {
 #pragma endregion
 
 constexpr int16_t FRAME__MinVisibility = 5;
-void Frame::_OnMouse(const MOUSE_STATE *pState) {
-	if (pState)
-		if (pState->Pressed) {
+void Frame::_OnMouse(MOUSE_STATE State) {
+	if (State)
+		if (State.Pressed) {
 			if (!(StatusEx & FRAME_CF_ACTIVE))
 				Focus();
 			BringToTop();
 			if (!(StatusEx & FRAME_CF_UNMOVEABLE))
-				CaptureMove(*pState, FRAME__MinVisibility);
+				CaptureMove(State, FRAME__MinVisibility);
 		}
 }
 void Frame::_OnPaint() const {
@@ -273,15 +273,16 @@ void Frame::_OnChildHasFocus(const FOCUS_CHANGED_STATE *pInfo) {
 
 WM_RESULT Frame::_cbClient(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 	auto pParent = (Frame *)pWin->Parent();
-	auto cb = pParent->cb;
+	if (!pParent) return 0;
+	auto hcb = pParent->hcb;
 	switch (MsgId) {
 		case WM_PAINT:
 			if (pParent->Props.ClientColor != RGB_INVALID_COLOR) {
 				GUI.BkColor(pParent->Props.ClientColor);
 				GUI.Clear();
 			}
-			if (cb)
-				cb(pWin, WM_PAINT, Param, nullptr);
+			if (hcb)
+				hcb(pWin, WM_PAINT, Param, nullptr);
 			return 0;
 		case WM_KEY: {
 			KEY_STATE State = Param;
@@ -294,6 +295,16 @@ WM_RESULT Frame::_cbClient(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 			}
 			break;
 		}
+		case WM_DELETE:
+			pParent->pClient = nullptr;
+			break;
+		case WM_NOTIFY_CHILD:
+			switch (Param) {
+				case WN_GOT_FOCUS:
+					pParent->pFocussedChild = pSrc;
+					break;
+			}
+			break;
 		case WM_FOCUS:
 			return pParent->SendMessage(MsgId, Param, pSrc);
 		case WM_FOCUSSABLE:
@@ -306,8 +317,9 @@ WM_RESULT Frame::_cbClient(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 		case WM_GET_CLIENT_WINDOW:
 			return DefCallback(pWin, MsgId, Param, pSrc);
 	}
-	if (cb)
-		return cb(pWin, MsgId, Param, pSrc);
+	if (hcb)
+		if (hcb(pParent, MsgId, Param, pSrc))
+			return Param;
 	return DefCallback(pWin, MsgId, Param, pSrc);
 }
 WM_RESULT Frame::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
@@ -324,8 +336,8 @@ WM_RESULT Frame::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 			return 0;
 		case WM_MOUSE_CHILD:
 			if (!(pObj->StatusEx & FRAME_CF_ACTIVE))
-				if (const MOUSE_STATE *pState = Param)
-					if (pState->Pressed)
+				if (MOUSE_STATE State = Param)
+					if (State.Pressed)
 						pObj->Focus();
 			return 0;
 		case WM_DELETE:
@@ -347,24 +359,23 @@ WM_RESULT Frame::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 			switch ((int)Param) {
 				case WN_RELEASED:
 					pObj->SendMessage(WM_NOTIFY_CHILD_REFLECT, Param, pObj);
-					if (PWObj pButton = Param)
-						if (pSrc)
-							switch (pSrc->ID()) {
-								case GUI_ID_CLOSE:
-									pObj->Destroy();
-									return 0;
-								case GUI_ID_MAXIMIZE:
-									if (pObj->StatusEx & FRAME_CF_MAXIMIZED)
-										pObj->Restore();
-									else
-										pObj->Maximize();
-									break;
-								case GUI_ID_MINIMIZE:
-									if (pObj->StatusEx & FRAME_CF_MINIMIZED)
-										pObj->Restore();
-									else
-										pObj->Minimize();
-									break;
+					if (Param && pSrc)
+						switch (pSrc->ID()) {
+							case GUI_ID_CLOSE:
+								pObj->Destroy();
+								return 0;
+							case GUI_ID_MAXIMIZE:
+								if (pObj->StatusEx & FRAME_CF_MAXIMIZED)
+									pObj->Restore();
+								else
+									pObj->Maximize();
+								break;
+							case GUI_ID_MINIMIZE:
+								if (pObj->StatusEx & FRAME_CF_MINIMIZED)
+									pObj->Restore();
+								else
+									pObj->Minimize();
+								break;
 						}
 					break;
 			}
@@ -394,18 +405,23 @@ WM_RESULT Frame::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 Frame::Frame(const SRect &rc,
 			 PWObj pParent, uint16_t Id,
 			 WM_CF Flags, FRAME_CF FlagsEx,
-			 GUI_PCSTR pTitle, WM_CB cb) :
+			 GUI_PCSTR pTitle, WM_HANDLE_CB hcb) :
 	Widget(rc,
 		   _Callback,
 		   pParent, Id,
-		   Flags | WC_FOCUSSABLE, FlagsEx | FRAME_CF_TITLEVIS),
-	cb(cb),
+		   Flags | WC_FOCUSSABLE,
+		   FlagsEx | FRAME_CF_TITLEVIS),
+	hcb(hcb),
 	pClient(new WObj(
 		_CalcPositions().rClient,
 		_cbClient,
 		this, 0,
 		WC_ANCHOR_MASK | WC_VISIBLE)) {
 	Text(pTitle);
+}
+Frame::~Frame() {
+	if (pDialogStatus)
+		pDialogStatus->Done = true;
 }
 
 void Frame::Minimize() {
@@ -570,7 +586,7 @@ void Frame::Menu(::Menu *pMenu) {
 	auto IBorderSize = StatusEx & FRAME_CF_TITLEVIS ? Props.IBorderSize : 0;
 	auto BorderSize = Props.BorderSize;
 	this->pMenu = pMenu;
-	if (cb)
+	if (hcb)
 		pMenu->Owner(pClient);
 	auto xSize = SizeX() - BorderSize * 2;
 	pMenu->Attach(this, { BorderSize, BorderSize + _CalcTitleHeight() + IBorderSize }, { xSize, 0 });

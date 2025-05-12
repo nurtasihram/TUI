@@ -49,7 +49,7 @@ private:
 	void _ScrollbarPressed();
 	void _ScrollbarReleased();
 
-	void _OnMouse(const MOUSE_STATE *pState);
+	void _OnMouse(MOUSE_STATE);
 	bool _OnKey(KEY_STATE);
 	void _OnPaint();
 	
@@ -67,7 +67,7 @@ public:
 		wc.Flags, wc.FlagsEx,
 		{ wc.Para.i16_4[0], wc.Para.i16_4[1], wc.Para.i16_4[2] }) {}
 protected:
-	~ScrollBar() = default;
+	~ScrollBar();
 
 public:
 	inline void Dec() { AddValue(-1); }
@@ -82,7 +82,7 @@ public: // Property - Value
 	/* W */ inline void Value(int v) {
 		state.Value(v);
 		Invalidate();
-		NotifyParent(WN_VALUE_CHANGED);
+		NotifyOwner(WN_VALUE_CHANGED);
 	}
 public: // Property - NumItems
 	/* R */ inline auto NumItems() const { return state.NumItems; }
