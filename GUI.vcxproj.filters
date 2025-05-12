@@ -16,11 +16,14 @@
     <Filter Include="GUI_EXT">
       <UniqueIdentifier>{6f9f436b-b208-4f92-9e0f-ccb9ec53821d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="GUI_EXT\duktape">
-      <UniqueIdentifier>{08cf5063-1624-4551-b5c6-825d3976d25d}</UniqueIdentifier>
-    </Filter>
     <Filter Include="GUI_test">
       <UniqueIdentifier>{17621e2a-e488-4d2b-b6f0-9a38513bd3fd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GUI_EXT\duktape">
+      <UniqueIdentifier>{43ea1ac1-fb45-4e7a-85d4-ee8d18227f5f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GUI_EXT\duktape\duktape">
+      <UniqueIdentifier>{08cf5063-1624-4551-b5c6-825d3976d25d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -92,11 +95,8 @@
     <ClCompile Include="GUI_EXT\ext_osk.cpp">
       <Filter>GUI_EXT</Filter>
     </ClCompile>
-    <ClCompile Include="GUI_EXT\ext_duktape.cpp">
-      <Filter>GUI_EXT</Filter>
-    </ClCompile>
     <ClCompile Include="GUI_EXT\duktape\duktape.c">
-      <Filter>GUI_EXT\duktape</Filter>
+      <Filter>GUI_EXT\duktape\duktape</Filter>
     </ClCompile>
     <ClCompile Include="GUI_test\test_checkbox_radio.cpp">
       <Filter>GUI_test</Filter>
@@ -127,6 +127,9 @@
     </ClCompile>
     <ClCompile Include="GUI_X_SIM\GUI_X.cpp">
       <Filter>GUI_X_SIM</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI_EXT\ext_duktape.cpp">
+      <Filter>GUI_EXT\duktape</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -194,20 +197,20 @@
     <ClInclude Include="GUI_EXT\ext_osk.h">
       <Filter>GUI_EXT</Filter>
     </ClInclude>
-    <ClInclude Include="GUI_EXT\duk_config.h">
-      <Filter>GUI_EXT</Filter>
-    </ClInclude>
-    <ClInclude Include="GUI_EXT\ext_duktape.h">
-      <Filter>GUI_EXT</Filter>
-    </ClInclude>
     <ClInclude Include="GUI_EXT\duktape\duktape.h">
-      <Filter>GUI_EXT\duktape</Filter>
+      <Filter>GUI_EXT\duktape\duktape</Filter>
     </ClInclude>
     <ClInclude Include="GUI_X_SIM\resource.h">
       <Filter>GUI_X_SIM</Filter>
     </ClInclude>
     <ClInclude Include="GUI\GUI_X.h">
       <Filter>GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI_EXT\duk_config.h">
+      <Filter>GUI_EXT\duktape</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI_EXT\ext_duktape.h">
+      <Filter>GUI_EXT\duktape</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

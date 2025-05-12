@@ -152,14 +152,6 @@ void GUI_MEM_Free(void *ptr) {
 }
 #pragma endregion
 
-static MOUSE_STATE _MouseNow;
-static KEY_STATE _KeyNow;
-static SRect _RectNow;
-
-MOUSE_STATE GUI_X_MOUSE_State() { return _MouseNow; }
-KEY_STATE GUI_X_KEY_State() { return _KeyNow; }
-SRect GUI_X_RECT_State() { return _RectNow; }
-
 void GUI_X_Init() {
 	GUI_X_SIM::LoadDll(_T("GUI_X_SIM.dll"));
 	GUI_X_SIM::IntResize([](uint16_t cx, uint16_t cy) {
