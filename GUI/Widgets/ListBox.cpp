@@ -7,19 +7,6 @@
 
 ListBox::Property ListBox::DefaultProps;
 
-static int _Tolower(int Key) {
-	return Key >= 0x41 && Key <= 0x5a ?
-		Key + 0x20 : Key;
-}
-static bool _IsAlphaNum(int Key) {
-	Key = _Tolower(Key);
-	if (Key >= 'a' && Key <= 'z')
-		return true;
-	if (Key >= '0' && Key <= '9')
-		return true;
-	return false;
-}
-
 int ListBox::_CallOwnerDraw(WIDGET_ITEM_CMD Cmd, uint16_t ItemIndex, SRect rItem)
 { return OwnerDraw()(this, Cmd, ItemIndex, rItem); }
 int ListBox::_GetYSize() { return WObj::InsideRect().ysize(); }
@@ -100,13 +87,13 @@ void ListBox::_InvalidateItemSize(uint16_t Index) {
 void ListBox::_InvalidateInsideArea() {
 	Invalidate(WObj::InsideRect());
 }
-void ListBox::_InvalidateItem(int sel) {
-	if (sel < 0)
+void ListBox::_InvalidateItem(int16_t Index) {
+	if (Index < 0)
 		return;
-	int ItemPosY = _GetItemPosY(sel);
+	int ItemPosY = _GetItemPosY(Index);
 	if (ItemPosY < 0)
 		return;
-	int ItemDistY = _GetItemSize(sel, WIDGET_ITEM_GET_YSIZE);
+	int ItemDistY = _GetItemSize(Index, WIDGET_ITEM_GET_YSIZE);
 	auto &&rsWin = WObj::InsideRect();
 	rsWin.y0 += ItemPosY;
 	rsWin.y1 = rsWin.y0 + ItemDistY - 1;
@@ -149,15 +136,6 @@ void ListBox::_ManageAutoScroll() {
 int ListBox::_UpdateScrollers() {
 	_ManageAutoScroll();
 	return _CalcScrollParas();
-}
-void ListBox::_SelectByKey(int Key) {
-	Key = _Tolower(Key);
-	for (auto i = 0; i < ItemArray.NumItems(); ++i) {
-		if (_Tolower(*ItemArray[i].Text) == Key) {
-			Sel(i);
-			break;
-		}
-	}
 }
 
 void ListBox::_ToggleMultiSel(int sel) {
@@ -247,11 +225,6 @@ bool ListBox::_OnKey(KEY_STATE State) {
 		case GUI_KEY_UP:
 			DecSel();
 			return true;
-		default:
-			if (_IsAlphaNum(Key)) {
-				_SelectByKey(Key);
-				return true;
-			}
 	}
 	return false;
 }

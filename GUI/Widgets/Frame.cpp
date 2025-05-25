@@ -299,7 +299,7 @@ WM_RESULT Frame::_cbClient(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 			pParent->pClient = nullptr;
 			break;
 		case WM_NOTIFY_CHILD:
-			switch (Param) {
+			switch ((WM_NOTIFICATIONS)Param) {
 				case WN_GOT_FOCUS:
 					pParent->pFocussedChild = pSrc;
 					break;
@@ -583,14 +583,14 @@ void Frame::BorderSize(int Size) {
 	Invalidate();
 }
 void Frame::Menu(::Menu *pMenu) {
+	this->pMenu = pMenu;
+	if (!pMenu) return;
 	auto IBorderSize = StatusEx & FRAME_CF_TITLEVIS ? Props.IBorderSize : 0;
 	auto BorderSize = Props.BorderSize;
-	this->pMenu = pMenu;
-	if (hcb)
-		pMenu->Owner(pClient);
 	auto xSize = SizeX() - BorderSize * 2;
 	pMenu->Attach(this, { BorderSize, BorderSize + _CalcTitleHeight() + IBorderSize }, { xSize, 0 });
 	pMenu->Anchor(WC_ANCHOR_LEFT | WC_ANCHOR_RIGHT);
+	pMenu->Visible(true);
 	_UpdatePositions();
 	Invalidate();
 }

@@ -1,22 +1,8 @@
 #include "DropDown.h"
 
-static int _Tolower(int Key) {
-	return Key >= 0x41 && Key <= 0x5a ? Key + 0x20 : Key;
-}
 static void _DrawTriangle(int x, int y, int Size, int Inc) {
 	for (; Size >= 0; --Size, y += Inc)
 		GUI.DrawLineH(x - Size, y, x + Size);
-}
-bool DropDown::_SelectByKey(int Key) {
-	Key = _Tolower(Key);
-	for (int i = 0, NumItems = this->NumItems(); i < NumItems; ++i) {
-		auto c = _Tolower(*pListbox->ItemText(i));
-		if (c == Key) {
-			Sel(i);
-			return true;
-		}
-	}
-	return false;
 }
 
 void DropDown::_AdjustHeight() {
@@ -81,8 +67,6 @@ bool DropDown::_OnKey(KEY_STATE State) {
 		case GUI_KEY_UP:
 			Dec();
 			return true;
-		default:
-			return _SelectByKey(Key);
 	}
 	return false;
 }
@@ -148,7 +132,7 @@ DropDown::DropDown(const SRect &rc,
 		WC_STAYONTOP | WC_POPUP, 0,
 		pItems)),
 	ySizeEx(rc.ysize()) {
-	pListbox->Effect(EffectItf::Simple);
+	pListbox->Effect(&EffectItf::Simple);
 	_AdjustHeight();
 }
 
@@ -161,6 +145,8 @@ void DropDown::Expand(bool bExpand) {
 	}
 	pListbox->Visible(bExpand);
 	Invalidate();
+	if (!bExpand)
+		Focus();
 }
 
 void DropDown::Sel(int16_t sel) {

@@ -225,7 +225,8 @@ public: // Property - Mouse
 		return old;
 	}
 	/* R */ inline auto MouseNA() { return _MouseLast == _MouseNow; }
-	/* R */ inline auto Mouse() { return _MouseLast = _MouseNow; }
+	/* R */ inline auto Mouse() { return _MouseNow; }
+	/* R */ inline auto MouseNext() { return _MouseLast = _MouseNow; }
 	/* R */ inline auto MousePrev() { return _MouseLast; }
 public: // Property - Key
 	/* W */ inline auto Key(KEY_STATE State) {
@@ -235,7 +236,8 @@ public: // Property - Key
 		return old;
 	}
 	/* R */ inline auto KeyNA() { return _KeyLast == _KeyNow; }
-	/* R */ inline auto Key() { return _KeyLast = _KeyNow; }
+	/* R */ inline auto Key() { return _KeyNow; }
+	/* R */ inline auto KeyNext() { return _KeyLast = _KeyNow; }
 	/* R */ inline auto KeyPrev() { return _KeyLast; }
 public: // Property - Rect
 	/* W */ inline void Rect(SRect rs) { rnScreen = rs; }
@@ -266,7 +268,7 @@ public:
 };
 struct GUI_STRING : GUI_ISTRING {
 	GUI_STRING() {}
-	GUI_STRING(const GUI_STRING &s) { GUI.SetText(&pText, s); }
+	GUI_STRING(const GUI_STRING &s) { pText = s.pText, s.pText = nullptr; }
 	GUI_STRING(GUI_PCSTR s) { GUI.SetText(&pText, s); }
 	~GUI_STRING() {
 		if (pText) {
@@ -275,5 +277,6 @@ struct GUI_STRING : GUI_ISTRING {
 		}
 	}
 	uint16_t operator++() = delete;
+	inline void operator=(const GUI_STRING &s) { pText = s.pText, s.pText = nullptr; }
 	inline void operator=(GUI_PCSTR s) { GUI.SetText(&pText, s); }
 };

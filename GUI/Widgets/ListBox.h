@@ -62,7 +62,7 @@ private:
 	int _UpdateScrollPos();
 	void _InvalidateItemSize(uint16_t Index);
 	void _InvalidateInsideArea();
-	void _InvalidateItem(int sel);
+	void _InvalidateItem(int16_t Index);
 	void _InvalidateItemAndBelow(int sel);
 	void _SetScrollbarWidth();
 	int _CalcScrollParas();

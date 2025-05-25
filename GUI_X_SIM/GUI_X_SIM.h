@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 typedef bool(*GUI_X_SIM_pfnOnSize)(uint16_t cx, uint16_t cy);
 typedef void(*GUI_X_SIM_pfnOnMouse)(int16_t x, int16_t y, int8_t key);
 typedef void(*GUI_X_SIM_pfnOnKey)(uint16_t vk, uint8_t bPressed);

@@ -131,6 +131,9 @@
     <ClCompile Include="GUI_EXT\ext_duktape.cpp">
       <Filter>GUI_EXT\duktape</Filter>
     </ClCompile>
+    <ClCompile Include="GUI_EXT\ext_monocolor.cpp">
+      <Filter>GUI_EXT</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GUI\GUI_Array.h">
@@ -211,6 +214,9 @@
     </ClInclude>
     <ClInclude Include="GUI\GUI.h">
       <Filter>GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI_EXT\ext_monocolor.h">
+      <Filter>GUI_EXT</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

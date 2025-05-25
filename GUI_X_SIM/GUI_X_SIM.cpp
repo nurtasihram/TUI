@@ -71,10 +71,9 @@ REG_FUNC(void, OpenConsole, void) {
 	Console.Title(S("TUI - Console"));
 	Console.Select();
 	Console.Reopen();
-	SimDisp::ConsoleEnableShow(true);
 }
-REG_FUNC(void, CloseConsole, void) {
-	Console.Free();
+REG_FUNC(void, ShowConsole, bool bVis) {
+	SimDisp::ConsoleEnableShow(bVis);
 }
 
 #pragma endregion

@@ -249,7 +249,7 @@ WM_PARAM MultiPage::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc)
 		return pObj->pClient->ServeRect();
 	case WM_WIDGET_SET_EFFECT:
 		if (auto pScroll = pObj->ScrollBarH())
-			pScroll->Effect(*(const EffectItf *)Param);
+			pScroll->Effect(Param);
 		break;
 	case WM_SIZED:
 		pObj->_UpdatePositions();

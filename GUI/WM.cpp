@@ -138,14 +138,6 @@ WObj::WObj(const SRect &rc,
 	SendMessage(WM_CREATE);
 }
 
-void WObj::DeleteChildren() {
-	NotifyOwner(WN_CHILD_DELETED);
-	while (pFirstChild) {
-		auto pNext = pFirstChild->pNext;
-		pFirstChild->Destroy();
-		pFirstChild = pNext;
-	}
-}
 void WObj::Destroy() {
 	if (!*this) return;
 	pWinNextDraw = nullptr;
@@ -155,10 +147,16 @@ void WObj::Destroy() {
 		pWinCapture = nullptr;
 	if (CriticalHandles::pFirst)
 		CriticalHandles::pFirst->Check(this);
-	DeleteChildren();
+	NotifyOwner(WN_CHILD_DELETED);
+	while (pFirstChild) {
+		auto pNext = pFirstChild->pNext;
+		pFirstChild->Destroy();
+		pFirstChild = pNext;
+	}
 	SendMessage(WM_DELETE);
-//	Detach();
+	_RemoveWindowFromList();
 	_RemoveFromLinList();
+	InvalidateArea(rsWin);
 	if (Status & WC_ACTIVATE)
 		--nInvalidWindows;
 	GUI_MEM_Free(this);
@@ -575,7 +573,7 @@ WM_RESULT WObj::DefCallback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 		case WM_KEY:
 			if (!pWin->Parent())
 				break;
-			if (!pWin->SendToOwner(MsgId, Param)) {
+			if (!pWin->SendOwnerMessage(MsgId, Param)) {
 				KEY_STATE State = Param;
 				if (State.PressedCnt <= 0)
 					break;
@@ -782,48 +780,54 @@ bool WObj::HandleKey() {
 	if (GUI.KeyNA())
 		return false;
 	WObj::OnKey(GUI.Key());
+	GUI.KeyNext();
 	return true;
 }
 bool WObj::HandleMouse() {
+	static auto _HandleMouse = []() {
+		auto StateOld = GUI.MousePrev(), StateNow = GUI.Mouse();
+		GUI.Cursor.Position(StateNow);
+		CriticalHandles CHWin = pWinCapture ? pWinCapture : WObj::FindOnScreen(StateNow);
+		if (!CHWin.pWin) return false;
+		if (!CHWin.pWin->_IsInModalArea()) return false;
+		if (StateOld.Pressed != StateNow.Pressed && CHWin.pWin)
+			CHWin.pWin->_SendMessageIfEnabled(
+				WM_MOUSE_CHANGED,
+				MOUSE_CHANGED_STATE{
+					CHWin.pWin->Screen2Client(StateNow),
+					StateNow.Pressed, StateOld.Pressed });
+		if (StateOld.Pressed | StateNow.Pressed) { /* Only if pressed or just released */
+			MOUSE_STATE State;
+			if (CriticalHandles::Last.pWin != CHWin.pWin)
+				if (CriticalHandles::Last.pWin) {
+					MOUSE_STATE State;
+					if (!StateNow.Pressed)
+						State = MOUSE_STATE{ StateOld, 0 };
+					CriticalHandles::Last.pWin->_SendMouseMessage(WM_MOUSE, State);
+					CriticalHandles::Last.pWin = nullptr;
+				}
+			if (CHWin.pWin) {
+				State = StateNow;
+				if (State.Pressed)
+					CriticalHandles::Last.pWin = CHWin.pWin;
+				else {
+					if (bCaptureAutoRelease)
+						CaptureRelease();
+					CriticalHandles::Last.pWin = nullptr;
+				}
+				CHWin.pWin->_SendMouseMessage(WM_MOUSE, State);
+			}
+			return true;
+		}
+		if (CHWin.pWin->Enable())
+			CHWin.pWin->_SendMouseMessage(WM_MOUSE_OVER, StateNow);
+		return false;
+	};
 	if (GUI.MouseNA())
 		return false;
-	auto StateOld = GUI.MousePrev(), StateNow = GUI.Mouse();
-	GUI.Cursor.Position(StateNow);
-	CriticalHandles CHWin = pWinCapture ? pWinCapture : WObj::FindOnScreen(StateNow);
-	if (!CHWin.pWin) return false;
-	if (!CHWin.pWin->_IsInModalArea()) return false;
-	if (StateOld.Pressed != StateNow.Pressed && CHWin.pWin)
-		CHWin.pWin->_SendMessageIfEnabled(
-			WM_MOUSE_CHANGED,
-			MOUSE_CHANGED_STATE{
-				CHWin.pWin->Screen2Client(StateNow),
-				StateNow.Pressed, StateOld.Pressed });
-	if (StateOld.Pressed | StateNow.Pressed) { /* Only if pressed or just released */
-		MOUSE_STATE State;
-		if (CriticalHandles::Last.pWin != CHWin.pWin)
-			if (CriticalHandles::Last.pWin) {
-				MOUSE_STATE State;
-				if (!StateNow.Pressed)
-					State = MOUSE_STATE{ StateOld, 0 };
-				CriticalHandles::Last.pWin->_SendMouseMessage(WM_MOUSE, State);
-				CriticalHandles::Last.pWin = nullptr;
-			}
-		if (CHWin.pWin) {
-			State = StateNow;
-			if (State.Pressed)
-				CriticalHandles::Last.pWin = CHWin.pWin;
-			else {
-				if (bCaptureAutoRelease)
-					CaptureRelease();
-				CriticalHandles::Last.pWin = nullptr;
-			}
-			CHWin.pWin->_SendMouseMessage(WM_MOUSE, State);
-		}
-		return true;
-	}
-	if (CHWin.pWin->Enable())
-		CHWin.pWin->_SendMouseMessage(WM_MOUSE_OVER, StateNow);
-	return false;
+	auto res = _HandleMouse();
+	GUI.MouseNext();
+	return res;
 }
 
 #pragma endregion
@@ -839,17 +843,6 @@ void WObj::StayOnTop(bool bEnable) {
 		return;
 	this->Status = Status;
 	Parent(Parent());
-}
-void WObj::Popup(bool bPopup) {
-	auto Status = this->Status;
-	if (bPopup)
-		Status |= WC_POPUP;
-	else
-		Status &= ~WC_POPUP;
-	if (this->Status == Status)
-		return;
-	this->Status = Status;
-	Parent(nullptr);
 }
 void WObj::Enable(bool bEnable) {
 	auto Status = this->Status;
@@ -898,6 +891,16 @@ void WObj::Parent(PWObj pParent, Point ptcPosition) {
 	/* Attach */
 	_InsertWindowIntoList(pParent);
 	Position(ptcPosition);
+}
+void WObj::Owner(PWObj pOwner) {
+	_RemoveWindowFromList();
+	auto Status = this->Status;
+	if (pOwner)
+		Status |= WC_POPUP;
+	else
+		Status &= ~WC_POPUP;
+	this->Status = Status;
+	Parent(pOwner);
 }
 
 PWObj WObj::LastSibling() {

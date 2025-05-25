@@ -12,4 +12,4 @@ REG_FUNC(void, SetBitmap, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, co
 REG_FUNC(void, GetBitmap, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint32_t *lpBits, uint16_t BytesPerLine);
 
 REG_FUNC(void, OpenConsole, void);
-REG_FUNC(void, CloseConsole, void);
+REG_FUNC(void, ShowConsole, bool bVis);

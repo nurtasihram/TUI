@@ -240,6 +240,7 @@ constexpr	WM_CF
 constexpr	WM_CF
 			WC_ANCHOR_MASK		 = WC_ANCHOR_HORIZONTAL | WC_ANCHOR_VERTICAL;
 
-using	  WC_EX = uint16_t;
-constexpr WC_EX WC_EX_VERTICAL = 1 << 0;
-constexpr WC_EX WC_EX_USER(uint8_t x) { return 1 << (1 + x); }
+using		WC_EX = uint16_t;
+constexpr	WC_EX
+			WC_EX_VERTICAL = 1 << 0;
+constexpr	WC_EX WC_EX_USER(uint8_t x) { return WC_EX_VERTICAL << (1 + x); }

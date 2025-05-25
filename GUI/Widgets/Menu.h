@@ -6,6 +6,7 @@ using		MENU_CF = uint16_t;
 constexpr	MENU_CF
 			MENU_CF_HORIZONTAL            = WC_EX_USER(0),
 			MENU_CF_VERTICAL              = WC_EX_USER(1),
+			MENU_CF_POPUP                 = WC_EX_USER(1),
 			MENU_CF_OPEN_ON_POINTEROVER   = WC_EX_USER(2),
 			MENU_CF_CLOSE_ON_SECOND_CLICK = WC_EX_USER(3),
 			MENU_CF_HIDE_DISABLED_SEL     = WC_EX_USER(4), /* Hides the selection when a disabled item is selected */
@@ -68,7 +69,7 @@ public:
 public:
 	struct Item {
 		Menu *pSubmenu = nullptr;
-		GUI_STRING text = nullptr;
+		GUI_STRING Text;
 		uint16_t Id = 0, TextWidth = 0;
 		MENU_IF Flags = 0;
 	};
@@ -78,76 +79,73 @@ public:
 	};
 	Property Props = DefaultProps;
 	GUI_Array<Item> ItemArray;
-	PWObj pOwner = nullptr;
 	uint16_t Width = 0, Height = 0;
 	int16_t Sel = -1;
-	uint16_t Flags = 0;
 	bool bSubmenuActive = false;
 
 private:
-	void _RecalcTextWidthOfItems();
-	void _ResizeMenu();
-	void _SetItem(unsigned Index, const Menu::Item &NewItem);
-	void _SetItemFlags(unsigned Index, uint16_t Mask, uint16_t Flags);
-	void _InvalidateItem(unsigned Index);
-	int  _FindItem(uint16_t ItemId, Menu **ppMenu);
-	size_t _SendMenuMessage(PWObj pDestWin, MENU_MSGID MsgType, uint16_t ItemId = 0);
+	int _SendMenuMessage(WObj *pDest, MENU_MSGID MsgType, uint16_t ItemId);
 
 	bool _IsTopLevelMenu();
 	bool _HasEffect();
 	int _GetEffectSize();
-	int _CalcTextWidth(GUI_PCSTR sText);
-	int _GetItemWidth(unsigned Index);
-	int _GetItemHeight(unsigned Index);
+	int _GetItemWidth(uint16_t Index);
+	int _GetItemHeight(uint16_t Index);
 	int _CalcMenuSizeX();
 	int _CalcMenuSizeY();
 	int _CalcWindowSizeX();
 	int _CalcWindowSizeY();
 	int _GetItemFromPos(Point Pos);
-	Point _GetItemPos(unsigned Index);
+	Point _GetItemPos(uint16_t Index);
 	void _SetCapture();
 	void _ReleaseCapture();
 	void _CloseSubmenu();
-	void _OpenSubmenu(unsigned Index);
+	void _OpenSubmenu(uint16_t Index);
 	void _ClosePopup();
-	void _SetSelection(int Index);
-	void _SelectItem(unsigned Index);
+	void _SetSelection(int16_t Index);
+	void _SelectItem(uint16_t Index);
 	void _DeselectItem();
-	void _ActivateItem(unsigned Index);
-	void _ActivateMenu(unsigned Index);
+	void _ActivateItem(uint16_t Index);
+	void _ActivateMenu(uint16_t Index);
 	void _DeactivateMenu();
 	bool _ForwardMouseOverMsg(Point);
 	bool _HandleMouse(MOUSE_STATE);
-	void _ForwardPIDMsgToOwner(int MsgId, MOUSE_STATE);
-	WM_RESULT _OnMenu(const MSG_DAT *pMsgData);
+	void _ForwardMouseMsgToOwner(uint16_t MsgId, MOUSE_STATE State);
+	WM_RESULT _OnMenu(MSG_DAT);
 	bool _OnMouse(MOUSE_STATE);
 	bool _OnMouseOver(MOUSE_STATE);
 	void _OnPaint();
 	void _SetPaintColors(const Menu::Item &Item, int ItemIndex) const;
+	void _InvalidateItem(int16_t Index);
+	void _RecalcTextWidthOfItems();
+	void _ResizeMenu();
+	void _SetItem(uint16_t Index, Item &);
 
 	static WM_RESULT _Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc);
 
-public:
+private:
 	Menu(const SRect &rc = {},
 		 PWObj pParent = nullptr, uint16_t Id = 0,
 		 WM_CF Flags = WC_HIDE, MENU_CF FlagsEx = 0);
-	Menu(MENU_CF FlagsEx = 0, uint16_t Id = 0, WM_CF Flags = WC_HIDE) :
+public:
+	Menu(MENU_CF FlagsEx = 0, uint16_t Id = 0) :
 		Menu({},
 			 nullptr, Id,
-			 Flags, FlagsEx) {}
+			 WC_HIDE, FlagsEx) {}
 private:
 	~Menu() = default;
 
 public:
-	void Attach(PWObj pDestWin, Point Pos, Point Size);
-	void Popup(Menu *pParentMenu, Point Pos, Point Size, uint16_t Flags);
-	void AddItem(const Menu::Item &Item);
-	void DeleteItem(uint16_t ItemId);
-	void InsertItem(uint16_t ItemId, const Menu::Item &Item);
-	void SetItem(uint16_t ItemId, const Menu::Item &Item);
+	void Attach(PWObj pOwner, Point Pos, Point Size);
+	void Popup(Menu *pOwnerMenu, Point Pos);
 
-	void DisableItem(uint16_t ItemId);
-	void EnableItem(uint16_t ItemId);
+	void Add(Item &);
+
+	void Delete(uint16_t ItemId);
+	void Insert(uint16_t ItemId, Item &Item);
+	void Set(uint16_t ItemId, Item &Item);
+
+//	void Enable(uint16_t ItemId, bool bEnable);
 
 #pragma region Properties
 public: // Property - Font
@@ -177,9 +175,6 @@ public: // Property - BorderSize
 	}
 public: // Property - NumItems
 	/* R */ inline auto NumItems() const { return ItemArray.NumItems(); }
-public: // Property - Owner
-	/* R */ inline auto Owner() const { return pOwner; }
-	/* W */ inline void Owner(PWObj pOwner) { this->pOwner = pOwner; }
 #pragma endregion
 
 };

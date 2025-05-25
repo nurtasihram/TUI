@@ -145,10 +145,6 @@ protected:
 
 public:
 
-	/// @brief 銷毀所有子窗體
-	///		析構所有子窗體類並釋放内存
-	void DeleteChildren();
-
 	/// @brief 銷毀窗體
 	///		析構窗體類並釋放内存
 	void Destroy();
@@ -242,7 +238,7 @@ public:
 	/// @param MsgId 消息ID
 	/// @param Param 參數
 	/// @return 返迴數據
-	inline WM_RESULT SendToOwner(int MsgId, WM_PARAM Param) {
+	inline WM_RESULT SendOwnerMessage(int MsgId, WM_PARAM Param) {
 		if (auto pOwner = Owner())
 			return pOwner->SendMessage(MsgId, Param, this);
 		return 0;
@@ -250,7 +246,7 @@ public:
 
 	/// @brief 通知消息
 	/// @param Notification 通知ID
-	inline void NotifyOwner(int Notification) { SendToOwner(WM_NOTIFY_CHILD, Notification); }
+	inline void NotifyOwner(int Notification) { SendOwnerMessage(WM_NOTIFY_CHILD, Notification); }
 
 	static bool HandleRect();
 	static bool HandleKey();
@@ -526,7 +522,6 @@ public: // Property - StayOnTop
 	/* W */ void StayOnTop(bool bEnable);
 public: // Property - Popup
 	/* R */ inline bool Popup() const { return Status & WC_POPUP; }
-	/* W */ void Popup(bool bPopup);
 public: // Property - Visible
 	/* R */ inline bool Visible() const { return (Status & WC_VISIBLE) == WC_VISIBLE; }
 	/* W */ void Visible(bool bVisible);
@@ -570,9 +565,9 @@ public: // Property - Parent
 	/* R */ inline PWObj Parent() const { return Popup() ? Desktop() : pParent; }
 	/* W */ inline void Parent(PWObj pParent) { Parent(pParent, Position()); }
 	/* W */ void Parent(PWObj pParent, Point ptcPosition);
-//	/* A */ inline void Deatach() {}
 public: // Property - Owner
 	/* R */ inline PWObj Owner() const { return pParent; }
+	/* W */ void Owner(PWObj pOnwer);
 public: // Property - FirstChild
 	/* R */ inline PWObj FirstChild() { return pFirstChild; }
 	/* R */ inline PWObj FirstChild() const { return pFirstChild; }
@@ -704,8 +699,8 @@ protected:
 
 #pragma region Properties
 public: // Property - Effect
-	/* R */ inline auto&Effect() const { return pEffect ? *pEffect : EffectItf::None; }
-	/* W */ inline void Effect(const EffectItf &effect) { SendMessage(WM_WIDGET_SET_EFFECT, &effect); }
+	/* R */ inline auto Effect() const { return pEffect; }
+	/* W */ inline void Effect(const EffectItf *pEffect) { SendMessage(WM_WIDGET_SET_EFFECT, pEffect); }
 public: // Property - ClientRect
 	/* R */ inline SRect ClientRect() const {
 		auto &&r = WObj::ClientRect();

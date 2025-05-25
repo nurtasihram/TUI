@@ -170,6 +170,7 @@ GUI_PCSTR GUI_Panel::NextText(GUI_PCSTR pTexts) {
 }
 
 uint16_t GUI_Panel::NumLines(GUI_PCSTR pText) {
+	if (!pText) return 1;
 	uint16_t NumLines = 1;
 	while (auto ch = CharNext(pText))
 		if (ch == '\n')
@@ -177,6 +178,7 @@ uint16_t GUI_Panel::NumLines(GUI_PCSTR pText) {
 	return NumLines;
 }
 GUI_PCSTR GUI_Panel::NextLines(GUI_PCSTR pText) {
+	if (!pText) return nullptr;
 	for (; auto ch = *pText; ++pText)
 		if (ch == '\n')
 			return ++pText;
@@ -184,6 +186,7 @@ GUI_PCSTR GUI_Panel::NextLines(GUI_PCSTR pText) {
 }
 
 uint16_t GUI_Panel::NumCharsLine(GUI_PCSTR pText) {
+	if (!pText) return 1;
 	uint16_t NumChars = 1;
 	for (; auto ch = *pText; ++pText)
 		if (ch == '\n')
