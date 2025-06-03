@@ -110,7 +110,7 @@ void Frame::_ChangeWindowPosSize(Point p) {
 	if (d.y < yMin)
 		d.y = yMin;
 	Move({ _CaptureFlags & SIZE_REPOS_X ? -d.x : 0,
-		   _CaptureFlags & SIZE_REPOS_Y ? -d.y : 0 });
+			_CaptureFlags & SIZE_REPOS_Y ? -d.y : 0 });
 	Resize(d);
 }
 uint8_t Frame::_CheckReactBorder(Point Pos) {

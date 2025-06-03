@@ -68,7 +68,6 @@ private:
 	int _CalcScrollParas();
 	void _ManageAutoScroll();
 	int _UpdateScrollers();
-	void _SelectByKey(int Key);
 	void _ToggleMultiSel(int sel);
 	int _GetItemFromPos(Point);
 
@@ -76,7 +75,9 @@ private:
 	void _OnMouse(MOUSE_STATE);
 	bool _OnKey(KEY_STATE);
 	void _OnMouseOver(MOUSE_STATE);
-	
+	void _OnMouseChanged(MOUSE_CHANGED_STATE);
+	bool _ForwardMouseMsgToChild(uint16_t MsgId, WM_PARAM MouseParam);
+
 	static WM_RESULT _Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc);
 
 public:

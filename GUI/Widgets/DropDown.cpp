@@ -88,9 +88,8 @@ WM_RESULT DropDown::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc)
 			break;
 		case WM_MOUSE_CHANGED: {
 			MOUSE_CHANGED_STATE State = Param;
-			if (State.Pressed) {
+			if (State.StatePrev)
 				pObj->Expand(true);
-			}
 			break;
 		}
 		case WM_DELETE:
@@ -98,17 +97,17 @@ WM_RESULT DropDown::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc)
 			return 0;
 		case WM_NOTIFY_CHILD:
 			switch ((int)Param) {
-			case WN_SCROLL_CHANGED:
-				pObj->NotifyOwner(WN_SCROLL_CHANGED);
-				break;
-			case WN_CLICKED:
-				pObj->Sel(pObj->pListbox->Sel());
-			case WN_LOST_FOCUS:
-				if (pObj->Expand()) {
-					pObj->Expand(false);
-					pObj->Focus();
-				}
-				break;
+				case WN_SCROLL_CHANGED:
+					pObj->NotifyOwner(WN_SCROLL_CHANGED);
+					break;
+				case WN_CLICKED:
+					pObj->Sel(pObj->pListbox->Sel());
+				case WN_RELEASED:
+					if (pObj->Expand()) {
+						pObj->Expand(false);
+						pObj->Focus();
+					}
+					break;
 			}
 			break;
 		case WM_GET_CLASS:
@@ -141,8 +140,11 @@ void DropDown::Expand(bool bExpand) {
 		pListbox->Rect(_ListBoxRect());
 		pListbox->AutoScroll(StatusEx, true);
 		pListbox->Focus();
+		pListbox->Capture(false);
 		NotifyOwner(WN_CLICKED);
 	}
+	else if (pListbox->Captured())
+		pListbox->CaptureRelease();
 	pListbox->Visible(bExpand);
 	Invalidate();
 	if (!bExpand)

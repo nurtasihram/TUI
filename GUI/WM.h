@@ -343,10 +343,20 @@ public:
 
 #pragma region Capture
 private:
-	static PWObj pWinCapture;
-	static bool bCaptureAutoRelease;
-	static Point capturePoint;
-	static CCursor *pCursorCapture;
+	struct CaptureHandles {
+		PWObj pWin = nullptr;
+		CCursor *pCursor = nullptr;
+		CaptureHandles *pPrev = nullptr;
+		Point Pos;
+		bool bAutoRelease = false;
+	public:
+		static CaptureHandles First;
+	public:
+		CaptureHandles() {}
+		CaptureHandles(PWObj pWinCapture, CCursor *pCursorCapture, bool bCaptureAutoRelease, CaptureHandles *pPrev = nullptr) :
+			pWin(pWinCapture), pCursor(pCursorCapture), bAutoRelease(bCaptureAutoRelease), pPrev(pPrev) {}
+		inline operator bool() const { return pWin; }
+	};
 public:
 
 	/// @brief 捕獲窗體
@@ -354,7 +364,7 @@ public:
 	void Capture(bool bAutoRelease);
 
 	/// @brief 釋放捕獲
-	static void CaptureRelease();
+	bool CaptureRelease();
 
 	/// @brief 移動捕獲窗體
 	/// @param Pos 捕獲點
@@ -362,11 +372,13 @@ public:
 	void CaptureMove(Point Pos, int MinVisibility = 0);
 
 	/// @brief 是否被捕獲
-	inline bool Captured() const { return pWinCapture == this; }
+	bool Captured() const;
+
+	static PWObj CapturedWindow();
 
 public: // Property - CapturePoint
-	/* W */ static inline void CapturePoint(Point Pos) { capturePoint = Pos; }
-	/* R */ static inline Point CapturePoint() { return capturePoint; }
+//	/* W */ static inline void CapturePoint(Point Pos) { Ca = Pos; }
+//	/* R */ static inline Point CapturePoint() { return capturePoint; }
 #pragma endregion
 
 #pragma region Desktop
@@ -460,7 +472,7 @@ public:
 	/// @return 銀幕内坐標點
 	inline Point Screen2Parent(Point pts) const {
 		if (auto pParent = Parent())
-			return pParent->Client2Screen(pts);
+			return pParent->Screen2Client(pts);
 		return pts;
 	}
 
@@ -469,7 +481,7 @@ public:
 	/// @return 銀幕内區域
 	inline SRect Screen2Parent(const SRect &rs) const {
 		if (auto pParent = Parent())
-			return pParent->Client2Screen(rs);
+			return pParent->Screen2Client(rs);
 		return rs;
 	}
 #pragma endregion
@@ -484,7 +496,7 @@ public:
 
 	/// @brief 是否為孫窗體或自身
 	/// @param pParent 擬定的父窗體
-	bool IsAncestorOrSelf(PWObj pParent) const { return this == pParent ? true : IsAncestor(pParent); }
+	inline bool IsAncestorOrSelf(PWObj pParent) const { return this == pParent ? true : IsAncestor(pParent); }
 
 #pragma region Dialog
 public: // Property - DialogStatusPtr

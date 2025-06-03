@@ -70,7 +70,7 @@ int ListBox::_UpdateScrollPos() {
 	int PrevScrollStateV = scrollStateV.v;
 	if (sel >= 0) {
 		if (_IsPartiallyVis())
-			scrollStateV.v = sel - scrollStateV.PageSize + 1;
+			scrollStateV.v = sel - scrollStateV.PageSize; // + 1; // Old
 		if (sel < scrollStateV.v)
 			scrollStateV.v = sel;
 	}
@@ -229,12 +229,42 @@ bool ListBox::_OnKey(KEY_STATE State) {
 	return false;
 }
 void ListBox::_OnMouseOver(MOUSE_STATE State) {
-	if (State && Popup()) {
-		auto sel = _GetItemFromPos(State);
-		if (sel >= 0)
-			if (sel < scrollStateV.v + _GetNumVisItems())
-				Sel(sel);
+	if (!Popup())
+		return;
+	if (ClientRect() > State)
+		return;
+	auto sel = _GetItemFromPos(State);
+	if (sel >= 0)
+		if (sel <= scrollStateV.v + _GetNumVisItems())
+			Sel(sel);
+}
+void ListBox::_OnMouseChanged(MOUSE_CHANGED_STATE State) {
+	if (!State.Pressed)
+		return;
+	if (ClientRect() > State)
+		return;
+	int sel = _GetItemFromPos(State);
+	if (sel >= 0) {
+		_ToggleMultiSel(sel);
+		Sel(sel);
 	}
+	NotifyOwner(WN_CLICKED);
+}
+bool ListBox::_ForwardMouseMsgToChild(uint16_t MsgId, WM_PARAM MouseParam) {
+	Point Pos = MouseParam;
+	if (ClientRect() > Pos) {
+		MOUSE_STATE State = MouseParam;
+		if (MsgId == WM_MOUSE && State.Pressed)
+			NotifyOwner(WN_RELEASED);
+		return false;
+	}
+	Pos = Client2Screen(Pos);
+	auto pBelow = FindOnScreen(Pos);
+	if (!pBelow || pBelow == this)
+		return true;
+	(Point &)MouseParam = pBelow->Screen2Client(Pos);
+	pBelow->SendMessage(MsgId, MouseParam, this);
+	return false;
 }
 
 WM_RESULT ListBox::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
@@ -246,23 +276,17 @@ WM_RESULT ListBox::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) 
 			pObj->_OnPaint(Param);
 			return 0;
 		case WM_MOUSE:
-			pObj->_OnMouse(Param);
+			if (pObj->_ForwardMouseMsgToChild(MsgId, Param))
+				pObj->_OnMouse(Param);
 			return 0;
 		case WM_MOUSE_OVER:
-			pObj->_OnMouseOver(Param);
+			if (pObj->_ForwardMouseMsgToChild(MsgId, Param))
+				pObj->_OnMouseOver(Param);
 			return 0;
-		case WM_MOUSE_CHANGED: {
-			MOUSE_CHANGED_STATE State = Param;
-			if (!State.Pressed)
-				break;
-			int sel = pObj->_GetItemFromPos(State);
-			if (sel >= 0) {
-				pObj->_ToggleMultiSel(sel);
-				pObj->Sel(sel);
-			}
-			pObj->NotifyOwner(WN_CLICKED);
+		case WM_MOUSE_CHANGED:
+			if (pObj->_ForwardMouseMsgToChild(MsgId, Param))
+				pObj->_OnMouseChanged(Param);
 			return 0;
-		}
 		case WM_KEY:
 			if (pObj->_OnKey(Param))
 				return true;

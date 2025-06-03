@@ -70,8 +70,16 @@ public:
 	struct Item {
 		Menu *pSubmenu = nullptr;
 		GUI_STRING Text;
-		uint16_t Id = 0, TextWidth = 0;
+		uint16_t Id = 0;
 		MENU_IF Flags = 0;
+		Point Size;
+		Item(MENU_IF Flags = 0) : Flags(Flags) {}
+		Item(GUI_PCSTR pText, Menu *pSubmenu = nullptr, MENU_IF Flags = 0) :
+			pSubmenu(pSubmenu), Text(pText), Flags(Flags) {}
+		Item(GUI_PCSTR pText, uint16_t Id, MENU_IF Flags) :
+			Text(pText), Id(Id), Flags(Flags) {}
+		Item(GUI_PCSTR pText, uint16_t Id, Menu *pSubmenu = nullptr, MENU_IF Flags = 0) :
+			pSubmenu(pSubmenu), Text(pText), Id(Id), Flags(Flags) {}
 	};
 	struct MSG_DAT {
 		MENU_MSGID MsgType;
@@ -113,7 +121,6 @@ private:
 	void _ForwardMouseMsgToOwner(uint16_t MsgId, MOUSE_STATE State);
 	WM_RESULT _OnMenu(MSG_DAT);
 	bool _OnMouse(MOUSE_STATE);
-	bool _OnMouseOver(MOUSE_STATE);
 	void _OnPaint();
 	void _SetPaintColors(const Menu::Item &Item, int ItemIndex) const;
 	void _InvalidateItem(int16_t Index);
@@ -139,7 +146,7 @@ public:
 	void Attach(PWObj pOwner, Point Pos, Point Size);
 	void Popup(Menu *pOwnerMenu, Point Pos);
 
-	void Add(Item &);
+	void Add(Item);
 
 	void Delete(uint16_t ItemId);
 	void Insert(uint16_t ItemId, Item &Item);

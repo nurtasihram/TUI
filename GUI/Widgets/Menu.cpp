@@ -24,31 +24,22 @@ int Menu::_GetEffectSize() {
 	return 0;
 }
 int Menu::_GetItemWidth(uint16_t Index) {
-	int ItemWidth;
 	if (Width && (StatusEx & MENU_CF_VERTICAL))
-		ItemWidth = Width - (_GetEffectSize() << 1);
-	else {
-		auto &Item = ItemArray[Index];
-		if ((StatusEx & MENU_CF_VERTICAL) || !(Item.Flags & MENU_IF_SEPARATOR))
-			ItemWidth = Item.TextWidth;
-		else
-			ItemWidth = 3;
-		ItemWidth += Props.aBorder[MENU_BI_LEFT] + Props.aBorder[MENU_BI_RIGHT];
-	}
-	return ItemWidth;
+		return Width - (_GetEffectSize() << 1);
+	auto &Item = ItemArray[Index];
+	auto Border = Props.aBorder[MENU_BI_LEFT] + Props.aBorder[MENU_BI_RIGHT];
+	if ((StatusEx & MENU_CF_VERTICAL) || !(Item.Flags & MENU_IF_SEPARATOR))
+		return Border + Item.Size.x;
+	return Border + 3;
 }
 int Menu::_GetItemHeight(uint16_t Index) {
-	int ItemHeight;
 	if (Height && !(StatusEx & MENU_CF_VERTICAL))
-		ItemHeight = Height - (_GetEffectSize() << 1);
-	else {
-		ItemHeight = Props.pFont->YDist;
-		if (StatusEx & MENU_CF_VERTICAL)
-			if (ItemArray[Index].Flags & MENU_IF_SEPARATOR)
-				ItemHeight = 3;
-		ItemHeight += Props.aBorder[MENU_BI_TOP] + Props.aBorder[MENU_BI_BOTTOM];
-	}
-	return ItemHeight;
+		return Height - (_GetEffectSize() << 1);
+	auto &Item = ItemArray[Index];
+	auto Border = Props.aBorder[MENU_BI_TOP] + Props.aBorder[MENU_BI_BOTTOM];
+	if ((StatusEx & MENU_CF_VERTICAL) && (Item.Flags & MENU_IF_SEPARATOR))
+		return Border + 3;
+	return Border + Item.Size.y;
 }
 int Menu::_CalcMenuSizeX() {
 	unsigned i, NumItems = this->NumItems();
@@ -61,9 +52,8 @@ int Menu::_CalcMenuSizeX() {
 				xSize = ItemWidth;
 		}
 	}
-	else
-		for (i = 0; i < NumItems; i++)
-			xSize += _GetItemWidth(i);
+	else for (i = 0; i < NumItems; i++)
+		xSize += _GetItemWidth(i);
 	xSize += (_GetEffectSize() << 1);
 	return xSize;
 }
@@ -136,20 +126,17 @@ int Menu::_GetItemFromPos(Point Pos) {
 	return r;
 }
 Point Menu::_GetItemPos(uint16_t Index) {
-	int i, EffectSize;
-	EffectSize = _GetEffectSize();
+	auto EffectSize = _GetEffectSize();
 	if (StatusEx & MENU_CF_VERTICAL) {
 		int yPos = 0;
-		for (i = 0; i < (int)Index; i++) {
+		for (int i = 0; i < Index; ++i)
 			yPos += _GetItemHeight(i);
-		}
 		return { EffectSize, EffectSize + yPos };
 	}
 	else {
 		int xPos = 0;
-		for (i = 0; i < (int)Index; i++) {
+		for (int i = 0; i < Index; ++i)
 			xPos += _GetItemWidth(i);
-		}
 		return { EffectSize + xPos, EffectSize };
 	}
 }
@@ -328,10 +315,10 @@ bool Menu::_HandleMouse(MOUSE_STATE State) {
 	return true;
 }
 void Menu::_ForwardMouseMsgToOwner(uint16_t MsgId, MOUSE_STATE State) {
-	if (!_IsTopLevelMenu()) {
-		(Point &)State = Owner()->Screen2Client(Client2Screen(State));
-		SendOwnerMessage(MsgId, State);
-	}
+	if (_IsTopLevelMenu())
+		return;
+	(Point &)State = Owner()->Screen2Client(Client2Screen(State));
+	SendOwnerMessage(MsgId, State);
 }
 WM_RESULT Menu::_OnMenu(MSG_DAT MsgDat) {
 	switch (MsgDat.MsgType) {
@@ -363,11 +350,6 @@ bool Menu::_OnMouse(MOUSE_STATE State) {
 		return _HandleMouse(State);
 	return _HandleMouse({ -1, -1 });
 }
-bool Menu::_OnMouseOver(MOUSE_STATE State) {
-	if (State)
-		return _HandleMouse({ State, -1 });
-	return 0;
-}
 void Menu::_SetPaintColors(const Menu::Item &Item, int ItemIndex) const {
 	unsigned ColorIndex;
 	bool bSelected = ItemIndex == Sel;
@@ -378,12 +360,10 @@ void Menu::_SetPaintColors(const Menu::Item &Item, int ItemIndex) const {
 	else {
 		ColorIndex = bSelected ? MENU_CI_SELECTED : MENU_CI_ENABLED;
 		if (Item.Flags & MENU_IF_DISABLED) {
-			if (StatusEx & MENU_CF_HIDE_DISABLED_SEL) {
+			if (StatusEx & MENU_CF_HIDE_DISABLED_SEL)
 				ColorIndex = MENU_CI_DISABLED;
-			}
-			else {
+			else
 				ColorIndex += MENU_CI_DISABLED;
-			}
 		}
 	}
 	GUI.BkColor(Props.aBkColor[ColorIndex]);
@@ -414,7 +394,7 @@ void Menu::_OnPaint() {
 				GUI.DrawLineH(rFill.x0 + 2, rFill.y0 + BorderTop + 1, rFill.x1 - 2);
 			}
 			else {
-				rText.x1 = rText.x0 + Item.TextWidth - 1;
+				rText.x1 = rText.x0 + Item.Size.x - 1;
 				rText.y0 = rFill.y0 + BorderTop;
 				rText.y1 = rText.y0 + FontHeight - 1;
 				GUI.Clear(rFill);
@@ -441,7 +421,7 @@ void Menu::_OnPaint() {
 			}
 			else {
 				rText.x0 = rFill.x0 + BorderLeft;
-				rText.x1 = rText.x0 + Item.TextWidth - 1;
+				rText.x1 = rText.x0 + Item.Size.x - 1;
 				GUI.Clear(rFill);
 				GUI.DrawStringIn(Item.Text, rText);
 			}
@@ -471,7 +451,7 @@ WM_RESULT Menu::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 				pObj->_ForwardMouseMsgToOwner(MsgId, Param);
 			return 0;
 		case WM_MOUSE_OVER:
-			if (pObj->_OnMouseOver(Param))
+			if (pObj->_HandleMouse({ Param, -1 }))
 				pObj->_ForwardMouseMsgToOwner(MsgId, Param);
 			return 0;
 		case WM_DELETE:
@@ -490,7 +470,7 @@ void Menu::_RecalcTextWidthOfItems() {
 	auto NumItems = this->NumItems();
 	for (int i = 0; i < NumItems; i++) {
 		auto&Item = ItemArray[i];
-		Item.TextWidth = Props.pFont->Size(Item.Text).x;
+		Item.Size = Props.pFont->Size(Item.Text);
 	}
 }
 void Menu::_ResizeMenu() {
@@ -500,7 +480,7 @@ void Menu::_ResizeMenu() {
 void Menu::_SetItem(uint16_t Index, Item &Item) {
 	auto &&NewItem = ItemArray[Index];
 	NewItem = Item;
-	NewItem.TextWidth = Props.pFont->Size(NewItem.Text).x;
+	NewItem.Size = Props.pFont->Size(NewItem.Text);
 	if (NewItem.Flags & MENU_IF_SEPARATOR)
 		NewItem.pSubmenu = nullptr;
 	else if (NewItem.pSubmenu)
@@ -521,7 +501,7 @@ Menu::Menu(const SRect &rc,
 	else
 		StatusEx &= ~MENU_CF__ACTIVE;
 }
-void Menu::Add(Item &MenuItem) {
+void Menu::Add(Item MenuItem) {
 	ItemArray.Add();
 	_SetItem(NumItems() - 1, MenuItem);
 	_ResizeMenu();
@@ -529,8 +509,6 @@ void Menu::Add(Item &MenuItem) {
 void Menu::Popup(Menu *pOwnerMenu, Point Pos) {
 	if (pOwnerMenu) {
 		StatusEx |= MENU_CF_POPUP;
-		//Width = Size.x > 0 ? Size.x : 0;
-		//Height = Size.y > 0 ? Size.y : 0;
 		Owner(pOwnerMenu);
 		Position(Pos);
 		pOwnerMenu->_SendMenuMessage(this, MENU_ON_OPEN, 0);

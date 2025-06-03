@@ -143,8 +143,7 @@ void WObj::Destroy() {
 	pWinNextDraw = nullptr;
 	if (pWinFocus == this)
 		pWinFocus = nullptr;
-	if (pWinCapture == this)
-		pWinCapture = nullptr;
+	CaptureRelease();
 	if (CriticalHandles::pFirst)
 		CriticalHandles::pFirst->Check(this);
 	NotifyOwner(WN_CHILD_DELETED);
@@ -164,7 +163,7 @@ void WObj::Destroy() {
 		pWinFirst->Select();
 		return;
 	}
-	pWinFirst = pWinActive = pWinFocus = pWinCapture = pDesktop = nullptr;
+	pWinFirst = pWinActive = pWinFocus = CaptureHandles::First.pWin = pDesktop = nullptr;
 }
 void WObj::Select() {
 	pWinActive = this;
@@ -674,35 +673,54 @@ PWObj WObj::FocusNextChild() {
 #pragma endregion
 
 #pragma region Capture
-PWObj WObj::pWinCapture = nullptr;
-bool WObj::bCaptureAutoRelease = false;
-Point WObj::capturePoint;
-CCursor *WObj::pCursorCapture = nullptr;
+WObj::CaptureHandles WObj::CaptureHandles::First;
 void WObj::Capture(bool bAutoRelease) {
-	if (pWinCapture != this) {
-		CaptureRelease();
-		pCursorCapture = GUI.Cursor;
-		pWinCapture = this;
-		bCaptureAutoRelease = bAutoRelease;
-	}
+	for (auto i = &CaptureHandles::First; i; i = i->pPrev)
+		if (i->pWin == this) {
+			i->bAutoRelease = bAutoRelease;
+			return;
+		}
+	CaptureHandles *pPrev = nullptr;
+	if (CaptureHandles::First)
+		pPrev = CaptureHandles::First.pPrev = new CaptureHandles(CaptureHandles::First);
+	CaptureHandles::First = CaptureHandles{ this, GUI.Cursor, bAutoRelease, pPrev };
 }
-void WObj::CaptureRelease() {
-	if (pCursorCapture) {
-		GUI.Cursor(pCursorCapture);
-		pCursorCapture = nullptr;
+bool WObj::CaptureRelease() {
+	CaptureHandles *pPrev, *pThis;
+	for (pPrev = nullptr, 
+		 pThis = &CaptureHandles::First;
+		 pThis;
+		 pPrev = pThis,
+		 pThis = pThis->pPrev)
+		if (pThis->pWin == this)
+			break;
+	if (!pThis) return false;
+	if (pThis->pCursor)
+		GUI.Cursor(pThis->pCursor);
+	if (pThis->pWin)
+		pThis->pWin->SendMessage(WM_CAPTURE_RELEASED);
+	if (!pPrev) {
+		CaptureHandles::First.pWin = nullptr;
+		if (auto pPrev = CaptureHandles::First.pPrev) {
+			CaptureHandles::First = *pPrev;
+			delete pPrev;
+		}
 	}
-	if (pWinCapture) {
-		pWinCapture->SendMessage(WM_CAPTURE_RELEASED);
-		pWinCapture = nullptr;
+	else {
+		pPrev = pPrev->pPrev;
+
 	}
 }
 void WObj::CaptureMove(Point Pos, int MinVisibility) {
-	if (!Captured()) {
+	CaptureHandles *i;
+	for (i = &CaptureHandles::First; i; i = i->pPrev)
+		if (i->pWin == this)
+			break;
+	if (!i) {
 		Capture(true);
-		capturePoint = Pos;
-		return;
+		CaptureHandles::First.Pos = Pos;
 	}
-	auto &&d = Pos - capturePoint;
+	auto &&d = Pos - CaptureHandles::First.Pos;
 	if (!MinVisibility) {
 		Move(d);
 		return;
@@ -712,6 +730,15 @@ void WObj::CaptureMove(Point Pos, int MinVisibility) {
 	rParent /= MinVisibility;
 	if (rCapture && rParent)
 		Move(d);
+}
+bool WObj::Captured() const {
+	for (auto i = &CaptureHandles::First; i; i = i->pPrev)
+		if (i->pWin == this)
+			return true;
+	return false;
+}
+PWObj WObj::CapturedWindow() {
+	return CaptureHandles::First.pWin;
 }
 #pragma endregion
 
@@ -787,7 +814,7 @@ bool WObj::HandleMouse() {
 	static auto _HandleMouse = []() {
 		auto StateOld = GUI.MousePrev(), StateNow = GUI.Mouse();
 		GUI.Cursor.Position(StateNow);
-		CriticalHandles CHWin = pWinCapture ? pWinCapture : WObj::FindOnScreen(StateNow);
+		CriticalHandles CHWin = CaptureHandles::First.pWin ? CaptureHandles::First.pWin : WObj::FindOnScreen(StateNow);
 		if (!CHWin.pWin) return false;
 		if (!CHWin.pWin->_IsInModalArea()) return false;
 		if (StateOld.Pressed != StateNow.Pressed && CHWin.pWin)
@@ -810,11 +837,9 @@ bool WObj::HandleMouse() {
 				State = StateNow;
 				if (State.Pressed)
 					CriticalHandles::Last.pWin = CHWin.pWin;
-				else {
-					if (bCaptureAutoRelease)
-						CaptureRelease();
-					CriticalHandles::Last.pWin = nullptr;
-				}
+				else if (CaptureHandles::First)
+					if (CaptureHandles::First.bAutoRelease)
+						CaptureHandles::First.pWin->CaptureRelease();
 				CHWin.pWin->_SendMouseMessage(WM_MOUSE, State);
 			}
 			return true;
@@ -1117,12 +1142,12 @@ bool Widget::HandleActive(int MsgId, WM_PARAM &Param) {
 			if (auto pBarV = DialogItem(GUI_ID_VSCROLL)) {
 				auto Flags = pBarV->Styles();
 				if ((Flags & WC_ANCHOR_RIGHT) && (Flags & WC_VISIBLE))
-					rInside.x1 = pBarV->Rect().x0 - 1;
+					rInside.x1 -= pBarV->SizeX();
 			}
 			if (auto pBarH = DialogItem(GUI_ID_HSCROLL)) {
 				auto Flags = pBarH->Styles();
 				if ((Flags & WC_ANCHOR_BOTTOM) && (Flags & WC_VISIBLE))
-					rInside.y1 = pBarH->Rect().y0 - 1;
+					rInside.y1 -= pBarH->SizeY();
 			}
 			Param = rInside;
 			return false;

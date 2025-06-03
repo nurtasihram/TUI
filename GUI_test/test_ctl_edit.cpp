@@ -215,8 +215,8 @@ WM_RESULT CtlEdit::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) 
 			pObj->_Expend(Param);
 			return true;
 		case WM_MOUSE_CHILD:
-			if (const MOUSE_STATE *pState = Param)
-				if (pState->Pressed == 1) {
+			if (MOUSE_STATE State = Param)
+				if (State.Pressed == 1) {
 					if (pWidget->Focussable())
 						pWidget->Focus();
 					else
@@ -240,9 +240,10 @@ CtlEdit::CtlEdit(Widget *pWidget) :
 }
 
 #include "ext_osk.h"
+#include "ext_monocolor.h"
 
 void MainTask() {
-//	MonoColorStyle();
+	MonoColorStyle();
 	ShowOsk(true);
 	auto pStatic = new Static(
 		{ 10, 10, 55, 30 },
