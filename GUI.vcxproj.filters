@@ -25,6 +25,12 @@
     <Filter Include="GUI_EXT\duktape\duktape">
       <UniqueIdentifier>{08cf5063-1624-4551-b5c6-825d3976d25d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="GUI_EXT\FatFs">
+      <UniqueIdentifier>{060df351-f45f-4143-9280-57117d7229cb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GUI_EXT\FatFs\option">
+      <UniqueIdentifier>{19abc440-ca2a-48e4-8a14-d78f1f6685f5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GUI\GUI.cpp">
@@ -134,6 +140,36 @@
     <ClCompile Include="GUI_EXT\ext_monocolor.cpp">
       <Filter>GUI_EXT</Filter>
     </ClCompile>
+    <ClCompile Include="GUI_EXT\FatFs\diskio.c">
+      <Filter>GUI_EXT\FatFs</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI_EXT\FatFs\ff.c">
+      <Filter>GUI_EXT\FatFs</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI_EXT\FatFs\ff_gen_drv.c">
+      <Filter>GUI_EXT\FatFs</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI_EXT\FatFs\option\cc932.c">
+      <Filter>GUI_EXT\FatFs\option</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI_EXT\FatFs\option\cc936.c">
+      <Filter>GUI_EXT\FatFs\option</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI_EXT\FatFs\option\cc949.c">
+      <Filter>GUI_EXT\FatFs\option</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI_EXT\FatFs\option\cc950.c">
+      <Filter>GUI_EXT\FatFs\option</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI_EXT\FatFs\option\ccsbcs.c">
+      <Filter>GUI_EXT\FatFs\option</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI_EXT\FatFs\option\syscall.c">
+      <Filter>GUI_EXT\FatFs\option</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI_EXT\FatFs\option\unicode.c">
+      <Filter>GUI_EXT\FatFs\option</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GUI\GUI_Array.h">
@@ -217,6 +253,18 @@
     </ClInclude>
     <ClInclude Include="GUI_EXT\ext_monocolor.h">
       <Filter>GUI_EXT</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI_EXT\FatFs\diskio.h">
+      <Filter>GUI_EXT\FatFs</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI_EXT\FatFs\ff.h">
+      <Filter>GUI_EXT\FatFs</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI_EXT\FatFs\ff_gen_drv.h">
+      <Filter>GUI_EXT\FatFs</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI_EXT\FatFs\integer.h">
+      <Filter>GUI_EXT\FatFs</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

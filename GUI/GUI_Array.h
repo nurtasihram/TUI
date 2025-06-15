@@ -58,11 +58,11 @@ public: // Property - NumItems
 	/* R */ inline uint16_t NumItems() const { return nItems; }
 public:
 	inline AnyType &operator[](uint16_t Index) {
-		if (Index >= nItems) throw;
+		//if (Index >= nItems) throw;
 		return pElems[Index];
 	}
 	inline const AnyType &operator[](uint16_t Index) const {
-		if (Index >= nItems) throw;
+		//if (Index >= nItems) throw;
 		return pElems[Index];
 	}
 };

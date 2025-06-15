@@ -173,3 +173,7 @@ void GUI_X_Init() {
 	});
 	GUI_X_SIM::CreateDisplay(L"TUI - User Interface", 800, 480);
 }
+
+bool GUI_X_Run() {
+	return GUI_X_SIM::IsRunning();
+}

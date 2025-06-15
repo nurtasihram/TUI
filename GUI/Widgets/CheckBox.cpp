@@ -32,36 +32,31 @@ void CheckBox::_OnPaint() {
 	DrawDown(rBox);
 }
 void CheckBox::_OnMouse(MOUSE_STATE State) {
-	int Notification = 0;
-	int Hit = 0;
 	if (State) {
 		if (!Captured()) {
 			if (State.Pressed) {
 				Capture(true);
 				CurrentState = (CurrentState + 1) % Props.NumStates;
 				Invalidate();
-				Notification = WN_CLICKED;
+				NotifyOwner(WN_CLICKED);
 			}
-			else {
-				Hit = 1;
-				Notification = WN_RELEASED;
-			}
+			else
+				NotifyOwner(WN_RELEASED);
 		}
 	}
 	else
-		Notification = WN_MOVED_OUT;
-	NotifyOwner(Notification);
+		NotifyOwner(WN_MOVED_OUT);
 }
 bool CheckBox::_OnKey(KEY_STATE State) {
 	if (!Enable()) return false;
 	switch (State.Key) {
 		case GUI_KEY_SPACE: {
-			auto Notification = WN_CLICKED;
-			if (State.PressedCnt > 0)
+			if (State.PressedCnt > 0) {
 				CurrentState = (CurrentState + 1) % Props.NumStates;
+				NotifyOwner(WN_CLICKED);
+			}
 			else
-				Notification = WN_RELEASED;
-			NotifyOwner(Notification);
+				NotifyOwner(WN_RELEASED);
 			Invalidate();
 			return true;
 		}
@@ -70,24 +65,22 @@ bool CheckBox::_OnKey(KEY_STATE State) {
 }
 WM_RESULT CheckBox::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 	auto pObj = (CheckBox *)pWin;
-	if (!pObj->HandleActive(MsgId, Param))
-		return Param;
 	switch (MsgId) {
-		case WM_PAINT:
-			pObj->_OnPaint();
-			return 0;
-		case WM_MOUSE:
-			pObj->_OnMouse(Param);
-			return 0;
-		case WM_KEY:
-			if (pObj->_OnKey(Param))
-				return true;
-			break;
-		case WM_DELETE:
-			pObj->~CheckBox();
-			return 0;
-		case WM_GET_CLASS:
-			return ClassNames[WCLS_CHECKBOX];
+	case WM_PAINT:
+		pObj->_OnPaint();
+		return 0;
+	case WM_MOUSE:
+		pObj->_OnMouse(Param);
+		return 0;
+	case WM_KEY:
+		if (pObj->_OnKey(Param))
+			return true;
+		break;
+	case WM_DELETE:
+		pObj->~CheckBox();
+		return 0;
+	case WM_GET_CLASS:
+		return ClassNames[WCLS_CHECKBOX];
 	}
 	return DefCallback(pObj, MsgId, Param, pSrc);
 }

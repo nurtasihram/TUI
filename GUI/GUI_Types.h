@@ -1,8 +1,10 @@
-﻿#pragma once
+#pragma once
 
 #include <stdint.h>
 
 #include "GUI.inl"
+
+//#define size_t uint32_t
 
 using Null = decltype(nullptr);
 

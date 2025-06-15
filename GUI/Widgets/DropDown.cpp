@@ -57,7 +57,7 @@ bool DropDown::_OnMouse(MOUSE_STATE State) {
 bool DropDown::_OnKey(KEY_STATE State) {
 	if (State.PressedCnt <= 0)
 		return false;
-	switch (auto Key = State.Key) {
+	switch (State.Key) {
 		case ' ':
 			Expand(!Expand());
 			return true;
@@ -73,45 +73,43 @@ bool DropDown::_OnKey(KEY_STATE State) {
 
 WM_RESULT DropDown::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 	auto pObj = (DropDown *)pWin;
-	if (!pObj->HandleActive(MsgId, Param))
-		return Param;
 	switch (MsgId) {
-		case WM_PAINT:
-			pObj->_OnPaint();
-			return 0;
-		case WM_MOUSE:
-			pObj->_OnMouse(Param);
-			return 0;
-		case WM_KEY:
-			if (pObj->_OnKey(Param))
-				return true;
-			break;
-		case WM_MOUSE_CHANGED: {
-			MOUSE_CHANGED_STATE State = Param;
-			if (State.StatePrev)
-				pObj->Expand(true);
-			break;
+	case WM_PAINT:
+		pObj->_OnPaint();
+		return 0;
+	case WM_MOUSE:
+		pObj->_OnMouse(Param);
+		return 0;
+	case WM_KEY:
+		if (pObj->_OnKey(Param))
+			return true;
+		break;
+	case WM_MOUSE_CHANGED: {
+		MOUSE_CHANGED_STATE State = Param;
+		if (State.StatePrev)
+			pObj->Expand(true);
+		break;
+	}
+	case WM_DELETE:
+		pObj->~DropDown();
+		return 0;
+	case WM_NOTIFY_CHILD:
+		switch ((int)Param) {
+			case WN_SCROLL_CHANGED:
+				pObj->NotifyOwner(WN_SCROLL_CHANGED);
+				break;
+			case WN_CLICKED:
+				pObj->Sel(pObj->pListbox->Sel());
+			case WN_RELEASED:
+				if (pObj->Expand()) {
+					pObj->Expand(false);
+					pObj->Focus();
+				}
+				break;
 		}
-		case WM_DELETE:
-			pObj->~DropDown();
-			return 0;
-		case WM_NOTIFY_CHILD:
-			switch ((int)Param) {
-				case WN_SCROLL_CHANGED:
-					pObj->NotifyOwner(WN_SCROLL_CHANGED);
-					break;
-				case WN_CLICKED:
-					pObj->Sel(pObj->pListbox->Sel());
-				case WN_RELEASED:
-					if (pObj->Expand()) {
-						pObj->Expand(false);
-						pObj->Focus();
-					}
-					break;
-			}
-			break;
-		case WM_GET_CLASS:
-			return ClassNames[WCLS_DROPDOWN];
+		break;
+	case WM_GET_CLASS:
+		return ClassNames[WCLS_DROPDOWN];
 	}
 	return DefCallback(pObj, MsgId, Param, pSrc);
 }

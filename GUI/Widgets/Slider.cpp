@@ -97,8 +97,6 @@ bool Slider::_OnKey(KEY_STATE State) {
 
 WM_RESULT Slider::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 	auto pObj = (Slider *)pWin;
-	if (!pObj->HandleActive(MsgId, Param))
-		return Param;
 	switch (MsgId) {
 	case WM_PAINT:
 		pObj->_OnPaint();

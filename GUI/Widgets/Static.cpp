@@ -13,17 +13,15 @@ void Static::_OnPaint() const {
 }
 WM_RESULT Static::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 	auto pObj = (Static *)pWin;
-	if (!pObj->HandleActive(MsgId, Param))
-		return Param;
 	switch (MsgId) {
-		case WM_PAINT:
-			pObj->_OnPaint();
-			return 0;
-		case WM_DELETE:
-			pObj->~Static();
-			return 0;
-		case WM_GET_CLASS:
-			return ClassNames[WCLS_STATIC];
+	case WM_PAINT:
+		pObj->_OnPaint();
+		return 0;
+	case WM_DELETE:
+		pObj->~Static();
+		return 0;
+	case WM_GET_CLASS:
+		return ClassNames[WCLS_STATIC];
 	}
 	return DefCallback(pObj, MsgId, Param, pSrc);
 }

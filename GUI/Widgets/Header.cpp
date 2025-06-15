@@ -53,14 +53,12 @@ bool Header::_HandleDrag(int MsgId, MOUSE_STATE State) {
 		return false;
 	switch (MsgId) {
 		case WM_MOUSE: {
-			int Notification;
 			if (State) {
 				_HandleMouse(State);
-				Notification = State.Pressed ? WN_CLICKED : WN_RELEASED;
+				NotifyOwner(State.Pressed ? WN_CLICKED : WN_RELEASED);
 			}
 			else
-				Notification = WN_MOVED_OUT;
-			NotifyOwner(Notification);
+				NotifyOwner(WN_MOVED_OUT);
 			return true;
 		}
 		case WM_MOUSE_OVER:
@@ -126,19 +124,17 @@ void Header::_OnPaint() {
 
 WM_RESULT Header::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 	auto pObj = (Header *)pWin;
-	if (!pObj->HandleActive(MsgId, Param))
-		return Param;
 	if (pObj->_HandleDrag(MsgId, Param))
 		return 0;
 	switch (MsgId) {
-		case WM_PAINT:
-			pObj->_OnPaint();
-			return 0;
-		case WM_DELETE:
-			pObj->~Header();
-			return 0;
-		case WM_GET_CLASS:
-			return ClassNames[WCLS_HEADER];
+	case WM_PAINT:
+		pObj->_OnPaint();
+		return 0;
+	case WM_DELETE:
+		pObj->~Header();
+		return 0;
+	case WM_GET_CLASS:
+		return ClassNames[WCLS_HEADER];
 	}
 	return DefCallback(pObj, MsgId, Param, pSrc);
 }

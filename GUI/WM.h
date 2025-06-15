@@ -1,8 +1,9 @@
 ﻿#pragma once
-#include "GUI.h"
 
+#include "GUI.h"
 #include "WM.inl"
 
+#pragma region WM Misc
 struct SCROLL_STATE {
 	int16_t NumItems = 0, v = 0, PageSize = 0;
 	SCROLL_STATE(int16_t NumItems = 0,
@@ -106,6 +107,7 @@ public:
 	PWObj Create() const;
 	PWObj CreateDialog(WM_HANDLE_CB hcb = nullptr, Point Pos = 0, PWObj pParent = nullptr) const;
 };
+#pragma endregion
 
 class WObj {
 	SRect rsWin, rsInvalid;
@@ -228,21 +230,13 @@ public:
 	/// @param Param 參數
 	/// @param pSrc 數據源窗體
 	/// @return 返迴數據
-	inline WM_RESULT SendMessage(int MsgId, WM_PARAM Param = 0, PWObj pSrc = nullptr) {
-		if (cb)
-			return cb(this, MsgId, Param, pSrc);
-		return 0;
-	}
+	WM_RESULT SendMessage(int MsgId, WM_PARAM Param = 0, PWObj pSrc = nullptr);
 
 	/// @brief 發送至所有者
 	/// @param MsgId 消息ID
 	/// @param Param 參數
 	/// @return 返迴數據
-	inline WM_RESULT SendOwnerMessage(int MsgId, WM_PARAM Param) {
-		if (auto pOwner = Owner())
-			return pOwner->SendMessage(MsgId, Param, this);
-		return 0;
-	}
+	WM_RESULT SendOwnerMessage(int MsgId, WM_PARAM Param);
 
 	/// @brief 通知消息
 	/// @param Notification 通知ID
@@ -271,6 +265,9 @@ public:
 	/// @brief 執行窗體管理器
 	/// @return 是否活動
 	static bool Exec();
+
+	/// @brief 關閉窗體管理器
+	static void Deinit();
 
 	static inline bool Online() { return nWindows; }
 
@@ -354,7 +351,7 @@ private:
 	public:
 		CaptureHandles() {}
 		CaptureHandles(PWObj pWinCapture, CCursor *pCursorCapture, bool bCaptureAutoRelease, CaptureHandles *pPrev = nullptr) :
-			pWin(pWinCapture), pCursor(pCursorCapture), bAutoRelease(bCaptureAutoRelease), pPrev(pPrev) {}
+			pWin(pWinCapture), pCursor(pCursorCapture), pPrev(pPrev), bAutoRelease(bCaptureAutoRelease) {}
 		inline operator bool() const { return pWin; }
 	};
 public:
@@ -371,8 +368,10 @@ public:
 	/// @param MinVisibility 最小分辨率
 	void CaptureMove(Point Pos, int MinVisibility = 0);
 
-	/// @brief 是否被捕獲
+	/// @brief 是否被捕獲s
 	bool Captured() const;
+
+	static inline bool HasCaptures() { return CaptureHandles::First; }
 
 	static PWObj CapturedWindow();
 
@@ -535,10 +534,11 @@ public: // Property - StayOnTop
 public: // Property - Popup
 	/* R */ inline bool Popup() const { return Status & WC_POPUP; }
 public: // Property - Visible
-	/* R */ inline bool Visible() const { return (Status & WC_VISIBLE) == WC_VISIBLE; }
+	/* R */ inline bool Visible() const { return Status & WC_VISIBLE; }
 	/* W */ void Visible(bool bVisible);
 public: // Property - RectScreen
 	/* R */ inline SRect RectScreen() const { return rsWin; }
+	/* W */ SRect RectScreenAbs(const SRect &rsNew);
 	/* W */ void RectScreen(const SRect &rsNew);
 public: // Property - Rect
 	/* R */ inline SRect Rect() const { return Screen2Parent(RectScreen()); }
@@ -624,7 +624,6 @@ public: // Property - Callback
 #pragma endregion
 
 };
-static inline bool IsWindow(PWObj pObj) { return pObj ? *pObj : false; }
 
 struct FOCUS_CHANGED_STATE {
 	PWObj pOld, pNew;
@@ -654,6 +653,7 @@ protected:
 
 protected:
 	bool HandleActive(int MsgId, WM_PARAM &Param);
+	static WM_PARAM DefCallback(Widget *pWidget, int MsgId, WM_PARAM Param, PWObj pSrc);
 
 protected: // Graphics
 	void DrawVLine(int x, int y0, int y1) const;

@@ -299,7 +299,7 @@ WM_RESULT Frame::_cbClient(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 			pParent->pClient = nullptr;
 			break;
 		case WM_NOTIFY_CHILD:
-			switch ((WM_NOTIFICATIONS)Param) {
+			switch ((int)Param) {
 				case WN_GOT_FOCUS:
 					pParent->pFocussedChild = pSrc;
 					break;
@@ -315,12 +315,12 @@ WM_RESULT Frame::_cbClient(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 		case WM_GET_INSIDE_RECT:
 		case WM_GET_ID:
 		case WM_GET_CLIENT_WINDOW:
-			return DefCallback(pWin, MsgId, Param, pSrc);
+			return WObj::DefCallback(pWin, MsgId, Param, pSrc);
 	}
 	if (hcb)
 		if (hcb(pParent, MsgId, Param, pSrc))
 			return Param;
-	return DefCallback(pWin, MsgId, Param, pSrc);
+	return WObj::DefCallback(pWin, MsgId, Param, pSrc);
 }
 WM_RESULT Frame::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 	auto pObj = (Frame *)pWin;
@@ -328,77 +328,75 @@ WM_RESULT Frame::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 		if (pObj->_HandleResize(MsgId, Param))
 			return Param;
 	switch (MsgId) {
-		case WM_PAINT:
-			pObj->_OnPaint();
-			return 0;
-		case WM_MOUSE:
-			pObj->_OnMouse(Param);
-			return 0;
-		case WM_MOUSE_CHILD:
-			if (!(pObj->StatusEx & FRAME_CF_ACTIVE))
-				if (MOUSE_STATE State = Param)
-					if (State.Pressed)
-						pObj->Focus();
-			return 0;
-		case WM_DELETE:
-			pObj->~Frame();
-			return 0;
-		case WM_HANDLE_DIALOG_STATUS:
-			if (DIALOG_STATE *wds = Param)
-				pObj->pDialogStatus = wds;
+	case WM_PAINT:
+		pObj->_OnPaint();
+		return 0;
+	case WM_MOUSE:
+		pObj->_OnMouse(Param);
+		return 0;
+	case WM_MOUSE_CHILD:
+		if (!(pObj->StatusEx & FRAME_CF_ACTIVE))
+			if (MOUSE_STATE State = Param)
+				if (State.Pressed)
+					pObj->Focus();
+		return 0;
+	case WM_DELETE:
+		pObj->~Frame();
+		return 0;
+	case WM_HANDLE_DIALOG_STATUS:
+		if (DIALOG_STATE *wds = Param)
+			pObj->pDialogStatus = wds;
+		else
+			return pObj->pDialogStatus;
+		return 0;
+	case WM_GET_INSIDE_RECT:
+		return pObj->_CalcPositions().rClient;
+	case WM_GET_CLIENT_WINDOW:
+		return pObj->pClient;
+	case WM_GET_SERVE_RECT:
+		return pObj->pClient->ServeRect();
+	case WM_NOTIFY_CHILD:
+		switch ((int)Param) {
+			case WN_RELEASED:
+				pObj->SendMessage(WM_NOTIFY_CHILD_REFLECT, Param, pObj);
+				if (Param && pSrc)
+					switch (pSrc->ID()) {
+						case GUI_ID_CLOSE:
+							pObj->Destroy();
+							return 0;
+						case GUI_ID_MAXIMIZE:
+							if (pObj->StatusEx & FRAME_CF_MAXIMIZED)
+								pObj->Restore();
+							else
+								pObj->Maximize();
+							break;
+						case GUI_ID_MINIMIZE:
+							if (pObj->StatusEx & FRAME_CF_MINIMIZED)
+								pObj->Restore();
+							else
+								pObj->Minimize();
+							break;
+					}
+				break;
+		}
+		return 0;
+	case WM_FOCUS:
+		if (Param) {
+			if (pObj->pFocussedChild)
+				pObj->pFocussedChild->Focus();
 			else
-				return pObj->pDialogStatus;
-			return 0;
-		case WM_GET_INSIDE_RECT:
-			return pObj->_CalcPositions().rClient;
-		case WM_GET_CLIENT_WINDOW:
-			return pObj->pClient;
-		case WM_GET_SERVE_RECT:
-			return pObj->pClient->ServeRect();
-		case WM_NOTIFY_CHILD:
-			switch ((int)Param) {
-				case WN_RELEASED:
-					pObj->SendMessage(WM_NOTIFY_CHILD_REFLECT, Param, pObj);
-					if (Param && pSrc)
-						switch (pSrc->ID()) {
-							case GUI_ID_CLOSE:
-								pObj->Destroy();
-								return 0;
-							case GUI_ID_MAXIMIZE:
-								if (pObj->StatusEx & FRAME_CF_MAXIMIZED)
-									pObj->Restore();
-								else
-									pObj->Maximize();
-								break;
-							case GUI_ID_MINIMIZE:
-								if (pObj->StatusEx & FRAME_CF_MINIMIZED)
-									pObj->Restore();
-								else
-									pObj->Minimize();
-								break;
-						}
-					break;
-			}
-			return 0;
-		case WM_FOCUS:
-			if (Param) {
-				if (IsWindow(pObj->pFocussedChild))
-					pObj->pFocussedChild->Focus();
-				else
-					pObj->pFocussedChild = pObj->pClient->FocusNextChild();
-				pObj->Active(true);
-			}
-			else
-				pObj->Active(false);
-			break;
-		case WM_NOTIFY_CHILD_HAS_FOCUS:
-			pObj->_OnChildHasFocus(Param);
-			return 0;
-		case WM_GET_CLASS:
-			return ClassNames[WCLS_FRAME];
+				pObj->pFocussedChild = pObj->pClient->FocusNextChild();
+			pObj->Active(true);
+		}
+		else
+			pObj->Active(false);
+		break;
+	case WM_NOTIFY_CHILD_HAS_FOCUS:
+		pObj->_OnChildHasFocus(Param);
+		return 0;
+	case WM_GET_CLASS:
+		return ClassNames[WCLS_FRAME];
 	}
-	if (!pObj->HandleActive(MsgId, Param))
-		return Param;
 	return DefCallback(pObj, MsgId, Param, pSrc);
 }
 

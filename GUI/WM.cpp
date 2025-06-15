@@ -292,7 +292,7 @@ void WObj::_MoveDescendents(Point d) {
 		i->SendMessage(WM_MOVED);
 	}
 }
-void WObj::RectScreen(const SRect &rsNew) {
+SRect WObj::RectScreenAbs(const SRect &rsNew) {
 	auto rsOld = rsWin;
 	rsWin = rsNew;
 	rsInvalid = rsNew;
@@ -300,7 +300,10 @@ void WObj::RectScreen(const SRect &rsNew) {
 		InvalidateArea(rsWin);
 		InvalidateArea(rsOld);
 	}
-	auto &&dRect = rsNew - rsOld;
+	return rsOld;
+}
+void WObj::RectScreen(const SRect &rsNew) {
+	auto &&dRect = rsNew - RectScreenAbs(rsNew);
 	if (auto dPos = dRect.left_top()) {
 		if (pFirstChild)
 			pFirstChild->_MoveDescendents(dRect.left_top());
@@ -538,6 +541,11 @@ void WObj::Init() {
 	CriticalHandles::Last.Add();
 	pDesktop->Select();
 }
+void WObj::Deinit() {
+	if (!pDesktop) return;
+	pDesktop->Destroy();
+}
+
 bool WObj::Exec() {
 	if (HandleMouse())
 		return true;
@@ -710,6 +718,7 @@ bool WObj::CaptureRelease() {
 		pPrev = pPrev->pPrev;
 
 	}
+	return true;
 }
 void WObj::CaptureMove(Point Pos, int MinVisibility) {
 	CaptureHandles *i;
@@ -763,7 +772,7 @@ void WObj::_SendMessageIfEnabled(int MsgId, WM_PARAM Param, PWObj pSrc) {
 void WObj::_SendMouseMessage(int MsgId, MOUSE_STATE State) {
 	if (State) State -= rsWin.left_top();
 	_SendMessageIfEnabled(MsgId, State);
-	for (auto i = Parent(); IsWindow(i); i = i->Parent())
+	for (auto i = Parent(); i; i = i->Parent())
 		i->_SendMessageIfEnabled(WM_MOUSE_CHILD, State, this);
 }
 
@@ -795,6 +804,17 @@ void WObj::CriticalHandles::Check(PWObj pWin) {
 }
 
 #include "GUI_X.h"
+
+WM_RESULT WObj::SendMessage(int MsgId, WM_PARAM Param, PWObj pSrc) {
+	if (cb)
+		return cb(this, MsgId, Param, pSrc);
+	return 0;
+}
+WM_RESULT WObj::SendOwnerMessage(int MsgId, WM_PARAM Param) {
+	if (auto pOwner = Owner())
+		return pOwner->SendMessage(MsgId, Param, this);
+	return 0;
+}
 
 bool WObj::HandleRect() {
 	if (GUI.RectNA())
@@ -1142,18 +1162,23 @@ bool Widget::HandleActive(int MsgId, WM_PARAM &Param) {
 			if (auto pBarV = DialogItem(GUI_ID_VSCROLL)) {
 				auto Flags = pBarV->Styles();
 				if ((Flags & WC_ANCHOR_RIGHT) && (Flags & WC_VISIBLE))
-					rInside.x1 -= pBarV->SizeX();
+					rInside.x1 = pBarV->Position().x;
 			}
 			if (auto pBarH = DialogItem(GUI_ID_HSCROLL)) {
 				auto Flags = pBarH->Styles();
 				if ((Flags & WC_ANCHOR_BOTTOM) && (Flags & WC_VISIBLE))
-					rInside.y1 -= pBarH->SizeY();
+					rInside.y1 = pBarH->Position().y;
 			}
 			Param = rInside;
 			return false;
 		}
 	}
 	return true;
+}
+WM_PARAM Widget::DefCallback(Widget *pWidget, int MsgId, WM_PARAM Param, PWObj pSrc) {
+	if (!pWidget->HandleActive(MsgId, Param))
+		return Param;
+	return WObj::DefCallback(pWidget, MsgId, Param, pSrc);
 }
 
 void Widget::DrawVLine(int x, int y0, int y1) const {

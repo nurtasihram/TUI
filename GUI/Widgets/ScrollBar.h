@@ -4,6 +4,7 @@
 using		SCROLLBAR_CF = WC_EX;
 constexpr	SCROLLBAR_CF
 			SCROLLBAR_CF__PRESSED	= WC_EX_USER(0),
+			SCROLLBAR_CF_NOARROW	= WC_EX_USER(1),
 			SCROLLBAR_CF_VERTICAL	= WC_EX_VERTICAL,
 			SCROLLBAR_CF_FOCUSSABLE	= WC_FOCUSSABLE;
 enum SCROLLBAR_CI {
@@ -40,11 +41,11 @@ private:
 		int16_t x1 = 0;
 	};
 
-	int _GetArrowSize() const;
+	void _DrawTriangle(int x, int y, int Size, int Inc) const;
+
 	Positions _CalcPositions() const;
 	SRect _AutoSize(PWObj pParent, uint16_t FlagsEx) const;
 
-	void _DrawTriangle(int x, int y, int Size, int Inc) const;
 	void _InvalidatePartner();
 	void _ScrollbarPressed();
 	void _ScrollbarReleased();

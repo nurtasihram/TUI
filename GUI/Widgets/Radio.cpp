@@ -106,8 +106,6 @@ void Radio::_OnPaint() const {
 	}
 }
 void Radio::_OnMouse(MOUSE_STATE State) {
-	int Notification;
-	bool Hit = 0;
 	if (State) {
 		if (State.Pressed) {
 			int y = State.y,
@@ -117,16 +115,13 @@ void Radio::_OnMouse(MOUSE_STATE State) {
 				Sel(sel);
 			if (Focussable())
 				Focus();
-			Notification = WN_CLICKED;
+			NotifyOwner(WN_CLICKED);
 		}
-		else {
-			Hit = true;
-			Notification = WN_RELEASED;
-		}
+		else
+			NotifyOwner(WN_RELEASED);
 	}
 	else
-		Notification = WN_MOVED_OUT;
-	NotifyOwner(Notification);
+		NotifyOwner(WN_MOVED_OUT);
 }
 bool Radio::_OnKey(KEY_STATE State) {
 	if (State.PressedCnt <= 0)
@@ -148,8 +143,6 @@ bool Radio::_OnKey(KEY_STATE State) {
 
 WM_RESULT Radio::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 	auto pObj = (Radio *)pWin;
-	if (!pObj->HandleActive(MsgId, Param))
-		return Param;
 	switch (MsgId) {
 	case WM_PAINT:
 		pObj->_OnPaint();

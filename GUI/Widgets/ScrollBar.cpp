@@ -4,14 +4,25 @@ ScrollBar::Property ScrollBar::DefaultProps;
 
 static int _DivideRound(int a, int b) { return b ? (a + b / 2) / b : 0; }
 
-int ScrollBar::_GetArrowSize() const {
-	auto size = Size();
-	if (StatusEx & SCROLLBAR_CF_VERTICAL)
-		size = ~size;
-	auto r = size.y / 2 + 5;
-	return r > size.x - 5 ? size.x - 5 : r;
+void ScrollBar::_DrawTriangle(int x, int y, int Size, int Inc) const {
+	if (StatusEx & WC_EX_VERTICAL)
+		for (; Size >= 0; --Size, x += Inc)
+			GUI.DrawLineH(y - Size, x, y + Size);
+	else
+		for (; Size >= 0; --Size, x += Inc)
+			GUI.DrawLineV(x, y - Size, y + Size);
 }
+
 ScrollBar::Positions ScrollBar::_CalcPositions() const {
+	static auto _GetArrowSize = [this]() {
+		if (StatusEx & SCROLLBAR_CF_NOARROW)
+			return 0;
+		auto size = Size();
+		if (StatusEx & SCROLLBAR_CF_VERTICAL)
+			size = ~size;
+		auto r = size.y / 2 + 5;
+		return r > size.x - 5 ? size.x - 5 : r;
+	};
 	Positions Pos;
 	auto &&r = Rect();
 	auto &&WndPos = r.left_top();
@@ -43,10 +54,12 @@ ScrollBar::Positions ScrollBar::_CalcPositions() const {
 	if (ThumbSize > xSizeThumbArea)
 		ThumbSize = xSizeThumbArea;
 	int xSizeMoveable = xSizeThumbArea - ThumbSize;
-	Pos.x0_LeftArrow = r.x0;
-	Pos.x1_LeftArrow = xSizeArrow - 1;
-	Pos.x1_RightArrow = xSize - 1;
-	Pos.x0_RightArrow = xSize - xSizeArrow;
+	if (!(StatusEx & SCROLLBAR_CF_NOARROW)) {
+		Pos.x0_LeftArrow = r.x0;
+		Pos.x1_LeftArrow = xSizeArrow - 1;
+		Pos.x1_RightArrow = xSize - 1;
+		Pos.x0_RightArrow = xSize - xSizeArrow;
+	}
 	Pos.x0_Thumb = Pos.x1_LeftArrow + 1 + _DivideRound(
 		xSizeMoveable * state.v, NumItems - state.PageSize);
 	Pos.x1_Thumb = Pos.x0_Thumb + ThumbSize - 1;
@@ -58,14 +71,6 @@ void ScrollBar::_InvalidatePartner() {
 	if (auto pAnotherScroll = Partner())
 		pAnotherScroll->Invalidate();
 	Parent()->SendMessage(WM_NOTIFY_CLIENT_CHANGE);
-}
-void ScrollBar::_DrawTriangle(int x, int y, int Size, int Inc) const {
-	if (StatusEx & WC_EX_VERTICAL)
-		for (; Size >= 0; --Size, x += Inc)
-			GUI.DrawLineH(y - Size, x, y + Size);
-	else
-		for (; Size >= 0; --Size, x += Inc)
-			GUI.DrawLineV(x, y - Size, y + Size);
 }
 void ScrollBar::_ScrollbarPressed() {
 	OrState(SCROLLBAR_CF__PRESSED);
@@ -87,18 +92,10 @@ SRect ScrollBar::_AutoSize(PWObj pParent, uint16_t FlagsEx) const {
 
 void ScrollBar::_OnPaint() {
 	auto &&Pos = _CalcPositions();
-	auto &&rClient = ClientRect();
+	auto &&rClient = ClientRect(),
+		r = rClient;
 	int ArrowSize = rClient.dy() / 3 - 1,
 		ArrowOff = 3 + ArrowSize + ArrowSize / 3;
-	/* Left Arrow */
-	auto r = rClient;
-	r.x0 = Pos.x0_LeftArrow;
-	r.x1 = Pos.x1_LeftArrow;
-	GUI.PenColor(Props.aColor);
-	Fill(r);
-	GUI.PenColor(Props.aBkColor[1]);
-	_DrawTriangle(r.x0 + ArrowOff, r.dy() / 2, ArrowSize, -1);
-	DrawUp(r);
 	/* Thumb Overlap */
 	GUI.PenColor(Props.aBkColor[0]);
 	r.x0 = Pos.x1_LeftArrow + 1;
@@ -115,6 +112,23 @@ void ScrollBar::_OnPaint() {
 	GUI.PenColor(Props.aColor);
 	Fill(r);
 	DrawUp(r);
+	/* Overlap Area */
+	if (Pos.x1_RightArrow != Pos.x1) {
+		r.x0 = Pos.x1_RightArrow + 1;
+		r.x1 = Pos.x1;
+		GUI.PenColor(Props.aColor);
+		Fill(r);
+	}
+	if (StatusEx & SCROLLBAR_CF_NOARROW)
+		return;
+	/* Left Arrow */
+	r.x0 = Pos.x0_LeftArrow;
+	r.x1 = Pos.x1_LeftArrow;
+	GUI.PenColor(Props.aColor);
+	Fill(r);
+	GUI.PenColor(Props.aBkColor[1]);
+	_DrawTriangle(r.x0 + ArrowOff, r.dy() / 2, ArrowSize, -1);
+	DrawUp(r);
 	/* Right Arrow */
 	GUI.PenColor(Props.aColor);
 	r.x0 = Pos.x0_RightArrow;
@@ -123,13 +137,6 @@ void ScrollBar::_OnPaint() {
 	GUI.PenColor(Props.aBkColor[1]);
 	_DrawTriangle(r.x1 - ArrowOff, r.dy() / 2, ArrowSize, 1);
 	DrawUp(r);
-	/* Overlap Area */
-	if (Pos.x1_RightArrow == Pos.x1)
-		return;
-	r.x0 = Pos.x1_RightArrow + 1;
-	r.x1 = Pos.x1;
-	GUI.PenColor(Props.aColor);
-	Fill(r);
 }
 void ScrollBar::_OnMouse(MOUSE_STATE State) {
 	if (!State)
@@ -180,8 +187,6 @@ bool ScrollBar::_OnKey(KEY_STATE State) {
 
 WM_RESULT ScrollBar::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 	auto pObj = (ScrollBar *)pWin;
-	if (!pObj->HandleActive(MsgId, Param))
-		return Param;
 	switch (MsgId) {
 	case WM_PAINT:
 		pObj->_OnPaint();
@@ -209,7 +214,7 @@ ScrollBar::ScrollBar(const SRect &rc,
 	Widget(rc ? rc : _AutoSize(pParent, FlagsEx),
 		   _Callback,
 		   pParent, Id,
-		   Flags, FlagsEx),
+		   Flags, FlagsEx | SCROLLBAR_CF_NOARROW),
 	state(State)
 { _InvalidatePartner(); }
 ScrollBar::ScrollBar(PWObj pParent, uint16_t Id) :

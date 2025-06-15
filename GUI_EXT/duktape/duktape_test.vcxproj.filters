@@ -9,12 +9,12 @@
     <ClCompile Include="duktape.c">
       <Filter>duktape</Filter>
     </ClCompile>
-    <ClCompile Include="duktape_test.cpp" />
+    <ClCompile Include="test\duktape_test.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="duktape.h">
       <Filter>duktape</Filter>
     </ClInclude>
-    <ClInclude Include="duk_config.h" />
+    <ClInclude Include="test\duk_config.h" />
   </ItemGroup>
 </Project>

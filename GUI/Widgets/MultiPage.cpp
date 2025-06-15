@@ -178,7 +178,6 @@ void MultiPage::_OnPaint() {
 	WObj::UserClip(nullptr);
 }
 void MultiPage::_OnMouse(MOUSE_STATE State) {
-	int Notification;
 	if (State) {
 		if (State.Pressed) {
 			if (_ClickedOnMultipage(State))
@@ -190,14 +189,13 @@ void MultiPage::_OnMouse(MOUSE_STATE State) {
 					pBelow->SendMessage(WM_MOUSE, State);
 				}
 			}
-			Notification = WN_CLICKED;
+			NotifyOwner(WN_CLICKED);
 		}
 		else
-			Notification = WN_RELEASED;
+			NotifyOwner(WN_RELEASED);
 	}
 	else
-		Notification = WN_MOVED_OUT;
-	NotifyOwner(Notification);
+		NotifyOwner(WN_MOVED_OUT);
 }
 
 WM_PARAM MultiPage::_ClientCb(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
@@ -219,11 +217,10 @@ WM_PARAM MultiPage::_ClientCb(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc)
 					MULTIPAGE_CI_DISABLED
 			];
 	}
-	return DefCallback(pObj, MsgId, Param, pSrc);
+	return WObj::DefCallback(pObj, MsgId, Param, pSrc);
 }
 WM_PARAM MultiPage::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 	auto pObj = (MultiPage *)pWin;
-	bool Handled = pObj->HandleActive(MsgId, Param);
 	switch (MsgId) {
 	case WM_PAINT:
 		pObj->_OnPaint();
@@ -260,9 +257,7 @@ WM_PARAM MultiPage::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc)
 	case WM_GET_CLASS:
 		return ClassNames[WCLS_MULTIPAGE];
 	}
-	if (Handled)
-		return DefCallback(pObj, MsgId, Param, pSrc);
-	return 0;
+	return DefCallback(pObj, MsgId, Param, pSrc);
 }
 
 MultiPage::MultiPage(
@@ -284,7 +279,7 @@ void MultiPage::Add(GUI_PCSTR pText, PWObj pWin) {
 	if (!pWin)
 		pWin = new WObj(
 			PageRect(),
-			DefCallback,
+			WObj::DefCallback,
 			pClient, 0,
 			WC_VISIBLE | WC_ANCHOR_MASK);
 	else

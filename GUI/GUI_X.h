@@ -28,3 +28,4 @@ void GUI_X_LCD_FreeBitmap(BitmapRect &br);
 #pragma endregion
 
 void GUI_X_Init();
+bool GUI_X_Run();

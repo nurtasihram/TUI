@@ -620,7 +620,6 @@ void MultiEdit::_OnPaint() {
 	this->DrawDown();
 }
 void MultiEdit::_OnMouse(WM_PARAM *pData) {
-	int Notification;
 	auto pState = (const PidState *)*pData;
 	if (*pData) {
 		if (pState->Pressed) {
@@ -630,16 +629,13 @@ void MultiEdit::_OnMouse(WM_PARAM *pData) {
 			yPos = pState->y + this->scrollStateV.v * GUI_GetYDistOfFont(this->pFont) - Effect;
 			_SetCursorXY(xPos, yPos);
 			_Invalidate();
-			Notification = WN_CLICKED;
+			NotifyOwner(WN_CLICKED);
 		}
-		else {
-			Notification = WN_RELEASED;
-		}
+		else
+			NotifyOwner(WN_RELEASED);
 	}
-	else {
-		Notification = WN_MOVED_OUT;
-	}
-	NotifyOwner(Notification);
+	else
+		NotifyOwner(WN_MOVED_OUT);
 }
 int MultiEdit::_AddKey(uint16_t Key) {
 	int r = 0;
@@ -723,62 +719,60 @@ int MultiEdit::_AddKey(uint16_t Key) {
 
 void MultiEdit::_Callback(WObj *pWin, int msgid, WM_PARAM *pData, WObj *pWinSrc) {
 	auto pObj = (MultiEdit *)pWin;
-	if (!pObj->HandleActive(msgid, pData))
-		return;
 	switch (msgid) {
-		case WM_NOTIFY_CLIENT_CHANGE:
-			pObj->_InvalidateCursorXY();
-			pObj->_InvalidateNumLines();
-			pObj->_InvalidateTextSizeX();
-			pObj->_ClearCache();
-			pObj->_CalcScrollParas();
-			break;
-		case WM_SIZE:
-			pObj->_InvalidateCursorXY();
-			pObj->_InvalidateNumLines();
-			pObj->_InvalidateTextSizeX();
-			pObj->_ClearCache();
-			pObj->_Invalidate();
-			break;
-		case WM_NOTIFY_CHILD:
-			switch (*pData) {
-				case WN_VALUE_CHANGED:
-					if (pData->pWinSrc == pObj->ScrollBarV()) {
-						pObj->scrollStateV.v = ((ScrollBar *)pData->pWinSrc)->ScrollState().v;
-						pObj->Invalidate();
-						pObj->NotifyOwner(WN_SCROLL_CHANGED);
-					}
-					else if (pData->pWinSrc == pObj->ScrollBarH()) {
-						pObj->scrollStateH.v = ((ScrollBar *)pData->pWinSrc)->ScrollState().v;
-						pObj->Invalidate();
-						pObj->NotifyOwner(WN_SCROLL_CHANGED);
-					}
-					break;
-				case WN_SCROLLBAR_ADDED:
-					pObj->_SetScrollState();
-					break;
-			}
-			break;
-		case WM_PAINT:
-			pObj->_OnPaint();
-			return;
-		case WM_MOUSE:
-			pObj->_OnMouse(pData);
-			break;
-		case WM_DELETE:
-			GUI_MEM_Free(pObj->pText);
-			pObj->pText = nullptr;
-			break;
-		case WM_KEY:
-			if (((const WM_KEY_INFO *)(*pData))->PressedCnt > 0) {
-				int Key = ((const WM_KEY_INFO *)(*pData))->Key;
-				if (pObj->_AddKey(Key))
-					return;
-			}
-			else if (!(pObj->Flags & MULTIEDIT_CF_READONLY))
+	case WM_NOTIFY_CLIENT_CHANGE:
+		pObj->_InvalidateCursorXY();
+		pObj->_InvalidateNumLines();
+		pObj->_InvalidateTextSizeX();
+		pObj->_ClearCache();
+		pObj->_CalcScrollParas();
+		break;
+	case WM_SIZE:
+		pObj->_InvalidateCursorXY();
+		pObj->_InvalidateNumLines();
+		pObj->_InvalidateTextSizeX();
+		pObj->_ClearCache();
+		pObj->_Invalidate();
+		break;
+	case WM_NOTIFY_CHILD:
+		switch (*pData) {
+			case WN_VALUE_CHANGED:
+				if (pData->pWinSrc == pObj->ScrollBarV()) {
+					pObj->scrollStateV.v = ((ScrollBar *)pData->pWinSrc)->ScrollState().v;
+					pObj->Invalidate();
+					pObj->NotifyOwner(WN_SCROLL_CHANGED);
+				}
+				else if (pData->pWinSrc == pObj->ScrollBarH()) {
+					pObj->scrollStateH.v = ((ScrollBar *)pData->pWinSrc)->ScrollState().v;
+					pObj->Invalidate();
+					pObj->NotifyOwner(WN_SCROLL_CHANGED);
+				}
+				break;
+			case WN_SCROLLBAR_ADDED:
+				pObj->_SetScrollState();
+				break;
+		}
+		break;
+	case WM_PAINT:
+		pObj->_OnPaint();
+		return;
+	case WM_MOUSE:
+		pObj->_OnMouse(pData);
+		break;
+	case WM_DELETE:
+		GUI_MEM_Free(pObj->pText);
+		pObj->pText = nullptr;
+		break;
+	case WM_KEY:
+		if (((const WM_KEY_INFO *)(*pData))->PressedCnt > 0) {
+			int Key = ((const WM_KEY_INFO *)(*pData))->Key;
+			if (pObj->_AddKey(Key))
 				return;
+		}
+		else if (!(pObj->Flags & MULTIEDIT_CF_READONLY))
+			return;
 	}
-	DefCallback(pObj, msgid, pData, pWinSrc);
+	return DefCallback(pObj, MsgId, Param, pSrc);
 }
 
 void MultiEdit::_SetFlag(bool bEnable, uint8_t Flag) {

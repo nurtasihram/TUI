@@ -1,8 +1,8 @@
-#include <initializer_list>
 #include <iostream>
 
-#include "./wx/window.h"
-#include "duktape.h"
+#include "wx_window.h"
+#include "duk_config.h"
+#include "../duktape.h"
 
 using namespace WX;
 

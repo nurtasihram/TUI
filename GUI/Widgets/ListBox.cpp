@@ -14,15 +14,12 @@ int ListBox::_GetItemSize(uint16_t Index, WIDGET_ITEM_CMD XY) {
 	auto &item = ItemArray[Index];
 	int size = XY == WIDGET_ITEM_GET_XSIZE ? item.xSize : item.ySize;
 	if (size == 0) {
-		auto pOldFont = GUI.Font();
-		GUI.Font(Props.pFont);
 		size = _CallOwnerDraw(XY, Index);
-		GUI.Font(pOldFont);
+		if (XY == WIDGET_ITEM_GET_XSIZE)
+			item.xSize = size;
+		else
+			item.ySize = size;
 	}
-	if (XY == WIDGET_ITEM_GET_XSIZE)
-		item.xSize = size;
-	else
-		item.ySize = size;
 	return size;
 }
 int ListBox::_GetContentsSizeX() {
@@ -35,36 +32,33 @@ int ListBox::_GetContentsSizeX() {
 	return r;
 }
 int ListBox::_GetItemPosY(uint16_t Index) {
-	if (Index >= ItemArray.NumItems())
-		return -1;
-	if (Index < scrollStateV.v)
-		return -1;
-	int PosY = 0;
-	for (auto i = scrollStateV.v; i < Index; ++i)
-		PosY += _GetItemSize(i, WIDGET_ITEM_GET_YSIZE);
-	return PosY;
+	if (Index < ItemArray.NumItems())
+		if (Index >= scrollStateV.v) {
+			int PosY = 0;
+			for (auto i = scrollStateV.v; i < Index; ++i)
+				PosY += _GetItemSize(i, WIDGET_ITEM_GET_YSIZE);
+			return PosY;
+		}
+	return -1;
 }
 bool ListBox::_IsPartiallyVis() {
-	int Index = sel;
-	if (Index >= ItemArray.NumItems())
-		return false;
-	if (Index < scrollStateV.v)
-		return false;
-	return _GetItemPosY(Index) +
-		_GetItemSize(Index, WIDGET_ITEM_GET_YSIZE) > _GetYSize();
+	if (sel < ItemArray.NumItems())
+		if (sel >= scrollStateV.v)
+			return _GetItemPosY(sel) +
+				_GetItemSize(sel, WIDGET_ITEM_GET_YSIZE) > _GetYSize();
+	return false;
 }
 uint16_t ListBox::_GetNumVisItems() {
 	int NumItems = ItemArray.NumItems();
 	if (NumItems <= 1)
 		return 1;
 	int ySize = _GetYSize(), yDist = 0;
-	uint16_t i;
-	for (i = 0; i < NumItems; ++i) {
+	for (int i = 0; i < NumItems; ++i) {
 		yDist += _GetItemSize(i, WIDGET_ITEM_GET_YSIZE);
 		if (yDist > ySize)
-			break;
+			return i;
 	}
-	return i;
+	return NumItems;
 }
 int ListBox::_UpdateScrollPos() {
 	int PrevScrollStateV = scrollStateV.v;
@@ -171,8 +165,7 @@ void ListBox::_OnPaint(SRect rClip) {
 	rItem.x0 = rClip.x0 - scrollStateH.v;
 	rItem.y0 = rInside.x0;
 	rItem.x1 = rClip.x1;
-	for (int i = scrollStateV.v,
-		 NumItems = ItemArray.NumItems(); i < NumItems; ++i) {
+	for (int i = scrollStateV.v, NumItems = ItemArray.NumItems(); i < NumItems; ++i) {
 		if (rItem.y0 > rClip.y1)
 			break;
 		int ItemDistY = _GetItemSize(i, WIDGET_ITEM_GET_YSIZE);
@@ -200,7 +193,7 @@ void ListBox::_OnMouse(MOUSE_STATE State) {
 bool ListBox::_OnKey(KEY_STATE State) {
 	if (State.PressedCnt <= 0)
 		return false;
-	switch (auto Key = State.Key) {
+	switch (State.Key) {
 		case ' ':
 			if (StatusEx & LISTBOX_CF_MULTISEL) {
 				_ToggleMultiSel(sel);
@@ -208,16 +201,14 @@ bool ListBox::_OnKey(KEY_STATE State) {
 			}
 			break;
 		case GUI_KEY_RIGHT:
-			if (scrollStateH.Value(scrollStateH.v + Props.ScrollStepH)) {
-				_UpdateScrollers();
-				_InvalidateInsideArea();
-			}
+			scrollStateH.Value(scrollStateH.v + 1);
+			_UpdateScrollers();
+			_InvalidateInsideArea();
 			return true;
 		case GUI_KEY_LEFT:
-			if (scrollStateH.Value(scrollStateH.v - Props.ScrollStepH)) {
-				_UpdateScrollers();
-				_InvalidateInsideArea();
-			}
+			scrollStateH.Value(scrollStateH.v - 1);
+			_UpdateScrollers();
+			_InvalidateInsideArea();
 			return true;
 		case GUI_KEY_DOWN:
 			IncSel();
@@ -269,56 +260,54 @@ bool ListBox::_ForwardMouseMsgToChild(uint16_t MsgId, WM_PARAM MouseParam) {
 
 WM_RESULT ListBox::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 	auto pObj = (ListBox *)pWin;
-	if (!pObj->HandleActive(MsgId, Param))
-		return Param;
 	switch (MsgId) {
-		case WM_PAINT:
-			pObj->_OnPaint(Param);
-			return 0;
-		case WM_MOUSE:
-			if (pObj->_ForwardMouseMsgToChild(MsgId, Param))
-				pObj->_OnMouse(Param);
-			return 0;
-		case WM_MOUSE_OVER:
-			if (pObj->_ForwardMouseMsgToChild(MsgId, Param))
-				pObj->_OnMouseOver(Param);
-			return 0;
-		case WM_MOUSE_CHANGED:
-			if (pObj->_ForwardMouseMsgToChild(MsgId, Param))
-				pObj->_OnMouseChanged(Param);
-			return 0;
-		case WM_KEY:
-			if (pObj->_OnKey(Param))
-				return true;
-			break;
-		case WM_DELETE:
-			pObj->~ListBox();
-			return 0;
-		case WM_NOTIFY_CHILD:
-			switch ((int)Param) {
-				case WN_VALUE_CHANGED:
-					if (pSrc == pObj->ScrollBarV()) {
-						pObj->scrollStateV.v = ((ScrollBar *)pSrc)->ScrollState().v;
-						pObj->_InvalidateInsideArea();
-						pObj->NotifyOwner(WN_SCROLL_CHANGED);
-					}
-					else if (pSrc == pObj->ScrollBarH()) {
-						pObj->scrollStateH.v = ((ScrollBar *)pSrc)->ScrollState().v;
-						pObj->_InvalidateInsideArea();
-						pObj->NotifyOwner(WN_SCROLL_CHANGED);
-					}
-					break;
-				case WN_SCROLLBAR_ADDED:
-					pObj->_UpdateScrollers();
-					break;
-			}
-			break;
-		case WM_SIZED:
-			pObj->_UpdateScrollers();
-			pObj->Invalidate();
-			break;
-		case WM_GET_CLASS:
-			return ClassNames[WCLS_LISTBOX];
+	case WM_PAINT:
+		pObj->_OnPaint(Param);
+		return 0;
+	case WM_MOUSE:
+		if (pObj->_ForwardMouseMsgToChild(MsgId, Param))
+			pObj->_OnMouse(Param);
+		return 0;
+	case WM_MOUSE_OVER:
+		if (pObj->_ForwardMouseMsgToChild(MsgId, Param))
+			pObj->_OnMouseOver(Param);
+		return 0;
+	case WM_MOUSE_CHANGED:
+		if (pObj->_ForwardMouseMsgToChild(MsgId, Param))
+			pObj->_OnMouseChanged(Param);
+		return 0;
+	case WM_KEY:
+		if (pObj->_OnKey(Param))
+			return true;
+		break;
+	case WM_DELETE:
+		pObj->~ListBox();
+		return 0;
+	case WM_NOTIFY_CHILD:
+		switch ((int)Param) {
+			case WN_VALUE_CHANGED:
+				if (pSrc == pObj->ScrollBarV()) {
+					pObj->scrollStateV.v = ((ScrollBar *)pSrc)->ScrollState().v;
+					pObj->_InvalidateInsideArea();
+					pObj->NotifyOwner(WN_SCROLL_CHANGED);
+				}
+				else if (pSrc == pObj->ScrollBarH()) {
+					pObj->scrollStateH.v = ((ScrollBar *)pSrc)->ScrollState().v;
+					pObj->_InvalidateInsideArea();
+					pObj->NotifyOwner(WN_SCROLL_CHANGED);
+				}
+				break;
+			case WN_SCROLLBAR_ADDED:
+				pObj->_UpdateScrollers();
+				break;
+		}
+		break;
+	case WM_SIZED:
+		pObj->_UpdateScrollers();
+		pObj->Invalidate();
+		break;
+	case WM_GET_CLASS:
+		return ClassNames[WCLS_LISTBOX];
 	}
 	return DefCallback(pObj, MsgId, Param, pSrc);
 }
@@ -401,32 +390,29 @@ void ListBox::Delete(uint16_t Index) {
 
 int ListBox::DefOwnerDraw(PWObj pWin, WIDGET_ITEM_CMD Cmd, int16_t ItemIndex, SRect rItem) {
 	auto pObj = (ListBox *)pWin;
+	auto &Item = pObj->ItemArray[ItemIndex];
 	switch (Cmd) {
 		case WIDGET_ITEM_GET_XSIZE:
-		{
-			auto &text = pObj->ItemArray[ItemIndex].Text;
-			return pObj->Props.pFont->XDist(text, text.Chars());
-		}
+			return pObj->Props.pFont->Size(Item.Text).x;
 		case WIDGET_ITEM_GET_YSIZE:
-			return pObj->Props.pFont->YDist + pObj->ItemSpacing;
+			return pObj->Props.pFont->Size(Item.Text).y;
 		case WIDGET_ITEM_DRAW:
 		{
-			auto &item = pObj->ItemArray[ItemIndex];
 			bool bFocussed = pObj->Focussed();
 			if (!pObj->Visible())
 				if (auto pOwner = pObj->Owner())
 					bFocussed = pOwner->Focussed();
 			auto ColorIndex0 = bFocussed ? LISTBOX_CI_SELFOCUS : LISTBOX_CI_SEL;
 			auto ColorIndex =
-				item.Status & LISTBOX_ITEM_DISABLED ? LISTBOX_CI_DISABLED :
-				pObj->MultiSel() ? item.Status & LISTBOX_ITEM_SELECTED ? ColorIndex0 : LISTBOX_CI_UNSEL :
+				Item.Status & LISTBOX_ITEM_DISABLED ? LISTBOX_CI_DISABLED :
+				pObj->MultiSel() ? Item.Status & LISTBOX_ITEM_SELECTED ? ColorIndex0 : LISTBOX_CI_UNSEL :
 				pObj->sel == ItemIndex ? ColorIndex0 : LISTBOX_CI_UNSEL;
 			GUI.BkColor(pObj->Props.aBkColor[ColorIndex]);
 			GUI.PenColor(pObj->Props.aTextColor[ColorIndex]);
 			GUI.Clear();
 			auto rText = rItem;
 			rText.x0 += pObj->EffectSize();
-			GUI.DrawStringIn(pObj->ItemArray[ItemIndex].Text, rText);
+			GUI.DrawStringIn(Item.Text, rText);
 			if (!(pObj->StatusEx & LISTBOX_CF_MULTISEL) || ItemIndex != pObj->sel)
 				return 0;
 			GUI.PenColor(RGB_WHITE - pObj->Props.aBkColor[ColorIndex]);
@@ -470,7 +456,7 @@ void ListBox::Sel(int NewSel) {
 		NewSel = MaxSel;
 	if (NewSel < 0)
 		NewSel = -1;
-	else if (0 <= NewSel && NewSel < MaxSel) {
+	else {
 		auto &item = ItemArray[NewSel];
 		if (item.Status & LISTBOX_ITEM_DISABLED)
 			NewSel = -1;

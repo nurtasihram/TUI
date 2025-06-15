@@ -142,7 +142,7 @@ Point Menu::_GetItemPos(uint16_t Index) {
 }
 void Menu::_SetCapture() {
 	if (!bSubmenuActive)
-		if (!Captured())
+		if (!HasCaptures())
 			Capture(false);
 }
 void Menu::_ReleaseCapture() {
@@ -276,8 +276,7 @@ bool Menu::_HandleMouse(MOUSE_STATE State) {
 			XYInWidget = 1;
 	}
 	if (XYInWidget) {
-		int ItemIndex;
-		ItemIndex = _GetItemFromPos(State);
+		int ItemIndex = _GetItemFromPos(State);
 		if (ItemIndex >= 0) {
 			if (State.Pressed == 1) {
 				if (PrevState.Pressed == 0)
@@ -439,26 +438,25 @@ void Menu::_OnPaint() {
 }
 WM_RESULT Menu::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 	auto pObj = (Menu *)pWin;
-	if (MsgId != WM_MOUSE_CHANGED)
-		if (!pObj->HandleActive(MsgId, Param))
-			return Param;
 	switch (MsgId) {
-		case WM_PAINT:
-			pObj->_OnPaint();
-			return 0;
-		case WM_MOUSE:
-			if (pObj->_OnMouse(Param))
-				pObj->_ForwardMouseMsgToOwner(MsgId, Param);
-			return 0;
-		case WM_MOUSE_OVER:
-			if (pObj->_HandleMouse({ Param, -1 }))
-				pObj->_ForwardMouseMsgToOwner(MsgId, Param);
-			return 0;
-		case WM_DELETE:
-			pObj->~Menu();
-			return 0;
-		case WM_MENU:
-			return pObj->_OnMenu(Param);
+	case WM_PAINT:
+		pObj->_OnPaint();
+		return 0;
+	case WM_MOUSE:
+		if (pObj->_OnMouse(Param))
+			pObj->_ForwardMouseMsgToOwner(MsgId, Param);
+		return 0;
+	case WM_MOUSE_OVER:
+		if (pObj->_HandleMouse({ Param, -1 }))
+			pObj->_ForwardMouseMsgToOwner(MsgId, Param);
+		return 0;
+	case WM_MOUSE_CHANGED:
+		return 0;
+	case WM_DELETE:
+		pObj->~Menu();
+		return 0;
+	case WM_MENU:
+		return pObj->_OnMenu(Param);
 	}
 	return DefCallback(pObj, MsgId, Param, pSrc);
 }

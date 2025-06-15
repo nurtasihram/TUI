@@ -76,8 +76,6 @@ void ProgBar::_OnPaint() const {
 }
 WM_RESULT ProgBar::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 	auto pObj = (ProgBar *)pWin;
-	if (!pObj->HandleActive(MsgId, Param))
-		return Param;
 	switch (MsgId) {
 	case WM_PAINT:
 		pObj->_OnPaint();

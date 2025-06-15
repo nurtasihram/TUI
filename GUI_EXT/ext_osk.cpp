@@ -180,7 +180,6 @@ static void _OSK_createButtons(PWObj pWin, Point size) {
 	}
 }
 static void _OSK_updateButtons(PWObj pWin, Point size) {
-	auto &&r = pWin->Rect();
 	for (int i = 0; i < sizeof(_aButtonData) / sizeof(ButtonInfo); ++i) {
 		auto inf = _aButtonData + i;
 		inf->pButton->Position(

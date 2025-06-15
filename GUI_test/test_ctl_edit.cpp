@@ -186,7 +186,7 @@ void CtlEdit::_Expend(bool bOpen) {
 	}
 	else 
 		rExpend /= (int)Border;
-	RectScreen(rExpend);
+	RectScreenAbs(rExpend);
 }
 
 WM_RESULT CtlEdit::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
@@ -243,8 +243,8 @@ CtlEdit::CtlEdit(Widget *pWidget) :
 #include "ext_monocolor.h"
 
 void MainTask() {
-	MonoColorStyle();
-	ShowOsk(true);
+//	MonoColorStyle();
+//	ShowOsk(true);
 	auto pStatic = new Static(
 		{ 10, 10, 55, 30 },
 		nullptr, 0,
@@ -306,9 +306,14 @@ void MainTask() {
 		{ 10, 250, 115, 310 },
 		nullptr, 0,
 		WC_VISIBLE, 0,
-		"ListBox 1\0"
+		"ListBox \n   Item 1\0"
 		"ListBox 2\0"
-		"ListBox 3\0");
+		"ListBox 3\0"
+		"ListBox 4\0"
+		"ListBox Item 5 *\0"
+		"ListBox 6\0"
+		"ListBox 7\0");
+	pListBox->AutoScroll(true);
 	new CtlEdit(pListBox);
 	auto pFrame = new Frame(
 		{ 130, 10, 235, 310 },
@@ -360,8 +365,6 @@ void MainTask() {
 	pPages->Add("Button - 2", new Button({ 15, 35, 55, 60 }, nullptr, 0, WC_VISIBLE, 0, "Page 2"));
 	pPages->Add("None - 3");
 	new CtlEdit(pPages);
-	printf("GUI Initialized !\n");
-	printf("JavaScript > ");
-	while (WObj::Online())
+	while (WObj::Online() && GUI_X_Run())
 		WObj::Exec();
 }

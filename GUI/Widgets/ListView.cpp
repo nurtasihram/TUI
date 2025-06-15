@@ -26,9 +26,10 @@ uint16_t ListView::_GetRowDistY() const {
 }
 int ListView::_GetHeaderWidth() const {
 	int i, r = 1;
-	if (auto NumItems = pHeader->NumItems())
-		for (i = 0, r = 0; i < NumItems; i++)
-			r += pHeader->ItemWidth(i);
+	if (pHeader)
+		if (auto NumItems = pHeader->NumItems())
+			for (i = 0, r = 0; i < NumItems; i++)
+				r += pHeader->ItemWidth(i);
 	auto Width = scrollStateH.v + scrollStateH.PageSize - r;
 	if (Width > 0)
 		r += Width;
@@ -80,11 +81,11 @@ int ListView::_UpdateScrollParas() {
 }
 
 void ListView::_OnPaint(SRect rClip) const {
-	int NumColumns = pHeader->NumItems(),
+	int NumColumns = pHeader ? pHeader->NumItems() : 0,
 		NumRows = RowArray.NumItems(),
 		NumVisRows = _GetNumVisibleRows();
 	int EffectSize = this->EffectSize();
-	int yPos = pHeader->Height() + EffectSize;
+	int yPos = (pHeader ? pHeader->Height() : 0) + EffectSize;
 	int EndRow = scrollStateV.v + NumVisRows + 1;
 	if (EndRow > NumRows)
 		EndRow = NumRows;
@@ -111,7 +112,7 @@ void ListView::_OnPaint(SRect rClip) const {
 				rsWin.y1--;
 			auto xPos = EffectSize - scrollStateH.v;
 			for (int j = 0; j < NumColumns; ++j) {
-				auto Width = pHeader->ItemWidth(j);
+				auto Width = pHeader ? pHeader->ItemWidth(j) : 0;
 				rsWin.x0 = xPos;
 				if (rsWin.x0 > rClip.x1)
 					break;
@@ -122,7 +123,7 @@ void ListView::_OnPaint(SRect rClip) const {
 					GUI.Clear(rsWin);
 					rsWin.x0 += lBorder;
 					rsWin.x1 -= rBorder;
-					GUI.TextAlign(pHeader->ItemAlign(j));
+					GUI.TextAlign(pHeader ? pHeader->ItemAlign(j) : TEXTALIGN_LEFT);
 					GUI.DrawStringIn(item.Text, rsWin);
 				}
 				xPos += Width;
@@ -138,7 +139,7 @@ void ListView::_OnPaint(SRect rClip) const {
 	}
 	if (StatusEx & LISTVIEW_CF_GRIDLINE) {
 		GUI.PenColor(Props.GridColor);
-		yPos = pHeader->Height() + EffectSize - 1;
+		yPos = (pHeader ? pHeader->Height() : 0) + EffectSize - 1;
 		for (int i = 0; i < NumVisRows; ++i) {
 			yPos += RowDistY;
 			if (yPos > rClip.y1)
@@ -148,7 +149,7 @@ void ListView::_OnPaint(SRect rClip) const {
 		}
 		auto xPos = EffectSize - scrollStateH.v;
 		for (int i = 0; i < NumColumns; ++i) {
-			xPos += pHeader->ItemWidth(i);
+			xPos += pHeader ? pHeader->ItemWidth(i) : 30; ///// 
 			if (xPos > rClip.x1)
 				break;
 			if (xPos >= rClip.x0)
@@ -158,19 +159,17 @@ void ListView::_OnPaint(SRect rClip) const {
 	DrawDown();
 }
 void ListView::_OnMouse(MOUSE_STATE State) {
-	int Notification;
 	if (State) {
 		if (State.Pressed) {
 			_SelFromPos(State);
-			Notification = WN_CLICKED;
 			Focus();
+			NotifyOwner(WN_CLICKED);
 		}
 		else
-			Notification = WN_RELEASED;
+			NotifyOwner(WN_RELEASED);
 	}
 	else
-		Notification = WN_MOVED_OUT;
-	NotifyOwner(Notification);
+		NotifyOwner(WN_MOVED_OUT);
 }
 bool ListView::_OnKey(KEY_STATE State) {
 	if (State.PressedCnt <= 0)
@@ -182,6 +181,20 @@ bool ListView::_OnKey(KEY_STATE State) {
 		case GUI_KEY_UP:
 			Dec();
 			return true;
+		case GUI_KEY_LEFT:
+			scrollStateH.Value(scrollStateH.v - 1);
+			_UpdateScrollParas();
+			if (pHeader)
+				pHeader->ScrollPos(scrollStateH.v);
+			Invalidate();
+			return true;
+		case GUI_KEY_RIGHT:
+			scrollStateH.Value(scrollStateH.v + 1);
+			_UpdateScrollParas();
+			if (pHeader)
+				pHeader->ScrollPos(scrollStateH.v);
+			Invalidate();
+			return true;
 	}
 	return false;
 }
@@ -189,62 +202,60 @@ bool ListView::_OnKey(KEY_STATE State) {
 WM_RESULT  ListView::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 	auto pObj = (ListView *)pWin;
 	switch (MsgId) {
-		case WM_PAINT:
-			pObj->_OnPaint(Param);
-			return 0;
-		case WM_MOUSE:
-			pObj->_OnMouse(Param);
-			return 0;
-		case WM_KEY:
-			if (pObj->_OnKey(Param))
-				return true;
-			break;
-		case WM_DELETE:
-			pObj->~ListView();
-			return 0;
-		case WM_NOTIFY_CLIENT_CHANGE:
-		case WM_SIZED:
-			pObj->_UpdateScrollParas();
-			return 0;
-		case WM_NOTIFY_CHILD:
-			switch ((int)Param) {
-				case WN_CHILD_DELETED:
-					if (pSrc == pObj->pHeader)
-						pObj->pHeader = nullptr;
-					return 0;
-				case WN_VALUE_CHANGED:
-					if (pSrc == (PWObj)pObj->ScrollBarV()) {
-						pObj->scrollStateV.v = ((ScrollBar *)pSrc)->Value();
-						pObj->Invalidate();
-						pObj->NotifyOwner(WN_SCROLL_CHANGED);
-					}
-					else if (pSrc == (PWObj)pObj->ScrollBarH()) {
-						pObj->scrollStateH.v = ((ScrollBar *)pSrc)->Value();
-						pObj->_UpdateScrollParas();
-						pObj->pHeader->ScrollPos(pObj->scrollStateH.v);
-						pObj->NotifyOwner(WN_SCROLL_CHANGED);
-					}
-					return 0;
-				case WN_SCROLLBAR_ADDED:
+	case WM_PAINT:
+		pObj->_OnPaint(Param);
+		return 0;
+	case WM_MOUSE:
+		pObj->_OnMouse(Param);
+		return 0;
+	case WM_KEY:
+		if (pObj->_OnKey(Param))
+			return true;
+		break;
+	case WM_DELETE:
+		pObj->~ListView();
+		return 0;
+	case WM_NOTIFY_CLIENT_CHANGE:
+	case WM_SIZED:
+		pObj->_UpdateScrollParas();
+		return 0;
+	case WM_NOTIFY_CHILD:
+		switch ((int)Param) {
+			case WN_CHILD_DELETED:
+				if (pObj->pHeader == pSrc)
+					pObj->pHeader = nullptr;
+				return 0;
+			case WN_VALUE_CHANGED:
+				if (pSrc == (PWObj)pObj->ScrollBarV()) {
+					pObj->scrollStateV.v = ((ScrollBar *)pSrc)->Value();
+					pObj->Invalidate();
+					pObj->NotifyOwner(WN_SCROLL_CHANGED);
+				}
+				else if (pSrc == (PWObj)pObj->ScrollBarH()) {
+					pObj->scrollStateH.v = ((ScrollBar *)pSrc)->Value();
 					pObj->_UpdateScrollParas();
-					return 0;
-			}
-			return 0;
-		case WM_GET_INSIDE_RECT: {
-			pObj->HandleActive(MsgId, Param);
-			SRect &&rInside = Param;
-			if (auto pHeader = pObj->pHeader) {
-				if (pObj->pHeader->Visible())
-					rInside.y0 += pObj->pHeader->Height();
-			}
-			return rInside;
+					if (pObj->pHeader)
+						pObj->pHeader->ScrollPos(pObj->scrollStateH.v);
+					pObj->NotifyOwner(WN_SCROLL_CHANGED);
+				}
+				return 0;
+			case WN_SCROLLBAR_ADDED:
+				pObj->_UpdateScrollParas();
+				return 0;
 		}
-		case WM_GET_CLASS:
-			return ClassNames[WCLS_LISTVIEW];
+		return 0;
+	case WM_GET_INSIDE_RECT: {
+		pObj->HandleActive(MsgId, Param);
+		SRect &&rInside = Param;
+		if (auto pHeader = pObj->pHeader)
+			if (pHeader->Visible())
+				rInside.y0 += pHeader->Height();
+		return rInside;
 	}
-	if (!pObj->HandleActive(MsgId, Param))
-		return Param;
-	return DefCallback(pWin, MsgId, Param, pSrc);
+	case WM_GET_CLASS:
+		return ClassNames[WCLS_LISTVIEW];
+	}
+	return DefCallback(pObj, MsgId, Param, pSrc);
 }
 
 ListView::ListView(const SRect &rc,
@@ -261,7 +272,8 @@ ListView::ListView(const SRect &rc,
 }
 
 void ListView::AddColumn(GUI_PCSTR s, int Width, TEXTALIGN Align) {
-	pHeader->Add(s, Width, Align);
+	if (pHeader)
+		pHeader->Add(s, Width, Align);
 	auto NumRows = this->NumRows();
 	if (!NumRows)
 		return;
@@ -285,9 +297,10 @@ bool ListView::AddRow(GUI_PCSTR pTexts) {
 }
 
 void ListView::DeleteColumn(uint16_t Index) {
-	if (Index >= pHeader->NumItems())
+	if (Index >= NumColumns())
 		return;
-	pHeader->Delete(Index);
+	if (pHeader)
+		pHeader->Delete(Index);
 	for (int i = 0, NumRows = RowArray.NumItems(); i < NumRows; ++i)
 		RowArray[i].Delete();
 	_UpdateScrollParas();

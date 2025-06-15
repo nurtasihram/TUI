@@ -182,22 +182,20 @@ bool Edit::_OnKey(KEY_STATE State) {
 }
 WM_RESULT Edit::_Callback(PWObj pWin, int MsgId, WM_PARAM Param, PWObj pSrc) {
 	auto pObj = (Edit *)pWin;
-	if (!pObj->HandleActive(MsgId, Param))
-		return;
 	switch (MsgId) {
-		case WM_PAINT:
-			pObj->_OnPaint();
-			return 0;
-		case WM_MOUSE:
-			pObj->_OnMouse(Param);
-			return 0;
-		case WM_DELETE:
-			pObj->~Edit();
-			return 0;
-		case WM_KEY:
-			if (pObj->_OnKey(Param))
-				return true;
-			return 0;
+	case WM_PAINT:
+		pObj->_OnPaint();
+		return 0;
+	case WM_MOUSE:
+		pObj->_OnMouse(Param);
+		return 0;
+	case WM_DELETE:
+		pObj->~Edit();
+		return 0;
+	case WM_KEY:
+		if (pObj->_OnKey(Param))
+			return true;
+		return 0;
 	}
 	return DefCallback(pObj, MsgId, Param, pSrc);
 }

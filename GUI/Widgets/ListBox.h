@@ -34,7 +34,6 @@ public:
 			/* Selected focussed */ RGB_WHITE,
 			/* Disabled */ RGB_GRAY
 		};
-		uint16_t ScrollStepH{ 10 };
 	} static DefaultProps;
 
 private:
@@ -141,9 +140,6 @@ public: // Property - Spacing
 		ItemSpacing = Value;
 		InvalidateItem(LISTBOX_ALL_ITEMS);
 	}
-public: // Property - ScrollStepH
-	/* R */ inline int ScrollStepH() const { return Props.ScrollStepH; }
-	/* W */ inline void ScrollStepH(int Value) { Props.ScrollStepH = Value; }
 public: // Property - ScrollBarWidth
 	/* R */ inline auto ScrollBarWidth() const { return ScrollbarWidth; }
 	/* W */ inline void ScrollBarWidth(uint8_t Width) {
@@ -170,6 +166,7 @@ public: // Property - MultiSel
 	/* W */ void MultiSel(bool bEnabled);
 public: // Property - AutoScroll
 	/* R */ inline LISTBOX_CF AutoScroll() { return StatusEx & LISTBOX_CF_AUTOSCROLLBAR; }
+	/* W */ void AutoScroll(bool bEnabled) { AutoScroll(LISTBOX_CF_AUTOSCROLLBAR, bEnabled); }
 	/* W */ void AutoScroll(LISTBOX_CF ScrollFlags, bool bEnabled);
 public: // Property - AutoScrollH
 	/* R */ inline bool AutoScrollH() { return StatusEx & LISTBOX_CF_AUTOSCROLLBAR_H; }

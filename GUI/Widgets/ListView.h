@@ -43,16 +43,15 @@ private:
 	};
 	GUI_Array<Column> RowArray;
 	Property Props = DefaultProps;
+	Header *pHeader = nullptr;
 	SCROLL_STATE scrollStateV;
 	int16_t sel = -1;
 	SCROLL_STATE scrollStateH;
 	uint16_t RowDistY = 0;
 	uint16_t lBorder = 1, rBorder = 1;
-	PWObj pOwner = nullptr;
-	Header *pHeader = nullptr;
 private:
 	uint16_t _HeaderHeight() const;
-	inline auto _GetXSize() const { return InsideRect().x1 + 1; }
+	inline auto _GetXSize() const { return InsideRect().x1 - EffectSize() + 1; }
 	uint16_t _GetNumVisibleRows() const;
 	uint16_t _GetRowDistY() const;
 	int _GetHeaderWidth() const;

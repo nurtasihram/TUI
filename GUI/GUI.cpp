@@ -377,7 +377,6 @@ void GUI_Panel::Init() {
 	ClipRect();
 	Cursor(Props.pCursor);
 	Font(Props.pFont);
-	WObj::Init();
 }
 
 #pragma region GUI_DRAW_BASE Classes
