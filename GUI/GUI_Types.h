@@ -14,8 +14,6 @@ template<class AnyType>
 inline AnyType Min(AnyType a, AnyType b) { return a < b ? a : b; }
 
 #pragma region Coordinates
-/// @brief 點
-///		用扵存儲坐標或尺寸
 struct Point {
 	int16_t x, y;
 	Point(int i = 0) : x(i), y(i) {}
@@ -33,7 +31,6 @@ struct Point {
 	inline bool operator!=(Point p) const { return x != p.x || y != p.y; }
 };
 
-/// @brief 矩形區域
 struct SRect {
 	int16_t x0 = 0, y0 = 0;
 	int16_t x1 = -1, y1 = -1;
@@ -149,7 +146,6 @@ public:
 #pragma endregion
 
 #pragma region Image
-/// @brief 調色板類
 struct LogPalette {
 	const RGBC *pPalEntries = nullptr;
 	size_t NumEntries = 0;
@@ -162,7 +158,6 @@ struct LogPalette {
 };
 using CPalette = const LogPalette;
 
-/// @brief 位圖類
 struct Bitmap {
 	Point Size;
 	uint16_t BytesPerLine = 0;
@@ -170,7 +165,6 @@ struct Bitmap {
 	bool HasTrans = false;
 	void *pData = nullptr;
 	CPalette *pPal = nullptr;
-
 public:
 	Bitmap() {}
 	Bitmap(
@@ -210,26 +204,21 @@ public:
 		HasTrans(HasTrans),
 		pData(const_cast<void *>(pData)),
 		pPal(pPal) {}
-
 public:
 	inline SRect Rect(Point p) const { return SRect::left_top(p, Size); }
 	inline auto PalEntries() const { return pPal ? pPal->pPalEntries : nullptr; }
-
 public:
 	struct BitmapRect operator+(Point Pos);
 	const struct BitmapRect operator+(Point Pos) const;
-
 };
 using CBitmap = const Bitmap;
 
-/// @brief 光標類
 struct Cursor : Bitmap {
 	Point Hot;
 	Cursor(CBitmap &bmp, Point Hot = 0) : Bitmap(bmp), Hot(Hot) {}
 };
 using CCursor = const Cursor;
 
-/// @brief 位圖矩形類
 struct BitmapRect : SRect {
 	void *pData = nullptr;
 	const RGBC *pPalEntries = nullptr;
@@ -237,16 +226,13 @@ struct BitmapRect : SRect {
 	uint8_t BitsPerPixel = 0;
 	uint8_t BitsXOff = 0;
 	bool HasTrans = false;
-
 public:
 	BitmapRect() {}
 	BitmapRect(const SRect &r) : SRect(r) {}
 	BitmapRect(CBitmap &bmp, Point Pos = 0);
-
 public:
 	inline auto CountPixel() const { return xsize() * ysize(); }
 	inline auto Bytes() const { return ysize() * BytesPerLine; }
-
 public:
 	BitmapRect &operator&=(const SRect &rClip);
 	inline const BitmapRect &operator&=(const SRect &rClip) const { return const_cast<BitmapRect &>(*this) &= rClip; }
@@ -267,7 +253,6 @@ inline const BitmapRect Bitmap::operator+(Point Pos) const {
 }
 #pragma endregion
 
-/// @brief 按鍵數據結構
 struct KEY_STATE {
 	uint16_t Key = 0;
 	uint16_t PressedCnt : 15;
@@ -275,7 +260,6 @@ struct KEY_STATE {
 	inline bool operator!=(KEY_STATE State) const { return Key != State.Key || PressedCnt != State.PressedCnt; }
 };
 
-/// @brief 鼠標數據結構
 struct MOUSE_STATE : Point {
 	int8_t Pressed = 0;
 	int8_t bValid = 0;
@@ -310,14 +294,11 @@ struct GUI_Encoder {
 extern GUI_Encoder DefaultEncoder;
 
 #pragma region Font
-/// @brief 字體類
 class Font {
-
 public:
 	GUI_Encoder &encoder;
 	uint8_t YDist, Baseline;
 	uint8_t LHeight, CHeight;
-
 public:
 	Font(uint8_t YDist, uint8_t Baseline,
 		 uint8_t LHeight, uint8_t CHeight,
@@ -325,58 +306,27 @@ public:
 		encoder(encoder),
 		YDist(YDist), Baseline(Baseline),
 		LHeight(LHeight), CHeight(CHeight) {}
-
 public:
-
-	/// @brief 顯示字元
-	/// @param ch 字元
-	/// @return 顯示字元的寬度，單位為圖元
 	virtual int  DispChar(GUI_CHAR ch) const = 0;
-
-	/// @brief 字元寬度
-	/// @param ch 字元
-	/// @return 字元寬度，單位為圖元
 	virtual int XDist(GUI_CHAR ch) const = 0;
-
-	/// @brief 計算字串的寬度
-	/// @param pString 字串
-	/// @param NumChars 字串長度
-	/// @return 字串的寬度，單位為圖元
 	virtual int XDist(GUI_PCSTR pString, uint16_t NumChars) const;
-
-	/// @brief 是否在字體範圍內
-	/// @param ch 字元
-	/// @return 在字體範圍內返回true，否則返回false
 	virtual bool IsInFont(GUI_CHAR ch) const = 0;
-
-	/// @brief 字串的大小
-	/// @param s 字串
-	/// @return 字串的大小，單位為圖元
 	Point Size(GUI_PCSTR s) const;
-
 };
 using CFont = const Font;
-
-/// @brief 等綫字體
 class FontProp : public Font {
 public:
-
-	/// @brief 字形數據結構
 	struct Glyph {
 		uint8_t XDist, BytesPerLine;
 		const BPP1_DAT *pData;
 	};
-
-	/// @brief 字形片段存儲結構
 	struct Prop {
 		uint16_t First, Last;
 		const Glyph *paGlyph;
 		const Prop *pNext;
 	};
-
 private:
 	Prop prop;
-
 public:
 	FontProp(uint8_t YDist, uint8_t Baseline,
 			 uint8_t LHeight, uint8_t CHeight,
@@ -393,37 +343,26 @@ public:
 			 GUI_Encoder &encoder = DefaultEncoder) :
 		Font(YDist, Baseline, LHeight, CHeight, encoder),
 		prop({ First, Last, paGlyph, &pNext->prop }) {}
-
 private:
 	const Prop *_FindChar(GUI_CHAR) const;
-
 public:
 	int DispChar(GUI_CHAR) const override;
 	int XDist(GUI_CHAR) const override;
 	bool IsInFont(GUI_CHAR) const override;
-
 };
-
-/// @brief 等寬字體
 class FontMono : public Font {
 public:
-
-	struct TransList {
-		int16_t c0, c1;
-	};
-
+	struct TransList { int16_t c0, c1; };
 	struct TransInfo {
 		uint16_t FirstChar, LastChar;
 		const TransList *pList;
 	};
-
 private:
 	const BPP1_DAT *pData, *pTransData;
 	const TransInfo *pTrans;
 	uint16_t FirstChar, LastChar;
 	uint8_t xSize, xDist;
 	uint8_t BytesPerLine;
-
 public:
 	FontMono(uint8_t YDist, uint8_t Baseline,
 			 uint8_t LHeight, uint8_t CHeight,
@@ -440,11 +379,9 @@ public:
 		FirstChar(FirstChar), LastChar(LastChar),
 		xSize(XSize), xDist(XDist),
 		BytesPerLine(BytesPerLine) {}
-
 public:
 	int DispChar(GUI_CHAR) const override;
 	int XDist(GUI_CHAR) const override;
 	bool IsInFont(GUI_CHAR) const override;
-
 };
 #pragma endregion

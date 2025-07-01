@@ -26,7 +26,7 @@ REG_FUNC(void, IntKey, GUI_X_SIM_pfnOnKey pfnOnKey) {
 
 REG_FUNC(void, CreateDisplay, const wchar_t *lpTitle, uint16_t xSize, uint16_t ySize) {
 	using namespace SimDisp;
-	LoadDll(_T("SimClient.dll"));
+	LoadDll(_T("SimDisp.dll"));
 	assertl(Open(L"TUI - User Interface", xSize, ySize));
 	SetOnResize([](uint16_t nSizeX, uint16_t nSizeY) -> uint8_t {
 		pfnIntResize(nSizeX, nSizeY);
@@ -71,7 +71,9 @@ REG_FUNC(void, GetBitmap, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, ui
 
 using namespace WX;
 REG_FUNC(void, OpenConsole, void) {
-	Console.Attach(SimDisp::ConsoleEnableShow(true));
+	auto pid = SimDisp::ConsoleEnableShow(true);
+	if (pid != WX::Process::Current().ID())
+		Console.Attach(pid);
 	Console.Title(S("TUI - Console"));
 	Console.Select();
 	Console.Reopen();

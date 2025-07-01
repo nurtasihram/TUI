@@ -1,9 +1,9 @@
-[submodule "SimDisp"]
-	path = SimDisp
+[submodule "GUI_X/SimDisp"]
+	path = GUI_X/SimDisp
 	url = https://github.com/nurtasihram/SimDisp.git
-[submodule "freetype"]
-	path = freetype
-	url = https://gitlab.freedesktop.org/freetype/freetype.git
+[submodule "Tools/wx"]
+	path = Tools/wx
+	url = https://github.com/nurtasihram/wx_library.git
 [submodule "Tools/font_maker/freetype"]
 	path = Tools/font_maker/freetype
 	url = https://gitlab.freedesktop.org/freetype/freetype.git
