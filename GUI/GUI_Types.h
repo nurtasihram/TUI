@@ -45,7 +45,7 @@ struct SRect {
 public:
 	inline Point left_top() const { return { x0, y0 }; }
 	inline auto &left_top(Point p) { x0 = p.x, y0 = p.y; return*this; }
-	inline static SRect left_top(Point p, Point s) { return { p.x, p.y, p.x + s.x - 1, p.y + s.y - 1 }; }
+	static inline SRect left_top(Point p, Point s) { return { p.x, p.y, p.x + s.x - 1, p.y + s.y - 1 }; }
 	inline Point right_bottom() const { return { x1, y1 }; }
 	inline auto &right_bottom(Point p) { x1 = p.x, y1 = p.y; return*this; }
 	inline Point size() const { return{ x1 - x0 + 1, y1 - y0 + 1 }; }

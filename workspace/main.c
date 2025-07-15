@@ -1,11 +1,11 @@
-#include "GUI_MAIN.h"
+#include <Windows.h>
+
+extern void GUI_Main();
 
 int main() {
 	GUI_Main();
 	return 0;
 }
-
-#include <Windows.h>
 
 int WINAPI wWinMain(
 	_In_ HINSTANCE hInstance,

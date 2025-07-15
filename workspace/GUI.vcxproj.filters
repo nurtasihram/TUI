@@ -31,6 +31,9 @@
     <Filter Include="GUI_EXT\FatFs\option">
       <UniqueIdentifier>{19abc440-ca2a-48e4-8a14-d78f1f6685f5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="resources">
+      <UniqueIdentifier>{68be4161-9dd1-4590-9c8d-ae27fbfd215a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GUI\GUI.cpp">
@@ -97,7 +100,7 @@
       <Filter>GUI\Widgets</Filter>
     </ClCompile>
     <ClCompile Include="main.c" />
-    <ClCompile Include="GUI_MAIN_SIM.cpp" />
+    <ClCompile Include="GUI_Main.cpp" />
     <ClCompile Include="GUI_EXT\ext_osk.cpp">
       <Filter>GUI_EXT</Filter>
     </ClCompile>
@@ -220,7 +223,6 @@
     <ClInclude Include="GUI\Widgets\MultiPage.h">
       <Filter>GUI\Widgets</Filter>
     </ClInclude>
-    <ClInclude Include="GUI_MAIN.h" />
     <ClInclude Include="GUI\Widgets\Edit.h">
       <Filter>GUI\Widgets</Filter>
     </ClInclude>
@@ -235,9 +237,6 @@
     </ClInclude>
     <ClInclude Include="GUI_EXT\duktape\duktape.h">
       <Filter>GUI_EXT\duktape\duktape</Filter>
-    </ClInclude>
-    <ClInclude Include="GUI_X_SIM\resource.h">
-      <Filter>GUI_X_SIM</Filter>
     </ClInclude>
     <ClInclude Include="GUI\GUI_X.h">
       <Filter>GUI</Filter>
@@ -266,6 +265,9 @@
     <ClInclude Include="GUI_EXT\FatFs\integer.h">
       <Filter>GUI_EXT\FatFs</Filter>
     </ClInclude>
+    <ClInclude Include="..\GUI_X_SIM\resources\resource.h">
+      <Filter>resources</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="GUI\GUI.inl">
@@ -282,13 +284,16 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="GUI_X_SIM\GUI.rc">
-      <Filter>GUI_X_SIM</Filter>
+    <ResourceCompile Include="..\GUI_X_SIM\resources\GUI.rc">
+      <Filter>resources</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="..\GUI_X_SIM\resources\GUI_X_SIM.rc">
+      <Filter>resources</Filter>
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="Ni.ico">
-      <Filter>GUI_X_SIM</Filter>
+    <Image Include="..\GUI_X_SIM\resources\Ni.ico">
+      <Filter>resources</Filter>
     </Image>
   </ItemGroup>
 </Project>

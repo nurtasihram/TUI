@@ -1,7 +1,7 @@
 #include "WM.h"
 #include "GUI_X_SIM.h"
 
-void MainTask();
+extern void MainTask();
 
 extern "C" void GUI_Main() {
 	GUI_X_Init();

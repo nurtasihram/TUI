@@ -187,7 +187,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release LLVM|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="GUI_MAIN_SIM.cpp" />
+    <ClCompile Include="GUI_Main.cpp" />
     <ClCompile Include="GUI_test\test_checkbox_radio.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release LLVM|Win32'">true</ExcludedFromBuild>
@@ -273,6 +273,7 @@
     <ClCompile Include="main.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\GUI_X_SIM\resources\resource.h" />
     <ClInclude Include="GUI\GUI.h" />
     <ClInclude Include="GUI\GUI_Array.h" />
     <ClInclude Include="GUI\GUI_Types.h" />
@@ -365,9 +366,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug LLVM|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="GUI_MAIN.h" />
     <ClInclude Include="GUI_X_SIM\GUI_X_SIM.h" />
-    <ClInclude Include="GUI_X_SIM\resource.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="GUI\GUI.inl" />
@@ -376,10 +375,11 @@
     <None Include="GUI\WM.inl" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="GUI_X_SIM\GUI.rc" />
+    <ResourceCompile Include="..\GUI_X_SIM\resources\GUI.rc" />
+    <ResourceCompile Include="..\GUI_X_SIM\resources\GUI_X_SIM.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="Ni.ico" />
+    <Image Include="..\GUI_X_SIM\resources\Ni.ico" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
@@ -486,6 +486,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)\GUI;$(SolutionDir)\GUI_EXT;$(SolutionDir)\GUI_X_SIM;$(SolutionDir)\Tools\wx;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -503,6 +504,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)\GUI;$(SolutionDir)\GUI_EXT;$(SolutionDir)\GUI_X_SIM;$(SolutionDir)\Tools\wx;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -540,6 +542,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <BrowseInformation>true</BrowseInformation>
+      <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -560,6 +563,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)\GUI;$(SolutionDir)\GUI_EXT;$(SolutionDir)\GUI_X_SIM;$(SolutionDir)\Tools\wx;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
